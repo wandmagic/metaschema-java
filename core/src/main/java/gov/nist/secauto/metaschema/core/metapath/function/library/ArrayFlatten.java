@@ -40,11 +40,14 @@ import java.util.stream.Stream;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
-public class ArrayFlatten {
+public final class ArrayFlatten {
   @NonNull
   static final IFunction SIGNATURE = IFunction.builder()
       .name("flatten")
       .namespace(MetapathConstants.NS_METAPATH_FUNCTIONS_ARRAY)
+      .deterministic()
+      .contextIndependent()
+      .focusIndependent()
       .argument(IArgument.builder()
           .name("input")
           .type(IItem.class)
@@ -54,6 +57,10 @@ public class ArrayFlatten {
       .returnZeroOrMore()
       .functionHandler(ArrayFlatten::execute)
       .build();
+
+  private ArrayFlatten() {
+    // disable construction
+  }
 
   @SuppressWarnings("unused")
   @NonNull

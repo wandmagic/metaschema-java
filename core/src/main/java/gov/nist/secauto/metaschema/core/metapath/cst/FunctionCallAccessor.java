@@ -27,10 +27,16 @@
 package gov.nist.secauto.metaschema.core.metapath.cst;
 
 import gov.nist.secauto.metaschema.core.metapath.DynamicContext;
+import gov.nist.secauto.metaschema.core.metapath.ICollectionValue;
 import gov.nist.secauto.metaschema.core.metapath.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.function.library.ArrayGet;
+import gov.nist.secauto.metaschema.core.metapath.function.library.FnData;
+import gov.nist.secauto.metaschema.core.metapath.function.library.MapGet;
 import gov.nist.secauto.metaschema.core.metapath.item.IItem;
-import gov.nist.secauto.metaschema.core.util.ObjectUtils;
+import gov.nist.secauto.metaschema.core.metapath.item.atomic.IAnyAtomicItem;
+import gov.nist.secauto.metaschema.core.metapath.item.atomic.IIntegerItem;
+import gov.nist.secauto.metaschema.core.metapath.item.function.IArrayItem;
+import gov.nist.secauto.metaschema.core.metapath.item.function.IMapItem;
 
 import java.util.List;
 
@@ -75,10 +81,20 @@ public class FunctionCallAccessor implements IExpression {
 
   @Override
   public ISequence<? extends IItem> accept(DynamicContext dynamicContext, ISequence<?> focus) {
-    ISequence<?> collection = getBase().accept(dynamicContext, focus);
-    ISequence<?> key = getArgument().accept(dynamicContext, focus);
+    ISequence<?> target = getBase().accept(dynamicContext, focus);
+    IItem collection = target.getFirstItem(true);
+    IAnyAtomicItem key = FnData.fnData(getArgument().accept(dynamicContext, focus)).getFirstItem(false);
 
-    return ArrayGet.SIGNATURE.execute(ObjectUtils.notNull(List.of(collection, key)), dynamicContext, focus);
+    ICollectionValue retval;
+    if (collection instanceof IArrayItem) {
+      retval = ArrayGet.get((IArrayItem<?>) collection, IIntegerItem.cast(key));
+    } else if (collection instanceof IMapItem) {
+      retval = MapGet.get((IMapItem<?>) collection, key);
+    } else {
+      retval = null;
+    }
+
+    return retval == null ? ISequence.empty() : retval.asSequence();
   }
 
   @Override

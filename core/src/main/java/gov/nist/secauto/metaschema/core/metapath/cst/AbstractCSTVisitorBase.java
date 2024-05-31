@@ -132,20 +132,20 @@ public abstract class AbstractCSTVisitorBase
   }
 
   @Nullable
-  protected <CONTEXT extends ParserRuleContext, EXPRESSION extends IExpression> IExpression
-      nAiryToCollection(
+  protected <CONTEXT extends ParserRuleContext, T extends IExpression, R extends IExpression>
+      R nairyToCollection(
           @NonNull CONTEXT context,
           int startIndex,
           int step,
-          @NonNull BiFunction<CONTEXT, Integer, EXPRESSION> parser,
-          @NonNull Function<List<EXPRESSION>, IExpression> supplier) {
+          @NonNull BiFunction<CONTEXT, Integer, T> parser,
+          @NonNull Function<List<T>, R> supplier) {
     int numChildren = context.getChildCount();
 
-    IExpression retval = null;
+    R retval = null;
     if (startIndex < numChildren) {
-      List<EXPRESSION> children = new ArrayList<>((numChildren - startIndex) / step);
+      List<T> children = new ArrayList<>((numChildren - startIndex) / step);
       for (int idx = startIndex; idx < numChildren; idx += step) {
-        EXPRESSION result = parser.apply(context, idx);
+        T result = parser.apply(context, idx);
         children.add(result);
       }
       retval = supplier.apply(children);

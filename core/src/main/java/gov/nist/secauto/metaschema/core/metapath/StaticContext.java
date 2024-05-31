@@ -65,6 +65,9 @@ public final class StaticContext {
     knownNamespaces.put(
         MetapathConstants.PREFIX_XPATH_FUNCTIONS_ARRAY,
         MetapathConstants.NS_METAPATH_FUNCTIONS_ARRAY);
+    knownNamespaces.put(
+        MetapathConstants.PREFIX_XPATH_FUNCTIONS_MAP,
+        MetapathConstants.NS_METAPATH_FUNCTIONS_MAP);
     WELL_KNOWN_NAMESPACES = CollectionUtil.unmodifiableMap(knownNamespaces);
   }
 

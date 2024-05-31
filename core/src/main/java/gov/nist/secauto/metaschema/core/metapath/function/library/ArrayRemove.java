@@ -47,11 +47,14 @@ import java.util.stream.IntStream;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
-public class ArrayRemove {
+public final class ArrayRemove {
   @NonNull
   public static final IFunction SIGNATURE = IFunction.builder()
       .name("remove")
       .namespace(MetapathConstants.NS_METAPATH_FUNCTIONS_ARRAY)
+      .deterministic()
+      .contextIndependent()
+      .focusIndependent()
       .argument(IArgument.builder()
           .name("array")
           .type(IArrayItem.class)
@@ -66,6 +69,10 @@ public class ArrayRemove {
       .returnOne()
       .functionHandler(ArrayRemove::execute)
       .build();
+
+  private ArrayRemove() {
+    // disable construction
+  }
 
   @SuppressWarnings("unused")
   @NonNull
@@ -109,13 +116,13 @@ public class ArrayRemove {
   public static <T extends IItem> IArrayItem<T> remove(
       @NonNull IArrayItem<T> array,
       @NonNull Collection<Integer> positions) {
-    Set<Integer> positionSet = positions instanceof Set ? (Set<Integer>) positions : new HashSet<Integer>(positions);
+    Set<Integer> positionSet = positions instanceof Set ? (Set<Integer>) positions : new HashSet<>(positions);
 
-    List<T> removed = ObjectUtils.notNull(IntStream.range(1, array.size() + 1)
+    List<T> remaining = ObjectUtils.notNull(IntStream.range(1, array.size() + 1)
         .filter(index -> !positionSet.contains(index))
         .mapToObj(index -> array.get(index - 1))
         .collect(Collectors.toList()));
 
-    return IArrayItem.ofCollection(removed);
+    return IArrayItem.ofCollection(remaining);
   }
 }

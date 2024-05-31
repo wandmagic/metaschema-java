@@ -44,11 +44,14 @@ import java.util.List;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
-public class ArrayPut {
+public final class ArrayPut {
   @NonNull
   public static final IFunction SIGNATURE = IFunction.builder()
       .name("put")
       .namespace(MetapathConstants.NS_METAPATH_FUNCTIONS_ARRAY)
+      .deterministic()
+      .contextIndependent()
+      .focusIndependent()
       .argument(IArgument.builder()
           .name("array")
           .type(IArrayItem.class)
@@ -69,6 +72,10 @@ public class ArrayPut {
       .functionHandler(ArrayPut::execute)
       .build();
 
+  private ArrayPut() {
+    // disable construction
+  }
+
   @SuppressWarnings("unused")
   @NonNull
   private static <T extends ICollectionValue> ISequence<? extends IArrayItem<T>> execute(@NonNull IFunction function,
@@ -78,7 +85,7 @@ public class ArrayPut {
     IArrayItem<T> array = FunctionUtils.asType(ObjectUtils.requireNonNull(
         arguments.get(0).getFirstItem(true)));
     IIntegerItem position = FunctionUtils.asType(ObjectUtils.requireNonNull(arguments.get(1).getFirstItem(true)));
-    @SuppressWarnings("unchecked") T member = (T) arguments.get(2).toArrayMember();
+    @SuppressWarnings("unchecked") T member = (T) arguments.get(2).toCollectionValue();
 
     return put(array, position, member).asSequence();
   }

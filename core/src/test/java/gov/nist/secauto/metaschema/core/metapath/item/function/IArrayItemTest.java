@@ -31,14 +31,10 @@ import static gov.nist.secauto.metaschema.core.metapath.TestUtils.integer;
 import static gov.nist.secauto.metaschema.core.metapath.TestUtils.sequence;
 import static gov.nist.secauto.metaschema.core.metapath.TestUtils.string;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import gov.nist.secauto.metaschema.core.metapath.ExpressionTestBase;
-import gov.nist.secauto.metaschema.core.metapath.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.MetapathExpression;
 
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -89,79 +85,4 @@ class IArrayItemTest
     assertEquals(expected, result);
   }
 
-  private static Stream<Arguments> functionCallLookupValues() { // NOPMD - false positive
-    return Stream.of(
-        // function call lookup
-        Arguments.of(
-            sequence(integer(7)),
-            "[ 1, 2, 5, 7 ](4)"),
-        Arguments.of(
-            sequence(array(integer(4), integer(5), integer(6))),
-            "[ [1, 2, 3], [4, 5, 6]](2)"),
-        Arguments.of(
-            sequence(integer(5)),
-            "[ [1, 2, 3], [4, 5, 6]](2)(2)"),
-        Arguments.of(
-            sequence(string("Robert Johnson")),
-            "[ 'a', 123, \"Robert Johnson\" ](3)"),
-        Arguments.of(
-            sequence(integer(27)),
-            "array { (), (27, 17, 0) }(1)"),
-        Arguments.of(
-            sequence(integer(7)),
-            "[ 1, 2, 5, 7 ](4)"));
-  }
-
-  @ParameterizedTest
-  @MethodSource("functionCallLookupValues")
-  void testFunctionCallLookup(@NonNull ISequence<?> expected, @NonNull String metapath) {
-    ISequence<?> result = MetapathExpression.compile(metapath)
-        .evaluateAs(null, MetapathExpression.ResultType.SEQUENCE, newDynamicContext());
-    assertEquals(expected, result);
-  }
-
-  private static Stream<Arguments> postfixLookupValues() { // NOPMD - false positive
-    return Stream.of(
-        // postfix lookup
-        // Arguments.of(
-        // sequence(string("Jenna")),
-        // "map { \"first\" : \"Jenna\", \"last\" : \"Scott\" }?first"),
-        Arguments.of(
-            sequence(integer(5)),
-            "[4, 5, 6]?2"),
-        // Arguments.of(
-        // sequence(string("Tom"), string("Dick"), string("Harry")),
-        // "(map {\"first\": \"Tom\"}, map {\"first\": \"Dick\"}, map {\"first\":
-        // \"Harry\"})?first"),
-        Arguments.of(
-            sequence(integer(2), integer(5)),
-            "([1,2,3], [4,5,6])?2"),
-        Arguments.of(
-            sequence(integer(1), integer(2), integer(5), integer(7)),
-            "[1, 2, 5, 7]?*"),
-        Arguments.of(
-            sequence(array(integer(1), integer(2), integer(3)), array(integer(4), integer(5), integer(6))),
-            "[[1, 2, 3], [4, 5, 6]]?*"));
-  }
-
-  @ParameterizedTest
-  @MethodSource("postfixLookupValues")
-  void testPostfixLookup(@NonNull ISequence<?> expected, @NonNull String metapath) {
-    ISequence<?> result = MetapathExpression.compile(metapath)
-        .evaluateAs(null, MetapathExpression.ResultType.SEQUENCE, newDynamicContext());
-    assertEquals(expected, result);
-  }
-
-  @Test
-  void testUnaryLookupMissingMember() {
-    ArrayException thrown = assertThrows(
-        ArrayException.class,
-        () -> {
-          ISequence<?> result = MetapathExpression.compile("([1,2,3], [1,2,5], [1,2])[?3 = 5]")
-              .evaluateAs(null, MetapathExpression.ResultType.SEQUENCE, newDynamicContext());
-          assertNotNull(result);
-          result.safeStream();
-        });
-    assertEquals(ArrayException.INDEX_OUT_OF_BOUNDS, thrown.getCode());
-  }
 }

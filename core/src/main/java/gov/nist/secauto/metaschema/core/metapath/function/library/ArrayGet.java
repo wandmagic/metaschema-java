@@ -43,11 +43,14 @@ import java.util.List;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
-public class ArrayGet {
+public final class ArrayGet {
   @NonNull
   public static final IFunction SIGNATURE = IFunction.builder()
       .name("get")
       .namespace(MetapathConstants.NS_METAPATH_FUNCTIONS_ARRAY)
+      .deterministic()
+      .contextIndependent()
+      .focusIndependent()
       .argument(IArgument.builder()
           .name("array")
           .type(IArrayItem.class)
@@ -62,6 +65,10 @@ public class ArrayGet {
       .returnZeroOrOne()
       .functionHandler(ArrayGet::execute)
       .build();
+
+  private ArrayGet() {
+    // disable construction
+  }
 
   @SuppressWarnings("unused")
   @NonNull
@@ -93,8 +100,13 @@ public class ArrayGet {
   public static <T extends ICollectionValue> T get(
       @NonNull List<T> target,
       @NonNull IIntegerItem positionItem) {
-    int position = positionItem.asInteger().intValue();
+    return get(target, positionItem.asInteger().intValue());
+  }
 
+  @NonNull
+  public static <T extends ICollectionValue> T get(
+      @NonNull List<T> target,
+      int position) {
     try {
       return ObjectUtils.requireNonNull(target.get(position - 1));
     } catch (IndexOutOfBoundsException ex) {

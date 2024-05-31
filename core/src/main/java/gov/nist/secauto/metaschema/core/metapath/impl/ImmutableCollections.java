@@ -29,10 +29,16 @@ package gov.nist.secauto.metaschema.core.metapath.impl;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 
 import java.util.AbstractCollection;
+import java.util.AbstractMap;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -42,21 +48,26 @@ import edu.umd.cs.findbugs.annotations.NonNull;
  * This implementation is inspired by the similar implementation provided by the
  * JDK.
  */
-public class ImmutableCollections {
-  protected static UnsupportedOperationException unsupported() {
+public final class ImmutableCollections {
+
+  private ImmutableCollections() {
+    // disable construction
+  }
+
+  private static UnsupportedOperationException unsupported() {
     return new UnsupportedOperationException("method not supported");
   }
 
-  public static abstract class AbstractImmutableCollection<T>
+  public abstract static class AbstractImmutableCollection<T>
       extends AbstractCollection<T> {
 
     @Override
-    public final boolean add(T e) {
+    public final boolean add(T item) {
       throw unsupported();
     }
 
     @Override
-    public final boolean addAll(Collection<? extends T> c) {
+    public final boolean addAll(Collection<? extends T> collection) {
       throw unsupported();
     }
 
@@ -66,12 +77,12 @@ public class ImmutableCollections {
     }
 
     @Override
-    public final boolean remove(Object o) {
+    public final boolean remove(Object obj) {
       throw unsupported();
     }
 
     @Override
-    public final boolean removeAll(Collection<?> c) {
+    public final boolean removeAll(Collection<?> collection) {
       throw unsupported();
     }
 
@@ -81,17 +92,17 @@ public class ImmutableCollections {
     }
 
     @Override
-    public final boolean retainAll(Collection<?> c) {
+    public final boolean retainAll(Collection<?> collection) {
       throw unsupported();
     }
   }
 
-  public static abstract class AbstractImmutableList<T>
+  public abstract static class AbstractImmutableList<T>
       extends AbstractImmutableCollection<T>
       implements List<T> {
 
     @Override
-    public boolean addAll(int index, Collection<? extends T> c) {
+    public boolean addAll(int index, Collection<? extends T> collection) {
       throw unsupported();
     }
 
@@ -111,7 +122,7 @@ public class ImmutableCollections {
     }
   }
 
-  public static abstract class AbstractImmutableDelegatedCollection<T>
+  public abstract static class AbstractImmutableDelegatedCollection<T>
       extends AbstractImmutableList<T> {
 
     @NonNull
@@ -165,6 +176,86 @@ public class ImmutableCollections {
     @Override
     public String toString() {
       return getValue().toString();
+    }
+  }
+
+  public abstract static class AbstractImmutableMap<K, V>
+      extends AbstractMap<K, V> {
+    @Override
+    public void clear() {
+      throw unsupported();
+    }
+
+    @Override
+    public V compute(K key, BiFunction<? super K, ? super V, ? extends V> rf) {
+      throw unsupported();
+    }
+
+    @Override
+    public V computeIfAbsent(K key, Function<? super K, ? extends V> mf) {
+      throw unsupported();
+    }
+
+    @Override
+    public V computeIfPresent(K key, BiFunction<? super K, ? super V, ? extends V> rf) {
+      throw unsupported();
+    }
+
+    @Override
+    public V merge(K key, V value, BiFunction<? super V, ? super V, ? extends V> rf) {
+      throw unsupported();
+    }
+
+    @Override
+    public V put(K key, V value) {
+      throw unsupported();
+    }
+
+    @Override
+    public void putAll(Map<? extends K, ? extends V> map) {
+      throw unsupported();
+    }
+
+    @Override
+    public V putIfAbsent(K key, V value) {
+      throw unsupported();
+    }
+
+    @Override
+    public V remove(Object key) {
+      throw unsupported();
+    }
+
+    @Override
+    public boolean remove(Object key, Object value) {
+      throw unsupported();
+    }
+
+    @Override
+    public V replace(K key, V value) {
+      throw unsupported();
+    }
+
+    @Override
+    public boolean replace(K key, V oldValue, V newValue) {
+      throw unsupported();
+    }
+
+    @Override
+    public void replaceAll(BiFunction<? super K, ? super V, ? extends V> function) {
+      throw unsupported();
+    }
+  }
+
+  public abstract static class AbstractImmutableDelegatedMap<K, V>
+      extends AbstractImmutableMap<K, V> {
+
+    @NonNull
+    public abstract Map<K, V> getValue();
+
+    @Override
+    public Set<Entry<K, V>> entrySet() {
+      return Collections.unmodifiableSet(getValue().entrySet());
     }
   }
 }

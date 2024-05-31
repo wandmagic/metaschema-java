@@ -225,6 +225,27 @@ public class DefaultFunctionLibrary
     // https://www.w3.org/TR/xpath-functions-31/#func-array-flatten
     registerFunction(ArrayFlatten.SIGNATURE);
 
+    // https://www.w3.org/TR/xpath-functions-31/#func-map-merge
+    registerFunction(MapMerge.SIGNATURE_ONE_ARG);
+    registerFunction(MapMerge.SIGNATURE_TWO_ARG);
+    // https://www.w3.org/TR/xpath-functions-31/#func-map-size
+    registerFunction(MapSize.SIGNATURE);
+    // https://www.w3.org/TR/xpath-functions-31/#func-map-keys
+    registerFunction(MapKeys.SIGNATURE);
+    // https://www.w3.org/TR/xpath-functions-31/#func-map-contains
+    registerFunction(MapContains.SIGNATURE);
+    // https://www.w3.org/TR/xpath-functions-31/#func-map-get
+    registerFunction(MapGet.SIGNATURE);
+    // https://www.w3.org/TR/xpath-functions-31/#func-map-find
+    registerFunction(MapFind.SIGNATURE);
+    // https://www.w3.org/TR/xpath-functions-31/#func-map-put
+    registerFunction(MapPut.SIGNATURE);
+    // https://www.w3.org/TR/xpath-functions-31/#func-map-entry
+    registerFunction(MapEntry.SIGNATURE);
+    // https://www.w3.org/TR/xpath-functions-31/#func-map-remove
+    registerFunction(MapRemove.SIGNATURE);
+    // P3: https://www.w3.org/TR/xpath-functions-31/#func-map-for-each
+
     // xpath casting functions
     registerFunction(
         CastFunction.signature(MetapathConstants.NS_XML_SCHEMA, "boolean", IBooleanItem.class, IBooleanItem::cast));

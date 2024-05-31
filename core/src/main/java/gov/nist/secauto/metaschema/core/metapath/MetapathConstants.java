@@ -55,6 +55,9 @@ public final class MetapathConstants {
   public static final URI NS_METAPATH_FUNCTIONS_ARRAY = ObjectUtils.requireNonNull(
       URI.create("http://csrc.nist.gov/ns/metaschema/metapath-functions/array"));
   @NonNull
+  public static final URI NS_METAPATH_FUNCTIONS_MAP = ObjectUtils.requireNonNull(
+      URI.create("http://csrc.nist.gov/ns/metaschema/metapath-functions/map"));
+  @NonNull
   public static final URI NS_METAPATH_FUNCTIONS_EXTENDED = NS_METAPATH_FUNCTIONS;
 
   @NonNull
@@ -67,6 +70,8 @@ public final class MetapathConstants {
   public static final String PREFIX_XPATH_FUNCTIONS_MATH = "math";
   @NonNull
   public static final String PREFIX_XPATH_FUNCTIONS_ARRAY = "array";
+  @NonNull
+  public static final String PREFIX_XPATH_FUNCTIONS_MAP = "map";
 
   private MetapathConstants() {
     // disable construction

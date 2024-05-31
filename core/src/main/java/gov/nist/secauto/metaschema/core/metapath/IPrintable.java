@@ -24,56 +24,16 @@
  * OF THE RESULTS OF, OR USE OF, THE SOFTWARE OR SERVICES PROVIDED HEREUNDER.
  */
 
-package gov.nist.secauto.metaschema.core.metapath.cst;
+package gov.nist.secauto.metaschema.core.metapath;
 
-import gov.nist.secauto.metaschema.core.metapath.DynamicContext;
-import gov.nist.secauto.metaschema.core.metapath.ISequence;
-import gov.nist.secauto.metaschema.core.metapath.item.function.IArrayItem;
+import edu.umd.cs.findbugs.annotations.NonNull;
 
-import java.util.List;
-
-import edu.umd.cs.findbugs.annotations.Nullable;
-
-public class ArraySequence implements IExpression {
-  @Nullable
-  private final IExpression expr;
-
-  public ArraySequence(@Nullable IExpression expr) {
-    this.expr = expr;
-  }
-
-  @SuppressWarnings("rawtypes")
-  @Override
-  public Class<IArrayItem> getBaseResultType() {
-    return IArrayItem.class;
-  }
-
-  @SuppressWarnings("rawtypes")
-  @Override
-  public Class<IArrayItem> getStaticResultType() {
-    return IArrayItem.class;
-  }
-
-  @SuppressWarnings("null")
-  @Override
-  public List<? extends IExpression> getChildren() {
-    return List.of(expr);
-  }
-
-  @Override
-  public ISequence<IArrayItem<?>> accept(DynamicContext dynamicContext, ISequence<?> focus) {
-    ISequence<IArrayItem<?>> retval;
-    if (expr != null) {
-      IArrayItem<?> array = IArrayItem.ofCollection(expr.accept(dynamicContext, focus));
-      retval = ISequence.of(array);
-    } else {
-      retval = ISequence.of();
-    }
-    return retval;
-  }
-
-  @Override
-  public <RESULT, CONTEXT> RESULT accept(IExpressionVisitor<RESULT, CONTEXT> visitor, CONTEXT context) {
-    return visitor.visitArray(this, context);
-  }
+public interface IPrintable {
+  /**
+   * Get the string value.
+   *
+   * @return the string value
+   */
+  @NonNull
+  String asString();
 }

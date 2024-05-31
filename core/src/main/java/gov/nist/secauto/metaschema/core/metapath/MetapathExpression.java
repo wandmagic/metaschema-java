@@ -46,6 +46,8 @@ import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.DefaultErrorStrategy;
+import org.antlr.v4.runtime.Parser;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.apache.logging.log4j.LogManager;
@@ -150,6 +152,13 @@ public class MetapathExpression {
         Metapath10 parser = new Metapath10(tokens);
         parser.removeErrorListeners();
         parser.addErrorListener(new FailingErrorListener());
+        parser.setErrorHandler(new DefaultErrorStrategy() {
+
+          @Override
+          public void sync(Parser recognizer) {
+            // disable
+          }
+        });
 
         ParseTree tree = ObjectUtils.notNull(parser.expr());
 

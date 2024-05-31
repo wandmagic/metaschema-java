@@ -30,12 +30,17 @@ import gov.nist.secauto.metaschema.core.metapath.DynamicContext;
 import gov.nist.secauto.metaschema.core.metapath.ICollectionValue;
 import gov.nist.secauto.metaschema.core.metapath.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.InvalidTypeMetapathException;
+import gov.nist.secauto.metaschema.core.metapath.function.library.ArrayGet;
 import gov.nist.secauto.metaschema.core.metapath.function.library.FnData;
+import gov.nist.secauto.metaschema.core.metapath.function.library.MapGet;
 import gov.nist.secauto.metaschema.core.metapath.item.IItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IAnyAtomicItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IIntegerItem;
+import gov.nist.secauto.metaschema.core.metapath.item.atomic.IStringItem;
 import gov.nist.secauto.metaschema.core.metapath.item.function.ArrayException;
 import gov.nist.secauto.metaschema.core.metapath.item.function.IArrayItem;
+import gov.nist.secauto.metaschema.core.metapath.item.function.IMapItem;
+import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 
 import java.util.stream.Stream;
 
@@ -63,6 +68,8 @@ public abstract class AbstractLookup implements IExpression {
       Stream<? extends ICollectionValue> result;
       if (item instanceof IArrayItem) {
         result = lookupInArray((IArrayItem<?>) item, dynamicContext, focus);
+      } else if (item instanceof IMapItem) {
+        result = lookupInMap((IMapItem<?>) item, dynamicContext, focus);
       } else {
         throw new InvalidTypeMetapathException(item,
             String.format("Item type '%s' is not an array or map.", item.getClass().getName()));
@@ -70,8 +77,15 @@ public abstract class AbstractLookup implements IExpression {
       return result;
     }
 
+    @NonNull
     Stream<? extends ICollectionValue> lookupInArray(
         @NonNull IArrayItem<?> item,
+        @NonNull DynamicContext dynamicContext,
+        @NonNull ISequence<?> focus);
+
+    @NonNull
+    Stream<? extends ICollectionValue> lookupInMap(
+        @NonNull IMapItem<?> item,
         @NonNull DynamicContext dynamicContext,
         @NonNull ISequence<?> focus);
   }
@@ -96,13 +110,21 @@ public abstract class AbstractLookup implements IExpression {
       throw new InvalidTypeMetapathException(item,
           String.format("The key name-based lookup '%s' is not appropriate for an array.", getName()));
     }
+
+    @Override
+    public Stream<? extends ICollectionValue> lookupInMap(
+        IMapItem<?> item,
+        DynamicContext dynamicContext,
+        ISequence<?> focus) {
+      return ObjectUtils.notNull(Stream.ofNullable(MapGet.get(item, IStringItem.valueOf(name))));
+    }
   }
 
   protected static class IntegerLiteralKeySpecifier implements IKeySpecifier {
     private final int index;
 
     public IntegerLiteralKeySpecifier(IIntegerItem literal) {
-      index = literal.asInteger().intValueExact() - 1;
+      index = literal.asInteger().intValueExact();
     }
 
     @Override
@@ -111,7 +133,7 @@ public abstract class AbstractLookup implements IExpression {
         DynamicContext dynamicContext,
         ISequence<?> focus) {
       try {
-        return Stream.of(item.get(index));
+        return ObjectUtils.notNull(Stream.ofNullable(ArrayGet.get(item, index)));
       } catch (IndexOutOfBoundsException ex) {
         throw new ArrayException(
             ArrayException.INDEX_OUT_OF_BOUNDS,
@@ -120,6 +142,14 @@ public abstract class AbstractLookup implements IExpression {
                 item.size()),
             ex);
       }
+    }
+
+    @Override
+    public Stream<? extends ICollectionValue> lookupInMap(
+        IMapItem<?> item,
+        DynamicContext dynamicContext,
+        ISequence<?> focus) {
+      return ObjectUtils.notNull(Stream.ofNullable(MapGet.get(item, IIntegerItem.valueOf(index))));
     }
   }
 
@@ -130,7 +160,15 @@ public abstract class AbstractLookup implements IExpression {
         IArrayItem<?> item,
         DynamicContext dynamicContext,
         ISequence<?> focus) {
-      return item.stream();
+      return ObjectUtils.notNull(item.stream());
+    }
+
+    @Override
+    public Stream<? extends ICollectionValue> lookupInMap(
+        IMapItem<?> item,
+        DynamicContext dynamicContext,
+        ISequence<?> focus) {
+      return ObjectUtils.notNull(item.values().stream());
     }
   }
 
@@ -147,18 +185,18 @@ public abstract class AbstractLookup implements IExpression {
     }
 
     @Override
-    public Stream<? extends ICollectionValue> lookupInArray(
+    public Stream<ICollectionValue> lookupInArray(
         IArrayItem<?> item,
         DynamicContext dynamicContext,
         ISequence<?> focus) {
       ISequence<IAnyAtomicItem> keys = FnData.fnData(getKeyExpression().accept(dynamicContext, focus));
 
-      return keys.stream()
-          .map(key -> {
+      return ObjectUtils.notNull(keys.stream()
+          .flatMap(key -> {
             if (key instanceof IIntegerItem) {
-              int index = ((IIntegerItem) key).asInteger().intValueExact() - 1;
+              int index = ((IIntegerItem) key).asInteger().intValueExact();
               try {
-                return item.get(index);
+                return Stream.ofNullable(ArrayGet.get(item, index));
               } catch (IndexOutOfBoundsException ex) {
                 throw new ArrayException(
                     ArrayException.INDEX_OUT_OF_BOUNDS,
@@ -173,8 +211,21 @@ public abstract class AbstractLookup implements IExpression {
                     key.asString(),
                     key.getClass().getName()));
 
+          }));
+    }
+
+    @Override
+    public Stream<ICollectionValue> lookupInMap(
+        IMapItem<?> item,
+        DynamicContext dynamicContext,
+        ISequence<?> focus) {
+      ISequence<? extends IAnyAtomicItem> keys
+          = ObjectUtils.requireNonNull(FnData.fnData(getKeyExpression().accept(dynamicContext, focus)));
+
+      return keys.stream()
+          .flatMap(key -> {
+            return Stream.ofNullable(MapGet.get(item, key));
           });
     }
   }
-
 }

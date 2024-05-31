@@ -43,11 +43,14 @@ import java.util.stream.Collectors;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
-public class ArrayJoin {
+public final class ArrayJoin {
   @NonNull
   public static final IFunction SIGNATURE = IFunction.builder()
       .name("join")
       .namespace(MetapathConstants.NS_METAPATH_FUNCTIONS_ARRAY)
+      .deterministic()
+      .contextIndependent()
+      .focusIndependent()
       .argument(IArgument.builder()
           .name("array")
           .type(IArrayItem.class)
@@ -57,6 +60,10 @@ public class ArrayJoin {
       .returnZeroOrOne()
       .functionHandler(ArrayJoin::execute)
       .build();
+
+  private ArrayJoin() {
+    // disable construction
+  }
 
   @SuppressWarnings("unused")
   @NonNull
@@ -83,7 +90,7 @@ public class ArrayJoin {
   public static <T extends ICollectionValue> IArrayItem<T> join(
       @NonNull Collection<? extends IArrayItem<T>> arrays) {
     return IArrayItem.ofCollection(ObjectUtils.notNull(arrays.stream()
-        .flatMap(array -> array.stream())
+        .flatMap(Collection::stream)
         .collect(Collectors.toList())));
   }
 }

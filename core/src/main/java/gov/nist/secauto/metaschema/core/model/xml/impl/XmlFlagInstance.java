@@ -136,7 +136,7 @@ class XmlFlagInstance
   @Override
   public boolean isRequired() {
     return getXmlObject().isSetRequired() ? getXmlObject().getRequired()
-        : IFlagInstance.DEFAULT_FLAG_REQUIRED;
+        : DEFAULT_FLAG_REQUIRED;
   }
 
   // -------------------------------------

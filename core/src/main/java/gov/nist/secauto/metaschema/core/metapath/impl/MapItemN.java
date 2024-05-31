@@ -24,41 +24,34 @@
  * OF THE RESULTS OF, OR USE OF, THE SOFTWARE OR SERVICES PROVIDED HEREUNDER.
  */
 
-package gov.nist.secauto.metaschema.core.metapath.cst;
+package gov.nist.secauto.metaschema.core.metapath.impl;
 
-import gov.nist.secauto.metaschema.core.metapath.DynamicContext;
-import gov.nist.secauto.metaschema.core.metapath.ISequence;
-import gov.nist.secauto.metaschema.core.metapath.item.IItem;
-import gov.nist.secauto.metaschema.core.metapath.item.function.IArrayItem;
+import gov.nist.secauto.metaschema.core.metapath.ICollectionValue;
+import gov.nist.secauto.metaschema.core.metapath.item.function.IMapKey;
+import gov.nist.secauto.metaschema.core.util.CollectionUtil;
+import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 
-import java.util.List;
+import java.util.Map;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
-public class ArraySquare implements IExpression {
+public class MapItemN<VALUE extends ICollectionValue>
+    extends AbstractMapItem<VALUE> {
   @NonNull
-  private final List<IExpression> children;
+  private final Map<IMapKey, VALUE> entries;
 
-  public ArraySquare(@NonNull List<IExpression> children) {
-    this.children = children;
+  @SafeVarargs
+  public MapItemN(@NonNull Map.Entry<IMapKey, ? extends VALUE>... entries) {
+    this(ObjectUtils.notNull(Map.ofEntries(entries)));
+  }
+
+  public MapItemN(@NonNull Map<IMapKey, VALUE> entries) {
+
+    this.entries = CollectionUtil.unmodifiableMap(entries);
   }
 
   @Override
-  public List<? extends IExpression> getChildren() {
-    return children;
+  public Map<IMapKey, VALUE> getValue() {
+    return entries;
   }
-
-  @Override
-  public ISequence<? extends IItem> accept(DynamicContext dynamicContext, ISequence<?> focus) {
-    return ISequence.of(getChildren().stream()
-        .map(expr -> expr.accept(dynamicContext, focus))
-        .map(ISequence::toArrayMember)
-        .collect(IArrayItem.toArrayItem()));
-  }
-
-  @Override
-  public <RESULT, CONTEXT> RESULT accept(IExpressionVisitor<RESULT, CONTEXT> visitor, CONTEXT context) {
-    return visitor.visitArray(this, context);
-  }
-
 }

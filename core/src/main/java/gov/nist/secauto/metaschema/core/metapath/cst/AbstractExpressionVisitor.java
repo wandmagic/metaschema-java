@@ -58,7 +58,7 @@ import edu.umd.cs.findbugs.annotations.Nullable;
  * @param <CONTEXT>
  *          additional state to pass between nodes visited
  */
-@SuppressWarnings("PMD.CouplingBetweenObjects")
+@SuppressWarnings({ "PMD.CouplingBetweenObjects", "PMD.ExcessivePublicCount" })
 public abstract class AbstractExpressionVisitor<RESULT, CONTEXT> implements IExpressionVisitor<RESULT, CONTEXT> {
 
   /**
@@ -354,12 +354,22 @@ public abstract class AbstractExpressionVisitor<RESULT, CONTEXT> implements IExp
   }
 
   @Override
-  public RESULT visitArray(ArraySequence expr, CONTEXT context) {
+  public RESULT visitMapConstructor(MapConstructor expr, CONTEXT context) {
     return visitChildren(expr, context);
   }
 
   @Override
-  public RESULT visitArray(ArraySquare expr, CONTEXT context) {
+  public RESULT visitMapConstructorEntry(MapConstructor.Entry expr, CONTEXT context) {
+    return visitChildren(expr, context);
+  }
+
+  @Override
+  public RESULT visitArray(ArraySequenceConstructor expr, CONTEXT context) {
+    return visitChildren(expr, context);
+  }
+
+  @Override
+  public RESULT visitArray(ArraySquareConstructor expr, CONTEXT context) {
     return visitChildren(expr, context);
   }
 

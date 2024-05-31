@@ -41,11 +41,14 @@ import java.util.List;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 
-public class ArrayTail {
+public final class ArrayTail {
   @NonNull
   static final IFunction SIGNATURE = IFunction.builder()
       .name("tail")
       .namespace(MetapathConstants.NS_METAPATH_FUNCTIONS_ARRAY)
+      .deterministic()
+      .contextIndependent()
+      .focusIndependent()
       .argument(IArgument.builder()
           .name("array")
           .type(IArrayItem.class)
@@ -55,6 +58,10 @@ public class ArrayTail {
       .returnZeroOrOne()
       .functionHandler(ArrayTail::execute)
       .build();
+
+  private ArrayTail() {
+    // disable construction
+  }
 
   @SuppressWarnings("unused")
   @NonNull

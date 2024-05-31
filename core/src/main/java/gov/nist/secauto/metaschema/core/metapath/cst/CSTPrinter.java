@@ -66,6 +66,7 @@ public final class CSTPrinter {
     return new CSTPrinterVisitor().visit(expr);
   }
 
+  @SuppressWarnings("PMD.ExcessivePublicCount")
   private static final class CSTPrinterVisitor
       extends AbstractExpressionVisitor<String, State> {
 
@@ -337,12 +338,12 @@ public final class CSTPrinter {
     }
 
     @Override
-    public String visitArray(ArraySequence expr, State context) {
+    public String visitArray(ArraySequenceConstructor expr, State context) {
       return appendNode(expr, super.visitArray(expr, context), context);
     }
 
     @Override
-    public String visitArray(ArraySquare expr, State context) {
+    public String visitArray(ArraySquareConstructor expr, State context) {
       return appendNode(expr, super.visitArray(expr, context), context);
     }
 
@@ -361,6 +362,15 @@ public final class CSTPrinter {
       return appendNode(expr, super.visitUnaryLookup(expr, context), context);
     }
 
+    @Override
+    public String visitMapConstructor(MapConstructor expr, State context) {
+      return appendNode(expr, super.visitMapConstructor(expr, context), context);
+    }
+
+    @Override
+    public String visitMapConstructorEntry(MapConstructor.Entry expr, State context) {
+      return appendNode(expr, super.visitMapConstructorEntry(expr, context), context);
+    }
   }
 
   static class State {

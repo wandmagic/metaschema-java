@@ -24,16 +24,20 @@
  * OF THE RESULTS OF, OR USE OF, THE SOFTWARE OR SERVICES PROVIDED HEREUNDER.
  */
 
-package gov.nist.secauto.metaschema.core.metapath;
+package gov.nist.secauto.metaschema.core.metapath.item.function;
+
+import gov.nist.secauto.metaschema.core.metapath.item.atomic.IAnyAtomicItem;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
-public interface IStringValued {
-  /**
-   * Get the string value.
-   *
-   * @return the string value
-   */
+public interface IMapKey {
+
   @NonNull
-  String asString();
+  IAnyAtomicItem getKey();
+
+  @Override
+  int hashCode();
+
+  @Override
+  boolean equals(Object obj);
 }

@@ -33,6 +33,6 @@ public abstract class AbstractGlobalFlagDefinition<MODULE extends IModule, INSTA
     implements IFlagDefinition {
 
   protected AbstractGlobalFlagDefinition(@NonNull MODULE module) {
-    super(module, name -> module.toFlagQName(name));
+    super(module, module::toFlagQName);
   }
 }

@@ -42,11 +42,14 @@ import java.util.List;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
-public class ArrayAppend {
+public final class ArrayAppend {
   @NonNull
   public static final IFunction SIGNATURE = IFunction.builder()
       .name("append")
       .namespace(MetapathConstants.NS_METAPATH_FUNCTIONS_ARRAY)
+      .deterministic()
+      .contextIndependent()
+      .focusIndependent()
       .argument(IArgument.builder()
           .name("array")
           .type(IArrayItem.class)
@@ -62,6 +65,10 @@ public class ArrayAppend {
       .functionHandler(ArrayAppend::execute)
       .build();
 
+  private ArrayAppend() {
+    // disable construction
+  }
+
   @SuppressWarnings("unused")
   @NonNull
   private static <T extends ICollectionValue> ISequence<IArrayItem<T>> execute(@NonNull IFunction function,
@@ -70,7 +77,7 @@ public class ArrayAppend {
       IItem focus) {
     IArrayItem<T> array = FunctionUtils.asType(ObjectUtils.requireNonNull(
         arguments.get(0).getFirstItem(true)));
-    @SuppressWarnings("unchecked") T appendage = (T) arguments.get(1).toArrayMember();
+    @SuppressWarnings("unchecked") T appendage = (T) arguments.get(1).toCollectionValue();
 
     return ISequence.of(append(array, appendage));
   }

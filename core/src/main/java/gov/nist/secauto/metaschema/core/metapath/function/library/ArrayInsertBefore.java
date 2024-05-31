@@ -43,11 +43,14 @@ import java.util.List;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
-public class ArrayInsertBefore {
+public final class ArrayInsertBefore {
   @NonNull
   public static final IFunction SIGNATURE = IFunction.builder()
       .name("insert-before")
       .namespace(MetapathConstants.NS_METAPATH_FUNCTIONS_ARRAY)
+      .deterministic()
+      .contextIndependent()
+      .focusIndependent()
       .argument(IArgument.builder()
           .name("array")
           .type(IArrayItem.class)
@@ -68,6 +71,10 @@ public class ArrayInsertBefore {
       .functionHandler(ArrayInsertBefore::execute)
       .build();
 
+  private ArrayInsertBefore() {
+    // disable construction
+  }
+
   @SuppressWarnings("unused")
   @NonNull
   private static <T extends ICollectionValue> ISequence<IArrayItem<T>> execute(@NonNull IFunction function,
@@ -77,7 +84,7 @@ public class ArrayInsertBefore {
     IArrayItem<T> array = FunctionUtils.asType(ObjectUtils.requireNonNull(
         arguments.get(0).getFirstItem(true)));
     IIntegerItem position = FunctionUtils.asType(ObjectUtils.requireNonNull(arguments.get(1).getFirstItem(true)));
-    @SuppressWarnings("unchecked") T member = (T) ObjectUtils.requireNonNull(arguments.get(2)).toArrayMember();
+    @SuppressWarnings("unchecked") T member = (T) ObjectUtils.requireNonNull(arguments.get(2)).toCollectionValue();
 
     return ISequence.of(insertBefore(array, position, member));
   }

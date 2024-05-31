@@ -284,7 +284,7 @@ public class DefaultFunction
       Stream<? extends IItem> stream = sequence.safeStream();
 
       if (IAnyAtomicItem.class.isAssignableFrom(requiredSequenceTypeClass)) {
-        Stream<? extends IAnyAtomicItem> atomicStream = stream.flatMap(item -> FnData.atomize(item));
+        Stream<? extends IAnyAtomicItem> atomicStream = stream.flatMap(FnData::atomize);
 
         // if (IUntypedAtomicItem.class.isInstance(item)) { // NOPMD
         // // TODO: apply cast to atomic type

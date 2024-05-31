@@ -40,7 +40,9 @@ public interface ICollectionValue {
 
   @NonNull
   static Stream<? extends IItem> normalizeAsItems(@NonNull ICollectionValue value) {
-    return value instanceof IItem ? ObjectUtils.notNull(Stream.of((IItem) value)) : value.asSequence().stream();
+    return value instanceof IItem
+        ? ObjectUtils.notNull(Stream.of((IItem) value))
+        : value.asSequence().stream();
   }
 
   @NonNull

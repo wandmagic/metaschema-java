@@ -44,11 +44,14 @@ import java.util.List;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
-public class ArraySubarray {
+public final class ArraySubarray {
   @NonNull
   public static final IFunction SIGNATURE_TWO_ARG = IFunction.builder()
       .name("subarray")
       .namespace(MetapathConstants.NS_METAPATH_FUNCTIONS_ARRAY)
+      .deterministic()
+      .contextIndependent()
+      .focusIndependent()
       .argument(IArgument.builder()
           .name("array")
           .type(IArrayItem.class)
@@ -67,6 +70,9 @@ public class ArraySubarray {
   public static final IFunction SIGNATURE_THREE_ARG = IFunction.builder()
       .name("subarray")
       .namespace(MetapathConstants.NS_METAPATH_FUNCTIONS_ARRAY)
+      .deterministic()
+      .contextIndependent()
+      .focusIndependent()
       .argument(IArgument.builder()
           .name("array")
           .type(IArrayItem.class)
@@ -86,6 +92,10 @@ public class ArraySubarray {
       .returnOne()
       .functionHandler(ArraySubarray::executeThreeArg)
       .build();
+
+  private ArraySubarray() {
+    // disable construction
+  }
 
   @SuppressWarnings("unused")
   @NonNull

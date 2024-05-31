@@ -48,6 +48,6 @@ public abstract class AbstractGlobalAssemblyDefinition<
         CHOICE_GROUP> {
 
   protected AbstractGlobalAssemblyDefinition(@NonNull MODULE module) {
-    super(module, name -> module.toModelQName(name));
+    super(module, module::toModelQName);
   }
 }

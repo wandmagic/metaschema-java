@@ -150,8 +150,7 @@ class XmlInlineFlagDefinition
 
   @Override
   public boolean isRequired() {
-    return getXmlObject().isSetRequired() ? getXmlObject().getRequired()
-        : IFlagInstance.DEFAULT_FLAG_REQUIRED;
+    return getXmlObject().isSetRequired() ? getXmlObject().getRequired() : DEFAULT_FLAG_REQUIRED;
   }
 
   @SuppressWarnings("null")

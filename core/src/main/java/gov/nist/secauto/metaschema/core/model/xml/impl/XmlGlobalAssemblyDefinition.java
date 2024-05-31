@@ -36,7 +36,6 @@ import gov.nist.secauto.metaschema.core.model.IChoiceGroupInstance;
 import gov.nist.secauto.metaschema.core.model.IChoiceInstance;
 import gov.nist.secauto.metaschema.core.model.IContainerFlagSupport;
 import gov.nist.secauto.metaschema.core.model.IContainerModelAssemblySupport;
-import gov.nist.secauto.metaschema.core.model.IDefinition;
 import gov.nist.secauto.metaschema.core.model.IFieldInstanceAbsolute;
 import gov.nist.secauto.metaschema.core.model.IFlagInstance;
 import gov.nist.secauto.metaschema.core.model.IModelInstanceAbsolute;
@@ -215,7 +214,7 @@ class XmlGlobalAssemblyDefinition
   @SuppressWarnings("null")
   @Override
   public ModuleScopeEnum getModuleScope() {
-    return getXmlObject().isSetScope() ? getXmlObject().getScope() : IDefinition.DEFAULT_DEFINITION_MODEL_SCOPE;
+    return getXmlObject().isSetScope() ? getXmlObject().getScope() : DEFAULT_DEFINITION_MODEL_SCOPE;
   }
 
   @SuppressWarnings("null")

@@ -52,6 +52,8 @@ import gov.nist.secauto.metaschema.core.metapath.antlr.Metapath10.KeyspecifierCo
 import gov.nist.secauto.metaschema.core.metapath.antlr.Metapath10.LetexprContext;
 import gov.nist.secauto.metaschema.core.metapath.antlr.Metapath10.LiteralContext;
 import gov.nist.secauto.metaschema.core.metapath.antlr.Metapath10.LookupContext;
+import gov.nist.secauto.metaschema.core.metapath.antlr.Metapath10.MapconstructorContext;
+import gov.nist.secauto.metaschema.core.metapath.antlr.Metapath10.MapconstructorentryContext;
 import gov.nist.secauto.metaschema.core.metapath.antlr.Metapath10.MultiplicativeexprContext;
 import gov.nist.secauto.metaschema.core.metapath.antlr.Metapath10.NametestContext;
 import gov.nist.secauto.metaschema.core.metapath.antlr.Metapath10.NodetestContext;
@@ -265,32 +267,54 @@ public class BuildCSTVisitor
     return retval;
   }
 
+  // ======================================================================
+  // Map Constructors - https://www.w3.org/TR/xpath-31/#id-map-constructors
+  // ======================================================================
+
+  @Override
+  protected MapConstructor handleMapConstructor(MapconstructorContext context) {
+    return context.getChildCount() == 3
+        // empty
+        ? new MapConstructor(CollectionUtil.emptyList())
+        // with members
+        : nairyToCollection(context, 3, 2,
+            (ctx, idx) -> {
+              int pos = (idx - 3) / 2;
+              MapconstructorentryContext entry = ctx.mapconstructorentry(pos);
+              assert entry != null;
+              return new MapConstructor.Entry(entry.mapkeyexpr().accept(this), entry.mapvalueexpr().accept(this));
+            },
+            children -> {
+              assert children != null;
+              return new MapConstructor(children);
+            });
+  }
+
   // ==============================================================
   // Array Constructors - https://www.w3.org/TR/xpath-31/#id-arrays
   // ==============================================================
 
   @Override
   protected IExpression handleArrayConstructor(SquarearrayconstructorContext context) {
-    if (context.getChildCount() == 2) {
-      // empty
-      return new ArraySquare(CollectionUtil.emptyList());
-    }
-
-    return nAiryToCollection(context, 1, 2,
-        (ctx, idx) -> {
-          int pos = (idx - 1) / 2;
-          ParseTree tree = ctx.exprsingle(pos);
-          return visit(tree);
-        },
-        children -> {
-          assert children != null;
-          return new ArraySquare(children);
-        });
+    return context.getChildCount() == 2
+        // empty
+        ? new ArraySquareConstructor(CollectionUtil.emptyList())
+        // with members
+        : nairyToCollection(context, 1, 2,
+            (ctx, idx) -> {
+              int pos = (idx - 1) / 2;
+              ParseTree tree = ctx.exprsingle(pos);
+              return visit(tree);
+            },
+            children -> {
+              assert children != null;
+              return new ArraySquareConstructor(children);
+            });
   }
 
   @Override
   protected IExpression handleArrayConstructor(CurlyarrayconstructorContext ctx) {
-    return new ArraySequence(visit(ctx.enclosedexpr()));
+    return new ArraySequenceConstructor(visit(ctx.enclosedexpr()));
   }
 
   // ===============================================

@@ -36,6 +36,6 @@ public abstract class AbstractGlobalFieldDefinition<
     implements IFieldDefinition, IFeatureContainerFlag<FLAG> {
 
   protected AbstractGlobalFieldDefinition(@NonNull MODULE module) {
-    super(module, name -> module.toModelQName(name));
+    super(module, module::toModelQName);
   }
 }

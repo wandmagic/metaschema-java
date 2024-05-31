@@ -58,6 +58,7 @@ import edu.umd.cs.findbugs.annotations.NonNull;
  * @param <CONTEXT>
  *          additional state to pass between nodes visited
  */
+@SuppressWarnings("PMD.ExcessivePublicCount")
 public interface IExpressionVisitor<RESULT, CONTEXT> {
 
   /**
@@ -520,7 +521,7 @@ public interface IExpressionVisitor<RESULT, CONTEXT> {
    *          the processing context
    * @return the visitation result or {@code null} if no result was produced
    */
-  RESULT visitArray(@NonNull ArraySequence expr, @NonNull CONTEXT context);
+  RESULT visitMapConstructor(@NonNull MapConstructor expr, @NonNull CONTEXT context);
 
   /**
    * Visit the CST node.
@@ -531,7 +532,29 @@ public interface IExpressionVisitor<RESULT, CONTEXT> {
    *          the processing context
    * @return the visitation result or {@code null} if no result was produced
    */
-  RESULT visitArray(@NonNull ArraySquare expr, @NonNull CONTEXT context);
+  RESULT visitMapConstructorEntry(@NonNull MapConstructor.Entry expr, @NonNull CONTEXT context);
+
+  /**
+   * Visit the CST node.
+   *
+   * @param expr
+   *          the CST node to visit
+   * @param context
+   *          the processing context
+   * @return the visitation result or {@code null} if no result was produced
+   */
+  RESULT visitArray(@NonNull ArraySequenceConstructor expr, @NonNull CONTEXT context);
+
+  /**
+   * Visit the CST node.
+   *
+   * @param expr
+   *          the CST node to visit
+   * @param context
+   *          the processing context
+   * @return the visitation result or {@code null} if no result was produced
+   */
+  RESULT visitArray(@NonNull ArraySquareConstructor expr, @NonNull CONTEXT context);
 
   /**
    * Visit the CST node.

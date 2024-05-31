@@ -60,7 +60,7 @@ import edu.umd.cs.findbugs.annotations.Nullable;
  *          the Java type of the items in a sequence
  */
 @SuppressWarnings("PMD.ShortMethodName")
-public interface ISequence<ITEM extends IItem> extends List<ITEM>, IStringValued, ICollectionValue {
+public interface ISequence<ITEM extends IItem> extends List<ITEM>, IPrintable, ICollectionValue {
   /**
    * Get an empty sequence.
    *
@@ -154,11 +154,11 @@ public interface ISequence<ITEM extends IItem> extends List<ITEM>, IStringValued
   }
 
   @NonNull
-  default ICollectionValue toArrayMember() {
+  default ICollectionValue toCollectionValue() {
     ICollectionValue retval;
     switch (size()) {
     case 0:
-      retval = ISequence.empty();
+      retval = empty();
       break;
     case 1:
       retval = ObjectUtils.notNull(stream().findFirst().get());
@@ -255,23 +255,6 @@ public interface ISequence<ITEM extends IItem> extends List<ITEM>, IStringValued
   }
 
   /**
-   * Returns an unmodifiable sequence containing the provided {@code item}.
-   * <p>
-   * If the item is {@code null} and empty sequence will be created.
-   *
-   * @param <T>
-   *          the type of items contained in the sequence.
-   * @param item
-   *          the item to add to the sequence
-   * @return the new sequence
-   */
-  @NonNull
-  static <T extends IItem> ISequence<T> of( // NOPMD - intentional
-      @Nullable T item) {
-    return item == null ? empty() : new SingletonSequence<>(item);
-  }
-
-  /**
    * Returns an unmodifiable sequence containing the provided {@code items}.
    *
    * @param <ITEM_TYPE>
@@ -295,6 +278,23 @@ public interface ISequence<ITEM extends IItem> extends List<ITEM>, IStringValued
   }
 
   /**
+   * Returns an unmodifiable sequence containing the provided {@code item}.
+   * <p>
+   * If the item is {@code null} and empty sequence will be created.
+   *
+   * @param <T>
+   *          the type of items contained in the sequence.
+   * @param item
+   *          the item to add to the sequence
+   * @return the new sequence
+   */
+  @NonNull
+  static <T extends IItem> ISequence<T> of( // NOPMD - intentional
+      @Nullable T item) {
+    return item == null ? empty() : new SingletonSequence<>(item);
+  }
+
+  /**
    * Returns an unmodifiable sequence containing the provided {@code items}.
    *
    * @param <T>
@@ -305,9 +305,8 @@ public interface ISequence<ITEM extends IItem> extends List<ITEM>, IStringValued
    */
   // TODO: remove null check on callers
   @NonNull
-  static <T extends IItem> ISequence<T> of( // NOPMD - intentional
-      Stream<T> items) {
-    return items == null ? empty() : new StreamSequence<>(items);
+  static <T extends IItem> ISequence<T> of(@NonNull Stream<T> items) {
+    return new StreamSequence<>(items);
   }
 
   /**

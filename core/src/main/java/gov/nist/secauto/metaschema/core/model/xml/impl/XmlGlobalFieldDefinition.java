@@ -33,7 +33,6 @@ import gov.nist.secauto.metaschema.core.datatype.markup.MarkupMultiline;
 import gov.nist.secauto.metaschema.core.model.AbstractGlobalFieldDefinition;
 import gov.nist.secauto.metaschema.core.model.IAttributable;
 import gov.nist.secauto.metaschema.core.model.IContainerFlagSupport;
-import gov.nist.secauto.metaschema.core.model.IDefinition;
 import gov.nist.secauto.metaschema.core.model.IFieldInstance;
 import gov.nist.secauto.metaschema.core.model.IFlagInstance;
 import gov.nist.secauto.metaschema.core.model.ModuleScopeEnum;
@@ -212,7 +211,7 @@ class XmlGlobalFieldDefinition
   @SuppressWarnings("null")
   @Override
   public ModuleScopeEnum getModuleScope() {
-    return getXmlObject().isSetScope() ? getXmlObject().getScope() : IDefinition.DEFAULT_DEFINITION_MODEL_SCOPE;
+    return getXmlObject().isSetScope() ? getXmlObject().getScope() : DEFAULT_DEFINITION_MODEL_SCOPE;
   }
 
   @SuppressWarnings("null")

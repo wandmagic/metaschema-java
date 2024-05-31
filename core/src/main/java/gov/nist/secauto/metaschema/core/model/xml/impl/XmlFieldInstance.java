@@ -91,7 +91,7 @@ class XmlFieldInstance
 
   @Override
   public boolean isInXmlWrapped() {
-    return getXmlObject().getInXml().booleanValue();
+    return getXmlObject().getInXml();
   }
 
   @Override

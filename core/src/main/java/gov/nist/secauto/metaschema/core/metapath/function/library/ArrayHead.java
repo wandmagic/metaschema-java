@@ -42,11 +42,14 @@ import java.util.List;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 
-public class ArrayHead {
+public final class ArrayHead {
   @NonNull
   static final IFunction SIGNATURE = IFunction.builder()
       .name("head")
       .namespace(MetapathConstants.NS_METAPATH_FUNCTIONS_ARRAY)
+      .deterministic()
+      .contextIndependent()
+      .focusIndependent()
       .argument(IArgument.builder()
           .name("array")
           .type(IArrayItem.class)
@@ -56,6 +59,10 @@ public class ArrayHead {
       .returnZeroOrOne()
       .functionHandler(ArrayHead::execute)
       .build();
+
+  private ArrayHead() {
+    // disable construction
+  }
 
   @SuppressWarnings("unused")
   @NonNull

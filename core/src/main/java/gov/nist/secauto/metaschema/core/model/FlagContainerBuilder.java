@@ -66,7 +66,7 @@ public class FlagContainerBuilder<T extends IFlagInstance> implements IFlagConta
 
   @Override
   public IContainerFlagSupport<T> build() {
-    IContainerFlagSupport<T> retval = null;
+    IContainerFlagSupport<T> retval;
     if (flags.isEmpty()) {
       retval = IContainerFlagSupport.empty();
     } else {

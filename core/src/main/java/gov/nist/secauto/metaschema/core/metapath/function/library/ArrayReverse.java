@@ -43,11 +43,14 @@ import java.util.List;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
-public class ArrayReverse {
+public final class ArrayReverse {
   @NonNull
   public static final IFunction SIGNATURE = IFunction.builder()
       .name("reverse")
       .namespace(MetapathConstants.NS_METAPATH_FUNCTIONS_ARRAY)
+      .deterministic()
+      .contextIndependent()
+      .focusIndependent()
       .argument(IArgument.builder()
           .name("array")
           .type(IArrayItem.class)
@@ -57,6 +60,10 @@ public class ArrayReverse {
       .returnOne()
       .functionHandler(ArrayReverse::execute)
       .build();
+
+  private ArrayReverse() {
+    // disable construction
+  }
 
   @SuppressWarnings("unused")
   @NonNull
