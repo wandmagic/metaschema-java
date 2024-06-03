@@ -188,7 +188,14 @@ public class DynamicContext { // NOPMD - intentional data class
 
   @NonNull
   public ISequence<?> getVariableValue(@NonNull QName name) {
-    return ObjectUtils.requireNonNull(letVariableMap.get(name));
+    ISequence<?> retval = letVariableMap.get(name);
+    if (retval == null) {
+      if (!letVariableMap.containsKey(name)) {
+        throw new MetapathException(String.format("Variable '%s' not defined in context.", name));
+      }
+      throw new MetapathException(String.format("Variable '%s' has null contents.", name));
+    }
+    return retval;
   }
 
   /**

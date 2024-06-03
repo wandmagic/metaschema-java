@@ -786,6 +786,10 @@ public class DefaultConstraintValidator implements IConstraintValidator { // NOP
         for (ILet let : lets) {
           QName name = let.getName();
           ISequence<?> result = let.getValueExpression().evaluate(focus, subContext);
+
+          // ensure the sequence is list backed
+          result.getValue();
+
           subContext.bindVariableValue(name, result);
         }
         retval = subContext;

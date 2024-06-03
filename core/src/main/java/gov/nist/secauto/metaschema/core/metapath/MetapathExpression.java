@@ -88,7 +88,12 @@ public class MetapathExpression {
     /**
      * The result is expected to be an {@link INodeItem} value.
      */
-    NODE;
+    // TODO: audit use of this value, replace with ITEM where appropriate
+    NODE,
+    /**
+     * The result is expected to be an {@link IItem} value.
+     */
+    ITEM;
   }
 
   private static final Logger LOGGER = LogManager.getLogger(MetapathExpression.class);
@@ -345,6 +350,7 @@ public class MetapathExpression {
     case BOOLEAN:
       result = FnBoolean.fnBoolean(sequence).toBoolean();
       break;
+    case ITEM:
     case NODE:
       result = sequence.getFirstItem(true);
       break;

@@ -142,7 +142,7 @@ public final class FnData {
    * @return the atomized result
    */
   @NonNull
-  public static IAnyAtomicItem fnDataItem(@NonNull INodeItem item) {
+  public static IAnyAtomicItem fnDataItem(@NonNull IItem item) {
     IAnyAtomicItem retval = null;
     if (item instanceof IAtomicValuedItem) {
       retval = ((IAtomicValuedItem) item).toAtomicItem();

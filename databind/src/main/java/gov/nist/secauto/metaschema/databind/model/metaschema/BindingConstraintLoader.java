@@ -335,6 +335,7 @@ public class BindingConstraintLoader
      *          the definition to apply the constraints to.
      */
     protected void applyTo(@NonNull IDefinition definition) {
+      getLetExpressions().values().forEach(definition::addLetExpression);
       getAllowedValuesConstraints().forEach(definition::addConstraint);
       getMatchesConstraints().forEach(definition::addConstraint);
       getIndexHasKeyConstraints().forEach(definition::addConstraint);

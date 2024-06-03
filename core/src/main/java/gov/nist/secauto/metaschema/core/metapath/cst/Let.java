@@ -141,6 +141,10 @@ public class Let implements IExpression {
         @NonNull DynamicContext boundContext) {
 
       ISequence<?> result = getBoundExpression().accept(evalContext, focus);
+
+      // ensure this sequence is list backed
+      result.getValue();
+
       boundContext.bindVariableValue(getName(), result);
     }
   }
