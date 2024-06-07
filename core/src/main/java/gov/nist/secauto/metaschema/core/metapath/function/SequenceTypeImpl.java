@@ -27,6 +27,7 @@
 package gov.nist.secauto.metaschema.core.metapath.function;
 
 import gov.nist.secauto.metaschema.core.metapath.item.IItem;
+import gov.nist.secauto.metaschema.core.metapath.item.TypeSystem;
 
 import java.util.Objects;
 
@@ -67,8 +68,11 @@ class SequenceTypeImpl implements ISequenceType {
   public String toSignature() {
     StringBuilder builder = new StringBuilder();
 
+    Class<? extends IItem> type = getType();
     // name
-    builder.append(getType().getName())
+    builder.append(type == null
+        ? ""
+        : TypeSystem.getName(type))
         // occurrence
         .append(getOccurrence().getIndicator());
 

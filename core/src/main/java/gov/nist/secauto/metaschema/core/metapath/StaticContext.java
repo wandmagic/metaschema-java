@@ -32,6 +32,7 @@ import gov.nist.secauto.metaschema.core.util.CollectionUtil;
 import java.net.URI;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 import javax.xml.XMLConstants;
 
@@ -47,6 +48,8 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 public final class StaticContext {
   @NonNull
   private static final Map<String, URI> WELL_KNOWN_NAMESPACES;
+  @NonNull
+  private static final Map<String, String> WELL_KNOWN_URI_TO_PREFIX;
 
   static {
     Map<String, URI> knownNamespaces = new ConcurrentHashMap<>();
@@ -69,6 +72,12 @@ public final class StaticContext {
         MetapathConstants.PREFIX_XPATH_FUNCTIONS_MAP,
         MetapathConstants.NS_METAPATH_FUNCTIONS_MAP);
     WELL_KNOWN_NAMESPACES = CollectionUtil.unmodifiableMap(knownNamespaces);
+
+    WELL_KNOWN_URI_TO_PREFIX = WELL_KNOWN_NAMESPACES.entrySet().stream()
+        .collect(Collectors.toUnmodifiableMap(
+            entry -> entry.getValue().toASCIIString(),
+            Map.Entry::getKey,
+            (v1, v2) -> v2));
   }
 
   @Nullable
@@ -92,6 +101,22 @@ public final class StaticContext {
   @SuppressFBWarnings("MS_EXPOSE_REP")
   public static Map<String, URI> getWellKnownNamespaces() {
     return WELL_KNOWN_NAMESPACES;
+  }
+
+  /**
+   * Get the mapping of namespace URIs to prefixes for all well-known namespaces
+   * provided by default to the static context.
+   *
+   * @return the mapping of namespace URI to prefix for all well-known namespaces
+   */
+  @SuppressFBWarnings("MS_EXPOSE_REP")
+  public static Map<String, String> getWellKnownURIToPrefix() {
+    return WELL_KNOWN_URI_TO_PREFIX;
+  }
+
+  @Nullable
+  public static String getWellKnownPrefixForUri(String uri) {
+    return WELL_KNOWN_URI_TO_PREFIX.get(uri);
   }
 
   /**

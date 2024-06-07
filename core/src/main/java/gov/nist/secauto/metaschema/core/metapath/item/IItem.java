@@ -33,6 +33,7 @@ import gov.nist.secauto.metaschema.core.metapath.ISequence;
 import java.util.stream.Stream;
 
 public interface IItem extends ICollectionValue {
+
   /**
    * Get the item's "wrapped" value. This "wrapped" value may be:
    * <ul>

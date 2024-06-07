@@ -36,6 +36,8 @@ import gov.nist.secauto.metaschema.databind.model.annotations.NullJavaTypeAdapte
 
 import java.util.List;
 
+import javax.xml.namespace.QName;
+
 import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
@@ -77,7 +79,7 @@ public class NullJavaTypeAdapter
   }
 
   @Override
-  public List<String> getNames() {
+  public List<QName> getNames() {
     throw new UnsupportedOperationException(NOT_VALID);
   }
 
