@@ -181,7 +181,7 @@ public class DefaultBindingContext implements IBindingContext {
    * A serializer returned by this method is thread-safe.
    */
   @Override
-  public <CLASS> ISerializer<CLASS> newSerializer(@NonNull Format format, @NonNull Class<CLASS> clazz) {
+  public <CLASS> ISerializer<CLASS> newSerializer(@NonNull Format format, @NonNull Class<? extends CLASS> clazz) {
     Objects.requireNonNull(format, "format");
     IBoundDefinitionModelAssembly definition;
     try {

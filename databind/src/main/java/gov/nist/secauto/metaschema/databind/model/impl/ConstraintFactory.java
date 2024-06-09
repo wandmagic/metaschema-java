@@ -96,7 +96,7 @@ final class ConstraintFactory {
             .append("' is not properly contextualized using '.'. Using '")
             .append(newPath)
             .append("' instead.");
-        LOGGER.atInfo().log(builder.toString());
+        LOGGER.atWarn().log(builder.toString());
       }
       path = newPath;
     }

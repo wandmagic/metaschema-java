@@ -47,12 +47,17 @@ import org.apache.commons.cli.Option;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
@@ -138,9 +143,6 @@ public abstract class AbstractConvertSubcommand
     @NonNull
     protected abstract IBindingContext getBindingContext();
 
-    @NonNull
-    protected abstract Class<?> getLoadedClass();
-
     @SuppressWarnings({
         "PMD.OnlyOneReturn", // readability
         "PMD.CyclomaticComplexity", "PMD.CognitiveComplexity" // reasonable
@@ -202,9 +204,19 @@ public abstract class AbstractConvertSubcommand
         }
 
         if (destination == null) {
-          loader.convert(source, ObjectUtils.notNull(System.out), toFormat, getLoadedClass());
+          // write to STDOUT
+          OutputStreamWriter writer = new OutputStreamWriter(System.out, StandardCharsets.UTF_8);
+          handleConversion(source, toFormat, writer, loader);
         } else {
-          loader.convert(source, destination, toFormat, getLoadedClass());
+          try (Writer writer = Files.newBufferedWriter(
+              destination,
+              StandardCharsets.UTF_8,
+              StandardOpenOption.CREATE,
+              StandardOpenOption.WRITE,
+              StandardOpenOption.TRUNCATE_EXISTING)) {
+            assert writer != null;
+            handleConversion(source, toFormat, writer, loader);
+          }
         }
       } catch (IOException | IllegalArgumentException ex) {
         return ExitCode.PROCESSING_ERROR.exit().withThrowable(ex); // NOPMD readability
@@ -215,5 +227,10 @@ public abstract class AbstractConvertSubcommand
       return ExitCode.OK.exit();
     }
 
+    protected abstract void handleConversion(
+        @NonNull URI source,
+        @NonNull Format toFormat,
+        @NonNull Writer writer,
+        @NonNull IBoundLoader loader) throws FileNotFoundException, IOException;
   }
 }
