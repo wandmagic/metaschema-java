@@ -27,6 +27,7 @@
 package gov.nist.secauto.metaschema.databind.model.impl;
 
 import gov.nist.secauto.metaschema.core.model.AbstractChoiceGroupInstance;
+import gov.nist.secauto.metaschema.core.model.IBoundObject;
 import gov.nist.secauto.metaschema.core.model.IContainerModelSupport;
 import gov.nist.secauto.metaschema.core.util.CollectionUtil;
 import gov.nist.secauto.metaschema.core.util.CustomCollectors;
@@ -74,13 +75,13 @@ public final class InstanceModelChoiceGroup
         IBoundInstanceModelGroupedAssembly>
     // extends AbstractBoundInstanceModelJavaField<BoundChoiceGroup>
     implements IBoundInstanceModelChoiceGroup,
-    IFeatureBoundContainerModelChoiceGroup, IFeatureInstanceModelGroupAs {
+    IFeatureBoundContainerModelChoiceGroup, IFeatureInstanceModelGroupAs<IBoundObject> {
   @NonNull
   private final Field javaField;
   @NonNull
   private final BoundChoiceGroup annotation;
   @NonNull
-  private final Lazy<IModelInstanceCollectionInfo> collectionInfo;
+  private final Lazy<IModelInstanceCollectionInfo<IBoundObject>> collectionInfo;
   @NonNull
   private final IGroupAs groupAs;
   @NonNull
@@ -106,7 +107,7 @@ public final class InstanceModelChoiceGroup
       @NonNull Field javaField,
       @NonNull IBoundDefinitionModelAssembly parent) {
     BoundChoiceGroup annotation = ModelUtil.getAnnotation(javaField, BoundChoiceGroup.class);
-    IGroupAs groupAs = ModelUtil.groupAs(annotation.groupAs(), parent.getContainingModule());
+    IGroupAs groupAs = ModelUtil.resolveDefaultGroupAs(annotation.groupAs(), parent.getContainingModule());
     if (annotation.maxOccurs() == -1 || annotation.maxOccurs() > 1) {
       if (IGroupAs.SINGLETON_GROUP_AS.equals(groupAs)) {
         throw new IllegalStateException(String.format("Field '%s' on class '%s' is missing the '%s' annotation.",
@@ -176,7 +177,7 @@ public final class InstanceModelChoiceGroup
 
   @SuppressWarnings("null")
   @Override
-  public IModelInstanceCollectionInfo getCollectionInfo() {
+  public IModelInstanceCollectionInfo<IBoundObject> getCollectionInfo() {
     return collectionInfo.get();
   }
 

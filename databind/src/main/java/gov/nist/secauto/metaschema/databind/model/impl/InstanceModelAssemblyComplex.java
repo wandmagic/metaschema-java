@@ -29,6 +29,7 @@ package gov.nist.secauto.metaschema.databind.model.impl;
 import gov.nist.secauto.metaschema.core.datatype.markup.MarkupLine;
 import gov.nist.secauto.metaschema.core.datatype.markup.MarkupMultiline;
 import gov.nist.secauto.metaschema.core.model.AbstractAssemblyInstance;
+import gov.nist.secauto.metaschema.core.model.IBoundObject;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 import gov.nist.secauto.metaschema.databind.model.IBoundDefinitionModelAssembly;
 import gov.nist.secauto.metaschema.databind.model.IBoundInstanceFlag;
@@ -59,19 +60,19 @@ public final class InstanceModelAssemblyComplex
         IBoundDefinitionModelAssembly,
         IBoundInstanceModelAssembly,
         IBoundDefinitionModelAssembly>
-    implements IBoundInstanceModelAssembly, IFeatureInstanceModelGroupAs {
+    implements IBoundInstanceModelAssembly, IFeatureInstanceModelGroupAs<IBoundObject> {
   @NonNull
   private final Field javaField;
   @NonNull
   private final BoundAssembly annotation;
   @NonNull
-  private final Lazy<IModelInstanceCollectionInfo> collectionInfo;
+  private final Lazy<IModelInstanceCollectionInfo<IBoundObject>> collectionInfo;
   @NonNull
   private final IBoundDefinitionModelAssembly definition;
   @NonNull
   private final IGroupAs groupAs;
   @NonNull
-  private final Lazy<Map<String, IBoundProperty>> jsonProperties;
+  private final Lazy<Map<String, IBoundProperty<?>>> jsonProperties;
 
   /**
    * Construct a new field instance bound to a Java field, supported by a bound
@@ -91,7 +92,9 @@ public final class InstanceModelAssemblyComplex
       @NonNull IBoundDefinitionModelAssembly definition,
       @NonNull IBoundDefinitionModelAssembly containingDefinition) {
     BoundAssembly annotation = ModelUtil.getAnnotation(javaField, BoundAssembly.class);
-    IGroupAs groupAs = ModelUtil.groupAs(annotation.groupAs(), containingDefinition.getContainingModule());
+    IGroupAs groupAs = ModelUtil.resolveDefaultGroupAs(
+        annotation.groupAs(),
+        containingDefinition.getContainingModule());
     if (annotation.maxOccurs() == -1 || annotation.maxOccurs() > 1) {
       if (IGroupAs.SINGLETON_GROUP_AS.equals(groupAs)) {
         throw new IllegalStateException(String.format("Field '%s' on class '%s' is missing the '%s' annotation.",
@@ -148,7 +151,7 @@ public final class InstanceModelAssemblyComplex
 
   @SuppressWarnings("null")
   @Override
-  public IModelInstanceCollectionInfo getCollectionInfo() {
+  public IModelInstanceCollectionInfo<IBoundObject> getCollectionInfo() {
     return collectionInfo.get();
   }
 
@@ -157,7 +160,7 @@ public final class InstanceModelAssemblyComplex
   // ------------------------------------------
 
   @Override
-  public Map<String, IBoundProperty> getJsonProperties() {
+  public Map<String, IBoundProperty<?>> getJsonProperties() {
     return ObjectUtils.notNull(jsonProperties.get());
   }
 

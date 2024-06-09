@@ -26,6 +26,7 @@
 
 package gov.nist.secauto.metaschema.databind;
 
+import gov.nist.secauto.metaschema.core.model.IBoundObject;
 import gov.nist.secauto.metaschema.core.model.IModule;
 import gov.nist.secauto.metaschema.core.model.IModuleLoader;
 import gov.nist.secauto.metaschema.core.util.CollectionUtil;
@@ -57,7 +58,7 @@ class PostProcessingModuleLoaderStrategy
   }
 
   @Override
-  public IBoundDefinitionModelComplex getBoundDefinitionForClass(@NonNull Class<?> clazz) {
+  public IBoundDefinitionModelComplex getBoundDefinitionForClass(@NonNull Class<? extends IBoundObject> clazz) {
     IBoundDefinitionModelComplex retval = super.getBoundDefinitionForClass(clazz);
     if (retval != null) {
       // force loading of metaschema information to apply constraints

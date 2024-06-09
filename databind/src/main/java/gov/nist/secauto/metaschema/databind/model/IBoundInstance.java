@@ -26,6 +26,7 @@
 
 package gov.nist.secauto.metaschema.databind.model;
 
+import gov.nist.secauto.metaschema.core.model.IBoundObject;
 import gov.nist.secauto.metaschema.core.model.IInstance;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -33,10 +34,13 @@ import edu.umd.cs.findbugs.annotations.Nullable;
 
 /**
  * Represents a Metaschema module instance bound to Java data.
+ *
+ * @param <ITEM>
+ *          the Java type for associated bound objects
  */
-public interface IBoundInstance extends IBoundProperty, IInstance {
+public interface IBoundInstance<ITEM> extends IBoundProperty<ITEM>, IInstance {
   @Override
-  IBoundDefinitionModel getContainingDefinition();
+  IBoundDefinitionModel<IBoundObject> getContainingDefinition();
 
   /**
    * {@inheritDoc}

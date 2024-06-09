@@ -129,7 +129,7 @@ public abstract class ModelTestBase {
             flag.isRequired(),
             "required"),
         () -> assertEquals(
-            ModelUtil.resolveNullOrValue(annotation.defaultValue(), adapter),
+            ModelUtil.resolveDefaultValue(annotation.defaultValue(), adapter),
             flag.getDefaultValue(),
             "defaultValue"),
         () -> assertEquals(
@@ -149,7 +149,7 @@ public abstract class ModelTestBase {
   public static void assertFieldInstance(
       @NonNull Class<?> assemblyClass,
       @NonNull String fieldJavaFieldName,
-      @NonNull IBoundInstanceModelField field,
+      @NonNull IBoundInstanceModelField<?> field,
       @NonNull IBindingContext context) throws NoSuchFieldException, SecurityException {
     Field javaField = assemblyClass.getDeclaredField(fieldJavaFieldName);
     BoundField annotation = javaField.getAnnotation(BoundField.class);
@@ -181,7 +181,7 @@ public abstract class ModelTestBase {
             field.getDefinition().getJavaTypeAdapter(),
             "typeAdapter"),
         () -> assertEquals(
-            ModelUtil.resolveNullOrValue(annotation.defaultValue(), adapter),
+            ModelUtil.resolveDefaultValue(annotation.defaultValue(), adapter),
             field.getDefaultValue(),
             "defaultValue"),
         () -> assertEquals(

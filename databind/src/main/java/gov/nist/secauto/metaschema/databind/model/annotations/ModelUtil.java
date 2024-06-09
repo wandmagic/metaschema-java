@@ -30,6 +30,8 @@ import gov.nist.secauto.metaschema.core.datatype.IDataTypeAdapter;
 import gov.nist.secauto.metaschema.core.datatype.adapter.MetaschemaDataTypeProvider;
 import gov.nist.secauto.metaschema.core.datatype.markup.MarkupLine;
 import gov.nist.secauto.metaschema.core.datatype.markup.MarkupMultiline;
+import gov.nist.secauto.metaschema.core.model.IBoundObject;
+import gov.nist.secauto.metaschema.core.model.IMetaschemaData;
 import gov.nist.secauto.metaschema.core.model.IModule;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 import gov.nist.secauto.metaschema.databind.IBindingContext;
@@ -38,6 +40,7 @@ import gov.nist.secauto.metaschema.databind.model.impl.DefaultGroupAs;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.net.URI;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
@@ -60,6 +63,19 @@ public final class ModelUtil {
     // disable construction
   }
 
+  /**
+   * Get the requested annotation from the provided Java class.
+   *
+   * @param <A>
+   *          the annotation Java type
+   * @param clazz
+   *          the Java class to get the annotation from
+   * @param annotationClass
+   *          the annotation class instance
+   * @return the annotation
+   * @throws IllegalArgumentException
+   *           if the annotation was not present on the class
+   */
   @NonNull
   public static <A extends Annotation> A getAnnotation(
       @NonNull Class<?> clazz,
@@ -74,6 +90,19 @@ public final class ModelUtil {
     return annotation;
   }
 
+  /**
+   * Get the requested annotation from the provided Java field.
+   *
+   * @param <A>
+   *          the annotation Java type
+   * @param javaField
+   *          the Java field to get the annotation from
+   * @param annotationClass
+   *          the annotation class instance
+   * @return the annotation
+   * @throws IllegalArgumentException
+   *           if the annotation was not present on the field
+   */
   @NonNull
   public static <A extends Annotation> A getAnnotation(
       @NonNull Field javaField,
@@ -151,6 +180,19 @@ public final class ModelUtil {
     return resolveNoneOrValue(value) == null ? null : MarkupMultiline.fromMarkdown(value);
   }
 
+  /**
+   * Get the data type adapter instance of the provided adapter class.
+   * <p>
+   * If the provided adapter Java class is the {@link NullJavaTypeAdapter} class,
+   * then the default data type adapter will be returned.
+   *
+   * @param adapterClass
+   *          the data type adapter class to get the data type adapter instance
+   *          for
+   * @param bindingContext
+   *          the Metaschema binding context used to lookup the data type adapter
+   * @return the data type adapter
+   */
   @NonNull
   public static IDataTypeAdapter<?> getDataTypeAdapter(
       @NonNull Class<? extends IDataTypeAdapter<?>> adapterClass,
@@ -164,6 +206,21 @@ public final class ModelUtil {
     return retval;
   }
 
+  /**
+   * Given a provided default value string, get the data type specific default
+   * value using the provided data type adapter.
+   * <p>
+   * If the provided default value is {@link ModelUtil#NULL_VALUE}, then this
+   * method will return a {@code null} value.
+   *
+   * @param defaultValue
+   *          the string representation of the default value
+   * @param adapter
+   *          the data type adapter instance used to cast the default string value
+   *          to a data type specific object
+   * @return the data type specific object or {@code null} if the provided default
+   *         value was {@link ModelUtil#NULL_VALUE}
+   */
   @Nullable
   public static Object resolveDefaultValue(@NonNull String defaultValue, IDataTypeAdapter<?> adapter) {
     Object retval = null;
@@ -173,24 +230,61 @@ public final class ModelUtil {
     return retval;
   }
 
-  public static Integer resolveNullOrInteger(int value) {
+  /**
+   * Resolves an integer value by determining if an actual value is provided or
+   * -2^31, which indicates that no actual value was provided.
+   * <p>
+   * The integer value -2^31 cannot be used, since this indicates no value.
+   *
+   * @param value
+   *          the integer value to resolve
+   * @return the integer value or {@code null} if the provided value was -2^31
+   */
+  public static Integer resolveDefaultInteger(int value) {
     return value == Integer.MIN_VALUE ? null : value;
   }
 
-  public static Object resolveNullOrValue(
-      @NonNull String defaultValue,
-      @NonNull IDataTypeAdapter<?> javaTypeAdapter) {
-    return NULL_VALUE.equals(defaultValue)
-        ? null
-        : javaTypeAdapter.parse(defaultValue);
-  }
-
+  /**
+   * Resolves a {@link GroupAs} annotation determining if an actual value is
+   * provided or if the value is the default, which indicates that no actual
+   * GroupAs was provided.
+   *
+   * @param groupAs
+   *          the GroupAs value to resolve
+   * @param module
+   *          the containing module instance
+   * @return a new {@link IGroupAs} instance or a singleton group as if the
+   *         provided value was the default value
+   */
   @NonNull
-  public static IGroupAs groupAs(
+  public static IGroupAs resolveDefaultGroupAs(
       @NonNull GroupAs groupAs,
       @NonNull IModule module) {
     return NULL_VALUE.equals(groupAs.name())
         ? IGroupAs.SINGLETON_GROUP_AS
         : new DefaultGroupAs(groupAs, module);
+  }
+
+  public static String toLocation(@NonNull IBoundObject obj) {
+    IMetaschemaData data = obj.getMetaschemaData();
+
+    String retval = "";
+    if (data != null) {
+      int line = data.getLine();
+      if (line > -1) {
+        retval = line + ":" + data.getColumn();
+      }
+    }
+    return retval;
+  }
+
+  public static String toLocation(@NonNull IBoundObject obj, @Nullable URI uri) {
+    String retval = uri == null ? "" : uri.toASCIIString();
+
+    String location = toLocation(obj);
+    if (!location.isEmpty()) {
+      retval = retval.isEmpty() ? location : retval + "@" + location;
+    }
+    return retval;
   }
 }

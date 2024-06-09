@@ -27,6 +27,7 @@
 package gov.nist.secauto.metaschema.databind.model.info;
 
 import gov.nist.secauto.metaschema.core.datatype.IDataTypeAdapter;
+import gov.nist.secauto.metaschema.core.model.IBoundObject;
 import gov.nist.secauto.metaschema.databind.io.BindingException;
 import gov.nist.secauto.metaschema.databind.model.IValuedMutable;
 
@@ -34,7 +35,7 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 
 public interface IFeatureScalarItemValueHandler
-    extends IItemValueHandler, IValuedMutable {
+    extends IItemValueHandler<Object>, IValuedMutable {
 
   default void setValue(@NonNull Object parent, @NonNull String text) {
     Object item = getValueFromString(text);
@@ -60,7 +61,7 @@ public interface IFeatureScalarItemValueHandler
   IDataTypeAdapter<?> getJavaTypeAdapter();
 
   @Override
-  default Object deepCopyItem(Object source, Object parentInstance) throws BindingException {
+  default Object deepCopyItem(Object source, IBoundObject parentInstance) throws BindingException {
     return getJavaTypeAdapter().copy(source);
   }
 }

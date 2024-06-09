@@ -49,9 +49,9 @@ import gov.nist.secauto.metaschema.core.model.constraint.IModelConstrained;
 import gov.nist.secauto.metaschema.core.model.constraint.ISource;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 import gov.nist.secauto.metaschema.databind.model.IBoundInstanceModelGroupedAssembly;
-import gov.nist.secauto.metaschema.databind.model.metaschema.binding.AssemblyConstraints;
-import gov.nist.secauto.metaschema.databind.model.metaschema.binding.JsonKey;
-import gov.nist.secauto.metaschema.databind.model.metaschema.binding.METASCHEMA;
+import gov.nist.secauto.metaschema.databind.model.binding.metaschema.AssemblyConstraints;
+import gov.nist.secauto.metaschema.databind.model.binding.metaschema.JsonKey;
+import gov.nist.secauto.metaschema.databind.model.binding.metaschema.METASCHEMA;
 
 import java.util.Map;
 import java.util.Set;
@@ -124,13 +124,10 @@ public class DefinitionAssemblyGlobal
     }));
     this.modelContainer = ObjectUtils.notNull(Lazy.lazy(() -> AssemblyModelContainerSupport.of(
         binding.getModel(),
-        ObjectUtils
-            .requireNonNull(bindingInstance.getDefinition().getAssemblyInstanceByName(MODEL_QNAME)),
+        ObjectUtils.requireNonNull(bindingInstance.getDefinition().getAssemblyInstanceByName(MODEL_QNAME)),
         this,
         nodeItemFactory)));
-    this.modelConstraints = ObjectUtils.notNull(Lazy.lazy(() ->
-
-    {
+    this.modelConstraints = ObjectUtils.notNull(Lazy.lazy(() -> {
       IModelConstrained retval = new AssemblyConstraintSet();
       AssemblyConstraints constraints = getBinding().getConstraint();
       if (constraints != null) {

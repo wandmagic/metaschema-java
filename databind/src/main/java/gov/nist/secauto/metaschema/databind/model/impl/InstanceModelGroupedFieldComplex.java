@@ -29,6 +29,7 @@ package gov.nist.secauto.metaschema.databind.model.impl;
 import gov.nist.secauto.metaschema.core.datatype.markup.MarkupLine;
 import gov.nist.secauto.metaschema.core.datatype.markup.MarkupMultiline;
 import gov.nist.secauto.metaschema.core.model.AbstractFieldInstance;
+import gov.nist.secauto.metaschema.core.model.IBoundObject;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 import gov.nist.secauto.metaschema.databind.model.IBoundDefinitionModelAssembly;
 import gov.nist.secauto.metaschema.databind.model.IBoundDefinitionModelFieldComplex;
@@ -59,7 +60,7 @@ public class InstanceModelGroupedFieldComplex
   @NonNull
   private final DefinitionField definition;
   @NonNull
-  private final Lazy<Map<String, IBoundProperty>> jsonProperties;
+  private final Lazy<Map<String, IBoundProperty<?>>> jsonProperties;
 
   public InstanceModelGroupedFieldComplex(
       @NonNull BoundGroupedField annotation,
@@ -93,12 +94,12 @@ public class InstanceModelGroupedFieldComplex
   // ------------------------------------------
 
   @Override
-  public Class<?> getBoundClass() {
+  public Class<? extends IBoundObject> getBoundClass() {
     return getAnnotation().binding();
   }
 
   @Override
-  public Map<String, IBoundProperty> getJsonProperties() {
+  public Map<String, IBoundProperty<?>> getJsonProperties() {
     return ObjectUtils.notNull(jsonProperties.get());
   }
 
@@ -134,7 +135,7 @@ public class InstanceModelGroupedFieldComplex
 
   @Override
   public Integer getUseIndex() {
-    return ModelUtil.resolveNullOrInteger(getAnnotation().useIndex());
+    return ModelUtil.resolveDefaultInteger(getAnnotation().useIndex());
   }
 
   // ----------------------------------------

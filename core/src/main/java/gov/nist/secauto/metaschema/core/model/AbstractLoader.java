@@ -92,7 +92,8 @@ public abstract class AbstractLoader<T> implements ILoader<T> {
   @Override
   @NonNull
   public T load(@NonNull Path path) throws MetaschemaException, IOException {
-    return loadInternal(ObjectUtils.notNull(path.toAbsolutePath().normalize().toUri()), new LinkedList<>());
+    // use toURL to normalize the URI
+    return load(ObjectUtils.notNull(path.toAbsolutePath().normalize().toUri().toURL()));
   }
 
   /**
@@ -153,7 +154,7 @@ public abstract class AbstractLoader<T> implements ILoader<T> {
 
     T retval = cache.get(resource);
     if (retval == null) {
-      LOGGER.info("Loading module '{}'", resource);
+      LOGGER.info("Loading '{}'", resource);
 
       try {
         visitedResources.push(resource);

@@ -29,6 +29,7 @@ package gov.nist.secauto.metaschema.databind.model.impl;
 import gov.nist.secauto.metaschema.core.datatype.markup.MarkupLine;
 import gov.nist.secauto.metaschema.core.datatype.markup.MarkupMultiline;
 import gov.nist.secauto.metaschema.core.model.AbstractAssemblyInstance;
+import gov.nist.secauto.metaschema.core.model.IBoundObject;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 import gov.nist.secauto.metaschema.databind.model.IBoundDefinitionModelAssembly;
 import gov.nist.secauto.metaschema.databind.model.IBoundInstanceModelChoiceGroup;
@@ -59,7 +60,7 @@ public class InstanceModelGroupedAssembly
   @NonNull
   private final IBoundDefinitionModelAssembly definition;
   @NonNull
-  private final Lazy<Map<String, IBoundProperty>> jsonProperties;
+  private final Lazy<Map<String, IBoundProperty<?>>> jsonProperties;
 
   /**
    * Construct a new field model instance instance that is a member of a choice
@@ -95,12 +96,12 @@ public class InstanceModelGroupedAssembly
   // ------------------------------------------
 
   @Override
-  public Class<?> getBoundClass() {
+  public Class<? extends IBoundObject> getBoundClass() {
     return getAnnotation().binding();
   }
 
   @Override
-  public Map<String, IBoundProperty> getJsonProperties() {
+  public Map<String, IBoundProperty<?>> getJsonProperties() {
     return ObjectUtils.notNull(jsonProperties.get());
   }
 
@@ -136,6 +137,6 @@ public class InstanceModelGroupedAssembly
 
   @Override
   public Integer getUseIndex() {
-    return ModelUtil.resolveNullOrInteger(getAnnotation().useIndex());
+    return ModelUtil.resolveDefaultInteger(getAnnotation().useIndex());
   }
 }

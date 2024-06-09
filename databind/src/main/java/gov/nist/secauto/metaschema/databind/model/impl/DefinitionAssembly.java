@@ -28,6 +28,7 @@ package gov.nist.secauto.metaschema.databind.model.impl;
 
 import gov.nist.secauto.metaschema.core.datatype.markup.MarkupLine;
 import gov.nist.secauto.metaschema.core.datatype.markup.MarkupMultiline;
+import gov.nist.secauto.metaschema.core.model.IBoundObject;
 import gov.nist.secauto.metaschema.core.model.constraint.AssemblyConstraintSet;
 import gov.nist.secauto.metaschema.core.model.constraint.IModelConstrained;
 import gov.nist.secauto.metaschema.core.model.constraint.ISource;
@@ -60,9 +61,9 @@ public final class DefinitionAssembly
     extends AbstractBoundDefinitionModelComplex<MetaschemaAssembly>
     implements IBoundDefinitionModelAssembly,
     IFeatureBoundContainerModelAssembly<
-        IBoundInstanceModel,
-        IBoundInstanceModelNamed,
-        IBoundInstanceModelField,
+        IBoundInstanceModel<?>,
+        IBoundInstanceModelNamed<?>,
+        IBoundInstanceModelField<?>,
         IBoundInstanceModelAssembly,
         IBoundInstanceModelChoiceGroup> {
 
@@ -75,10 +76,10 @@ public final class DefinitionAssembly
   @NonNull
   private final Lazy<QName> xmlRootQName;
   @NonNull
-  private final Lazy<Map<String, IBoundProperty>> jsonProperties;
+  private final Lazy<Map<String, IBoundProperty<?>>> jsonProperties;
 
   public static DefinitionAssembly newInstance(
-      @NonNull Class<?> clazz,
+      @NonNull Class<? extends IBoundObject> clazz,
       @NonNull IBindingContext bindingContext) {
     MetaschemaAssembly annotation = ModelUtil.getAnnotation(clazz, MetaschemaAssembly.class);
     Class<? extends IBoundModule> moduleClass = annotation.moduleClass();
@@ -86,7 +87,7 @@ public final class DefinitionAssembly
   }
 
   private DefinitionAssembly(
-      @NonNull Class<?> clazz,
+      @NonNull Class<? extends IBoundObject> clazz,
       @NonNull MetaschemaAssembly annotation,
       @NonNull Class<? extends IBoundModule> moduleClass,
       @NonNull IBindingContext bindingContext) {
@@ -115,17 +116,17 @@ public final class DefinitionAssembly
   }
 
   @Override
-  protected void deepCopyItemInternal(Object fromObject, Object toObject) throws BindingException {
+  protected void deepCopyItemInternal(IBoundObject fromObject, IBoundObject toObject) throws BindingException {
     // copy the flags
     super.deepCopyItemInternal(fromObject, toObject);
 
-    for (IBoundInstanceModel instance : getModelInstances()) {
+    for (IBoundInstanceModel<?> instance : getModelInstances()) {
       instance.deepCopy(fromObject, toObject);
     }
   }
 
   @Override
-  public Map<String, IBoundProperty> getJsonProperties() {
+  public Map<String, IBoundProperty<?>> getJsonProperties() {
     return ObjectUtils.notNull(jsonProperties.get());
   }
 
@@ -174,7 +175,7 @@ public final class DefinitionAssembly
   @Override
   @Nullable
   public Integer getIndex() {
-    return ModelUtil.resolveNullOrInteger(getAnnotation().index());
+    return ModelUtil.resolveDefaultInteger(getAnnotation().index());
   }
 
   @Override
@@ -208,7 +209,7 @@ public final class DefinitionAssembly
   @Override
   @Nullable
   public Integer getRootIndex() {
-    return ModelUtil.resolveNullOrInteger(getAnnotation().rootIndex());
+    return ModelUtil.resolveDefaultInteger(getAnnotation().rootIndex());
   }
 
   // ----------------------------------------

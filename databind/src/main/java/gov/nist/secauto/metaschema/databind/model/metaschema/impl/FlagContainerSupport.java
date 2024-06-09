@@ -35,8 +35,8 @@ import gov.nist.secauto.metaschema.core.model.IModule;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 import gov.nist.secauto.metaschema.databind.model.IBoundInstanceModelChoiceGroup;
 import gov.nist.secauto.metaschema.databind.model.IBoundInstanceModelGroupedAssembly;
-import gov.nist.secauto.metaschema.databind.model.metaschema.binding.FlagReference;
-import gov.nist.secauto.metaschema.databind.model.metaschema.binding.InlineDefineFlag;
+import gov.nist.secauto.metaschema.databind.model.binding.metaschema.FlagReference;
+import gov.nist.secauto.metaschema.databind.model.binding.metaschema.InlineDefineFlag;
 
 import java.util.List;
 
@@ -46,6 +46,7 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
+@SuppressWarnings("PMD.OnlyOneReturn")
 public final class FlagContainerSupport {
   @SuppressFBWarnings(value = "CT_CONSTRUCTOR_THROW", justification = "Use of final fields")
   @NonNull

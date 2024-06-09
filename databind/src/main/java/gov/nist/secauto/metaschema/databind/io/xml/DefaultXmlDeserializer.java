@@ -30,6 +30,7 @@ import com.ctc.wstx.stax.WstxInputFactory;
 
 import gov.nist.secauto.metaschema.core.metapath.item.node.IDocumentNodeItem;
 import gov.nist.secauto.metaschema.core.metapath.item.node.INodeItemFactory;
+import gov.nist.secauto.metaschema.core.model.IBoundObject;
 import gov.nist.secauto.metaschema.core.util.AutoCloser;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 import gov.nist.secauto.metaschema.databind.io.AbstractDeserializer;
@@ -52,7 +53,7 @@ import javax.xml.stream.XMLStreamException;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
-public class DefaultXmlDeserializer<CLASS>
+public class DefaultXmlDeserializer<CLASS extends IBoundObject>
     extends AbstractDeserializer<CLASS> {
   private XMLInputFactory2 xmlInputFactory;
 
@@ -94,6 +95,7 @@ public class DefaultXmlDeserializer<CLASS>
         assert xmlInputFactory instanceof WstxInputFactory;
         xmlInputFactory.configureForXmlConformance();
         xmlInputFactory.setProperty(XMLInputFactory.IS_COALESCING, false);
+        xmlInputFactory.setProperty(XMLInputFactory2.P_PRESERVE_LOCATION, true);
         // xmlInputFactory.configureForSpeed();
 
         if (isFeatureEnabled(DeserializationFeature.DESERIALIZE_XML_ALLOW_ENTITY_RESOLUTION)) {

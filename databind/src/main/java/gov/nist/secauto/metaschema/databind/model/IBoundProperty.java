@@ -26,12 +26,13 @@
 
 package gov.nist.secauto.metaschema.databind.model;
 
+import gov.nist.secauto.metaschema.core.model.IBoundObject;
 import gov.nist.secauto.metaschema.core.model.IJsonNamed;
 import gov.nist.secauto.metaschema.databind.io.BindingException;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
-public interface IBoundProperty extends IBoundModuleElement, IFeatureJavaField, IJsonNamed {
+public interface IBoundProperty<ITEM> extends IBoundModuleElement<ITEM>, IFeatureJavaField, IJsonNamed {
   /**
    * Copy this instance from one parent object to another.
    *
@@ -42,5 +43,5 @@ public interface IBoundProperty extends IBoundModuleElement, IFeatureJavaField, 
    * @throws BindingException
    *           if an error occurred while processing the object bindings
    */
-  void deepCopy(@NonNull Object fromInstance, @NonNull Object toInstance) throws BindingException;
+  void deepCopy(@NonNull IBoundObject fromInstance, @NonNull IBoundObject toInstance) throws BindingException;
 }

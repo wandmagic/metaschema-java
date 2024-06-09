@@ -30,6 +30,7 @@ import gov.nist.secauto.metaschema.core.datatype.IDataTypeAdapter;
 import gov.nist.secauto.metaschema.core.datatype.markup.MarkupLine;
 import gov.nist.secauto.metaschema.core.datatype.markup.MarkupMultiline;
 import gov.nist.secauto.metaschema.core.model.AbstractInlineFlagDefinition;
+import gov.nist.secauto.metaschema.core.model.IBoundObject;
 import gov.nist.secauto.metaschema.core.model.constraint.ISource;
 import gov.nist.secauto.metaschema.core.model.constraint.IValueConstrained;
 import gov.nist.secauto.metaschema.core.model.constraint.ValueConstraintSet;
@@ -56,7 +57,7 @@ import nl.talsmasoftware.lazy4j.Lazy;
  */
 // TODO: implement getProperties()
 public class InstanceFlagInline
-    extends AbstractInlineFlagDefinition<IBoundDefinitionModel, IBoundDefinitionFlag, IBoundInstanceFlag>
+    extends AbstractInlineFlagDefinition<IBoundDefinitionModel<IBoundObject>, IBoundDefinitionFlag, IBoundInstanceFlag>
     // extends AbstractBoundInstanceJavaField<BoundFlag, IBoundDefinitionModel>
     implements IBoundInstanceFlag {
   @NonNull
@@ -80,7 +81,7 @@ public class InstanceFlagInline
    */
   public InstanceFlagInline(
       @NonNull Field javaField,
-      @NonNull IBoundDefinitionModel containingDefinition) {
+      @NonNull IBoundDefinitionModel<IBoundObject> containingDefinition) {
     super(containingDefinition);
     this.javaField = javaField;
     this.annotation = ModelUtil.getAnnotation(javaField, BoundFlag.class);
@@ -88,7 +89,7 @@ public class InstanceFlagInline
     this.javaTypeAdapter = ModelUtil.getDataTypeAdapter(
         adapterClass,
         containingDefinition.getBindingContext());
-    this.defaultValue = ModelUtil.resolveNullOrValue(getAnnotation().defaultValue(), this.javaTypeAdapter);
+    this.defaultValue = ModelUtil.resolveDefaultValue(getAnnotation().defaultValue(), this.javaTypeAdapter);
 
     this.constraints = ObjectUtils.notNull(Lazy.lazy(() -> {
       IValueConstrained retval = new ValueConstraintSet();

@@ -37,12 +37,17 @@ import gov.nist.secauto.metaschema.cli.processor.command.AbstractTerminalCommand
 import gov.nist.secauto.metaschema.cli.processor.command.DefaultExtraArgument;
 import gov.nist.secauto.metaschema.cli.processor.command.ExtraArgument;
 import gov.nist.secauto.metaschema.cli.util.LoggingValidationHandler;
+import gov.nist.secauto.metaschema.core.configuration.DefaultConfiguration;
+import gov.nist.secauto.metaschema.core.configuration.IMutableConfiguration;
+import gov.nist.secauto.metaschema.core.metapath.MetapathException;
 import gov.nist.secauto.metaschema.core.model.IConstraintLoader;
 import gov.nist.secauto.metaschema.core.model.MetaschemaException;
 import gov.nist.secauto.metaschema.core.model.constraint.IConstraintSet;
+import gov.nist.secauto.metaschema.core.model.constraint.ValidationFeature;
 import gov.nist.secauto.metaschema.core.model.validation.IValidationResult;
 import gov.nist.secauto.metaschema.core.util.CollectionUtil;
 import gov.nist.secauto.metaschema.core.util.CustomCollectors;
+import gov.nist.secauto.metaschema.core.util.IVersionInfo;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 import gov.nist.secauto.metaschema.core.util.UriUtils;
 import gov.nist.secauto.metaschema.databind.IBindingContext;
@@ -50,6 +55,7 @@ import gov.nist.secauto.metaschema.databind.IBindingContext.ISchemaValidationPro
 import gov.nist.secauto.metaschema.databind.io.Format;
 import gov.nist.secauto.metaschema.databind.io.IBoundLoader;
 import gov.nist.secauto.metaschema.databind.model.metaschema.BindingConstraintLoader;
+import gov.nist.secauto.metaschema.modules.sarif.SarifValidationHandler;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
@@ -61,6 +67,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collection;
@@ -87,13 +94,28 @@ public abstract class AbstractValidateContentCommand
           .hasArg()
           .argName("FORMAT")
           .desc("source format: xml, json, or yaml")
+          .numberOfArgs(1)
           .build());
   @NonNull
   private static final Option CONSTRAINTS_OPTION = ObjectUtils.notNull(
       Option.builder("c")
-          .hasArg()
+          .hasArgs()
           .argName("URI")
           .desc("additional constraint definitions")
+          .build());
+  @NonNull
+  private static final Option SARIF_OUTPUT_FILE_OPTION = ObjectUtils.notNull(
+      Option.builder("o")
+          .hasArg()
+          .argName("FILE")
+          .desc("write SARIF results to the provided FILE")
+          .numberOfArgs(1)
+          .build());
+  @NonNull
+  private static final Option SARIF_INCLUDE_PASS_OPTION = ObjectUtils.notNull(
+      Option.builder()
+          .longOpt("sarif-include-pass")
+          .desc("include pass results in SARIF")
           .build());
 
   @Override
@@ -106,7 +128,9 @@ public abstract class AbstractValidateContentCommand
   public Collection<? extends Option> gatherOptions() {
     return List.of(
         AS_OPTION,
-        CONSTRAINTS_OPTION);
+        CONSTRAINTS_OPTION,
+        SARIF_OUTPUT_FILE_OPTION,
+        SARIF_INCLUDE_PASS_OPTION);
   }
 
   @Override
@@ -168,7 +192,7 @@ public abstract class AbstractValidateContentCommand
           try {
             URI constraintUri = ObjectUtils.requireNonNull(UriUtils.toUri(arg, cwd));
             constraintSets.add(constraintLoader.load(constraintUri));
-          } catch (IOException | MetaschemaException | URISyntaxException ex) {
+          } catch (IOException | MetaschemaException | MetapathException | URISyntaxException ex) {
             return ExitCode.IO_ERROR.exitMessage("Unable to load constraint set '" + arg + "'.").withThrowable(ex);
           }
         }
@@ -233,9 +257,14 @@ public abstract class AbstractValidateContentCommand
         LOGGER.info("Validating '{}' as {}.", source, asFormat.name());
       }
 
+      IMutableConfiguration<ValidationFeature<?>> configuration = new DefaultConfiguration<>();
+      if (cmdLine.hasOption(SARIF_OUTPUT_FILE_OPTION) && cmdLine.hasOption(SARIF_INCLUDE_PASS_OPTION)) {
+        configuration.enableFeature(ValidationFeature.VALIDATE_GENERATE_PASS_FINDINGS);
+      }
+
       IValidationResult validationResult;
       try {
-        validationResult = bindingContext.validate(source, asFormat, this);
+        validationResult = bindingContext.validate(source, asFormat, this, configuration);
       } catch (FileNotFoundException ex) {
         return ExitCode.IO_ERROR.exitMessage(String.format("Resource not found at '%s'", source)).withThrowable(ex);
 
@@ -243,21 +272,39 @@ public abstract class AbstractValidateContentCommand
         return ExitCode.IO_ERROR.exitMessage(String.format("Unknown host for '%s'.", source)).withThrowable(ex);
 
       } catch (IOException ex) {
+        return ExitCode.IO_ERROR.exit().withThrowable(ex);
+      } catch (MetapathException ex) {
         return ExitCode.PROCESSING_ERROR.exit().withThrowable(ex);
       }
 
-      if (LOGGER.isInfoEnabled() && !validationResult.isPassing()) {
+      if (cmdLine.hasOption(SARIF_OUTPUT_FILE_OPTION) && LOGGER.isInfoEnabled()) {
+        Path sarifFile = Paths.get(cmdLine.getOptionValue(SARIF_OUTPUT_FILE_OPTION));
+
+        IVersionInfo version
+            = getCallingContext().getCLIProcessor().getVersionInfos().get(CLIProcessor.COMMAND_VERSION);
+
+        try {
+          SarifValidationHandler sarifHandler = new SarifValidationHandler(source, version);
+          sarifHandler.addFindings(validationResult.getFindings());
+          sarifHandler.write(sarifFile);
+        } catch (IOException ex) {
+          return ExitCode.IO_ERROR.exit().withThrowable(ex);
+        }
+      } else if (!validationResult.isPassing()) {
         LOGGER.info("Validation identified the following issues:", source);
+
+        LoggingValidationHandler.instance().handleValidationResults(validationResult);
       }
 
-      LoggingValidationHandler.instance().handleValidationResults(validationResult);
-
-      if (validationResult.isPassing() && !cmdLine.hasOption(CLIProcessor.QUIET_OPTION) && LOGGER.isInfoEnabled()) {
-        LOGGER.info("The file '{}' is valid.", source);
+      if (validationResult.isPassing()) {
+        if (LOGGER.isInfoEnabled()) {
+          LOGGER.info("The file '{}' is valid.", source);
+        }
+      } else if (LOGGER.isErrorEnabled()) {
+        LOGGER.error("The file '{}' is invalid.", source);
       }
 
       return (validationResult.isPassing() ? ExitCode.OK : ExitCode.FAIL).exit();
     }
-
   }
 }

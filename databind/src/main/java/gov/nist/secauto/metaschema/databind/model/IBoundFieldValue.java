@@ -26,6 +26,7 @@
 
 package gov.nist.secauto.metaschema.databind.model;
 
+import gov.nist.secauto.metaschema.core.model.IBoundObject;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 import gov.nist.secauto.metaschema.databind.io.BindingException;
 import gov.nist.secauto.metaschema.databind.model.info.IFeatureScalarItemValueHandler;
@@ -39,7 +40,7 @@ import javax.xml.namespace.QName;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 
-public interface IBoundFieldValue extends IFeatureScalarItemValueHandler, IBoundProperty {
+public interface IBoundFieldValue extends IFeatureScalarItemValueHandler, IBoundProperty<Object> {
   @Override
   @Nullable
   Object getDefaultValue();
@@ -82,7 +83,7 @@ public interface IBoundFieldValue extends IFeatureScalarItemValueHandler, IBound
   }
 
   @Override
-  default Object readItem(Object parent, IItemReadHandler handler) throws IOException {
+  default Object readItem(IBoundObject parent, IItemReadHandler handler) throws IOException {
     return handler.readItemFieldValue(ObjectUtils.requireNonNull(parent, "parent"), this);
   }
 
@@ -92,7 +93,7 @@ public interface IBoundFieldValue extends IFeatureScalarItemValueHandler, IBound
   }
 
   @Override
-  default void deepCopy(@NonNull Object fromInstance, @NonNull Object toInstance) throws BindingException {
+  default void deepCopy(@NonNull IBoundObject fromInstance, @NonNull IBoundObject toInstance) throws BindingException {
     Object value = getValue(fromInstance);
     setValue(toInstance, value);
   }

@@ -26,16 +26,19 @@
 
 package gov.nist.secauto.metaschema.databind;
 
+import gov.nist.secauto.metaschema.core.configuration.IConfiguration;
 import gov.nist.secauto.metaschema.core.datatype.IDataTypeAdapter;
 import gov.nist.secauto.metaschema.core.metapath.DynamicContext;
 import gov.nist.secauto.metaschema.core.metapath.StaticContext;
 import gov.nist.secauto.metaschema.core.metapath.item.node.IDocumentNodeItem;
 import gov.nist.secauto.metaschema.core.metapath.item.node.INodeItem;
+import gov.nist.secauto.metaschema.core.model.IBoundObject;
 import gov.nist.secauto.metaschema.core.model.IModule;
 import gov.nist.secauto.metaschema.core.model.constraint.DefaultConstraintValidator;
 import gov.nist.secauto.metaschema.core.model.constraint.FindingCollectingConstraintValidationHandler;
 import gov.nist.secauto.metaschema.core.model.constraint.IConstraintValidationHandler;
 import gov.nist.secauto.metaschema.core.model.constraint.IConstraintValidator;
+import gov.nist.secauto.metaschema.core.model.constraint.ValidationFeature;
 import gov.nist.secauto.metaschema.core.model.validation.AggregateValidationResult;
 import gov.nist.secauto.metaschema.core.model.validation.IValidationResult;
 import gov.nist.secauto.metaschema.core.model.validation.JsonSchemaContentValidator;
@@ -114,7 +117,7 @@ public interface IBindingContext {
    * @return the matcher
    */
   @NonNull
-  IBindingMatcher registerBindingMatcher(@NonNull Class<?> clazz);
+  IBindingMatcher registerBindingMatcher(@NonNull Class<? extends IBoundObject> clazz);
 
   /**
    * Register a class binding for a given bound class.
@@ -140,7 +143,7 @@ public interface IBindingContext {
    *         not bound
    */
   @Nullable
-  IBoundDefinitionModelComplex getBoundDefinitionForClass(@NonNull Class<?> clazz);
+  IBoundDefinitionModelComplex getBoundDefinitionForClass(@NonNull Class<? extends IBoundObject> clazz);
 
   /**
    * Determine the bound class for the provided XML {@link QName}.
@@ -151,7 +154,7 @@ public interface IBindingContext {
    * @see IBindingContext#registerBindingMatcher(Class)
    */
   @Nullable
-  Class<?> getBoundClassForRootXmlQName(@NonNull QName rootQName);
+  Class<? extends IBoundObject> getBoundClassForRootXmlQName(@NonNull QName rootQName);
 
   /**
    * Determine the bound class for the provided JSON/YAML property/item name using
@@ -163,7 +166,7 @@ public interface IBindingContext {
    * @see IBindingContext#registerBindingMatcher(Class)
    */
   @Nullable
-  Class<?> getBoundClassForRootJsonName(@NonNull String rootName);
+  Class<? extends IBoundObject> getBoundClassForRootJsonName(@NonNull String rootName);
 
   /**
    * Get's the {@link IDataTypeAdapter} associated with the specified Java class,
@@ -240,7 +243,9 @@ public interface IBindingContext {
    * @see #getBoundDefinitionForClass(Class)
    */
   @NonNull
-  <CLASS> ISerializer<CLASS> newSerializer(@NonNull Format format, @NonNull Class<? extends CLASS> clazz);
+  <CLASS extends IBoundObject> ISerializer<CLASS> newSerializer(
+      @NonNull Format format,
+      @NonNull Class<CLASS> clazz);
 
   /**
    * Gets a data {@link IDeserializer} which can be used to read Java instance
@@ -267,7 +272,9 @@ public interface IBindingContext {
    * @see #getBoundDefinitionForClass(Class)
    */
   @NonNull
-  <CLASS> IDeserializer<CLASS> newDeserializer(@NonNull Format format, @NonNull Class<CLASS> clazz);
+  <CLASS extends IBoundObject> IDeserializer<CLASS> newDeserializer(
+      @NonNull Format format,
+      @NonNull Class<CLASS> clazz);
 
   /**
    * Get a new {@link IBoundLoader} instance.
@@ -295,24 +302,33 @@ public interface IBindingContext {
    *           if the provided class is not bound to a Module assembly or field
    */
   @NonNull
-  <CLASS> CLASS deepCopy(@NonNull CLASS other, Object parentInstance) throws BindingException;
+  <CLASS extends IBoundObject> CLASS deepCopy(@NonNull CLASS other, IBoundObject parentInstance)
+      throws BindingException;
 
   /**
    * Get a new single use constraint validator.
    *
    * @param handler
    *          the validation handler to use to process the validation results
+   * @param config
+   *          the validation configuration
    *
    * @return the validator
    */
-  default IConstraintValidator newValidator(@NonNull IConstraintValidationHandler handler) {
+  default IConstraintValidator newValidator(
+      @NonNull IConstraintValidationHandler handler,
+      @Nullable IConfiguration<ValidationFeature<?>> config) {
     IBoundLoader loader = newBoundLoader();
     loader.disableFeature(DeserializationFeature.DESERIALIZE_VALIDATE_CONSTRAINTS);
 
     DynamicContext context = new DynamicContext();
     context.setDocumentLoader(loader);
 
-    return new DefaultConstraintValidator(handler);
+    DefaultConstraintValidator retval = new DefaultConstraintValidator(handler);
+    if (config != null) {
+      retval.applyConfiguration(config);
+    }
+    return retval;
   }
 
   /**
@@ -323,13 +339,18 @@ public interface IBindingContext {
    *          the node item to validate
    * @param loader
    *          a module loader used to load and resolve referenced resources
+   * @param config
+   *          the validation configuration
    * @return the validation result
    * @throws IllegalArgumentException
    *           if the provided class is not bound to a Module assembly or field
    */
-  default IValidationResult validate(@NonNull INodeItem nodeItem, @NonNull IBoundLoader loader) {
+  default IValidationResult validate(
+      @NonNull INodeItem nodeItem,
+      @NonNull IBoundLoader loader,
+      @Nullable IConfiguration<ValidationFeature<?>> config) {
     FindingCollectingConstraintValidationHandler handler = new FindingCollectingConstraintValidationHandler();
-    IConstraintValidator validator = newValidator(handler);
+    IConstraintValidator validator = newValidator(handler, config);
 
     StaticContext staticContext = StaticContext.builder()
         .defaultModelNamespace(nodeItem.getNamespace())
@@ -352,6 +373,8 @@ public interface IBindingContext {
    *          the schema format to use to validate the target
    * @param schemaProvider
    *          provides callbacks to get the appropriate schemas
+   * @param config
+   *          the validation configuration
    * @return the validation result
    * @throws IOException
    *           if an error occurred while reading the target
@@ -359,12 +382,13 @@ public interface IBindingContext {
   default IValidationResult validate(
       @NonNull URI target,
       @NonNull Format asFormat,
-      @NonNull ISchemaValidationProvider schemaProvider) throws IOException {
+      @NonNull ISchemaValidationProvider schemaProvider,
+      @Nullable IConfiguration<ValidationFeature<?>> config) throws IOException {
 
     IValidationResult retval = schemaProvider.validate(target, asFormat);
 
     if (retval.isPassing()) {
-      IValidationResult constraintValidationResult = validateWithConstraints(target);
+      IValidationResult constraintValidationResult = validateWithConstraints(target, config);
       retval = AggregateValidationResult.aggregate(retval, constraintValidationResult);
     }
     return retval;
@@ -376,17 +400,21 @@ public interface IBindingContext {
    *
    * @param target
    *          the file to load and validate
+   * @param config
+   *          the validation configuration
    * @return the validation results
    * @throws IOException
    *           if an error occurred while parsing the target
    */
-  default IValidationResult validateWithConstraints(@NonNull URI target)
+  default IValidationResult validateWithConstraints(
+      @NonNull URI target,
+      @Nullable IConfiguration<ValidationFeature<?>> config)
       throws IOException {
     IBoundLoader loader = newBoundLoader();
     loader.disableFeature(DeserializationFeature.DESERIALIZE_VALIDATE_CONSTRAINTS);
     IDocumentNodeItem nodeItem = loader.loadAsNodeItem(target);
 
-    return validate(nodeItem, loader);
+    return validate(nodeItem, loader, config);
   }
 
   interface IModuleLoaderStrategy {
@@ -419,7 +447,7 @@ public interface IBindingContext {
      *         not bound
      */
     @Nullable
-    IBoundDefinitionModelComplex getBoundDefinitionForClass(@NonNull Class<?> clazz);
+    IBoundDefinitionModelComplex getBoundDefinitionForClass(@NonNull Class<? extends IBoundObject> clazz);
   }
 
   interface ISchemaValidationProvider {
@@ -427,7 +455,7 @@ public interface IBindingContext {
     @NonNull
     default IValidationResult validate(@NonNull URI target, @NonNull Format asFormat)
         throws FileNotFoundException, IOException {
-      URL targetResource = target.toURL();
+      URL targetResource = ObjectUtils.notNull(target.toURL());
 
       IValidationResult retval;
       switch (asFormat) {
@@ -511,7 +539,7 @@ public interface IBindingContext {
      * @return the bound class for the XML qualified name or {@code null} if not
      *         recognized
      */
-    Class<?> getBoundClassForXmlQName(QName rootQName);
+    Class<? extends IBoundObject> getBoundClassForXmlQName(QName rootQName);
 
     /**
      * Determine the bound class for the provided JSON/YAML property/item name.
@@ -521,6 +549,6 @@ public interface IBindingContext {
      * @return the bound class for the JSON property name or {@code null} if not
      *         recognized
      */
-    Class<?> getBoundClassForJsonName(String rootName);
+    Class<? extends IBoundObject> getBoundClassForJsonName(String rootName);
   }
 }
