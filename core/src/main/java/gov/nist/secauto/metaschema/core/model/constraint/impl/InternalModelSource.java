@@ -27,6 +27,7 @@
 package gov.nist.secauto.metaschema.core.model.constraint.impl;
 
 import gov.nist.secauto.metaschema.core.model.constraint.ISource;
+import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 
 import java.net.URI;
 import java.util.HashMap;
@@ -41,7 +42,7 @@ import edu.umd.cs.findbugs.annotations.NonNull;
  */
 public final class InternalModelSource implements ISource {
   @NonNull
-  private static final Map<URI, ExternalModelSource> sources = new HashMap<>(); // NOPMD - intentional
+  private static final Map<URI, InternalModelSource> sources = new HashMap<>(); // NOPMD - intentional
   @NonNull
   private final URI modelUri;
 
@@ -57,10 +58,9 @@ public final class InternalModelSource implements ISource {
   public static ISource instance(@NonNull URI location) {
     ISource retval;
     synchronized (sources) {
-      retval = sources.get(location);
-      if (retval == null) {
-        retval = new InternalModelSource(location);
-      }
+      retval = ObjectUtils.notNull(sources.computeIfAbsent(
+          location,
+          (uri) -> new InternalModelSource(ObjectUtils.notNull(uri))));
     }
     return retval;
   }
@@ -78,5 +78,10 @@ public final class InternalModelSource implements ISource {
   @Override
   public URI getSource() {
     return modelUri;
+  }
+
+  @Override
+  public String toString() {
+    return "internal:" + modelUri;
   }
 }
