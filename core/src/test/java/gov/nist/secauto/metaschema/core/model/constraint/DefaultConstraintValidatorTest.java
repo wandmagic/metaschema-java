@@ -37,6 +37,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import gov.nist.secauto.metaschema.core.datatype.markup.MarkupLine;
 import gov.nist.secauto.metaschema.core.metapath.DynamicContext;
+import gov.nist.secauto.metaschema.core.metapath.StaticContext;
 import gov.nist.secauto.metaschema.core.metapath.format.IPathFormatter;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IStringItem;
 import gov.nist.secauto.metaschema.core.metapath.item.node.IFlagNodeItem;
@@ -80,8 +81,10 @@ class DefaultConstraintValidatorTest {
 
     IFlagDefinition flagDefinition = context.mock(IFlagDefinition.class);
 
+    ISource source = context.mock(ISource.class);
+
     IAllowedValuesConstraint allowedValues = IAllowedValuesConstraint.builder()
-        .source(ISource.modelSource())
+        .source(source)
         .allowedValue(IAllowedValue.of("other", MarkupLine.fromMarkdown("some documentation")))
         .allowsOther(true)
         .build();
@@ -107,6 +110,9 @@ class DefaultConstraintValidatorTest {
         will(returnValue(CollectionUtil.emptyList()));
         allowing(flagDefinition).getIndexHasKeyConstraints();
         will(returnValue(CollectionUtil.emptyList()));
+
+        allowing(source).getStaticContext();
+        will(returnValue(StaticContext.instance()));
       }
     });
     FindingCollectingConstraintValidationHandler handler = new FindingCollectingConstraintValidationHandler();
@@ -126,13 +132,15 @@ class DefaultConstraintValidatorTest {
 
     IFlagDefinition flagDefinition = context.mock(IFlagDefinition.class);
 
+    ISource source = context.mock(ISource.class);
+
     IAllowedValuesConstraint allowedValues1 = IAllowedValuesConstraint.builder()
-        .source(ISource.modelSource())
+        .source(source)
         .allowedValue(IAllowedValue.of("other", MarkupLine.fromMarkdown("some documentation")))
         .allowsOther(true)
         .build();
     IAllowedValuesConstraint allowedValues2 = IAllowedValuesConstraint.builder()
-        .source(ISource.modelSource())
+        .source(source)
         .allowedValue(IAllowedValue.of("other2", MarkupLine.fromMarkdown("some documentation")))
         .allowsOther(true)
         .build();
@@ -161,6 +169,9 @@ class DefaultConstraintValidatorTest {
         will(returnValue(CollectionUtil.emptyList()));
         allowing(flagDefinition).getIndexHasKeyConstraints();
         will(returnValue(CollectionUtil.emptyList()));
+
+        allowing(source).getStaticContext();
+        will(returnValue(StaticContext.instance()));
       }
     });
     FindingCollectingConstraintValidationHandler handler = new FindingCollectingConstraintValidationHandler();
@@ -181,13 +192,15 @@ class DefaultConstraintValidatorTest {
 
     IFlagDefinition flagDefinition = context.mock(IFlagDefinition.class);
 
+    ISource source = context.mock(ISource.class);
+
     IAllowedValuesConstraint allowedValues1 = IAllowedValuesConstraint.builder()
-        .source(ISource.modelSource())
+        .source(source)
         .allowedValue(IAllowedValue.of("other", MarkupLine.fromMarkdown("some documentation")))
         .allowsOther(true)
         .build();
     IAllowedValuesConstraint allowedValues2 = IAllowedValuesConstraint.builder()
-        .source(ISource.modelSource())
+        .source(source)
         .allowedValue(IAllowedValue.of("other2", MarkupLine.fromMarkdown("some documentation")))
         .allowsOther(false)
         .build();
@@ -223,6 +236,9 @@ class DefaultConstraintValidatorTest {
         will(returnValue(CollectionUtil.emptyList()));
         allowing(flagDefinition).getIndexHasKeyConstraints();
         will(returnValue(CollectionUtil.emptyList()));
+
+        allowing(source).getStaticContext();
+        will(returnValue(StaticContext.instance()));
       }
     });
     FindingCollectingConstraintValidationHandler handler = new FindingCollectingConstraintValidationHandler();

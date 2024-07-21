@@ -55,11 +55,11 @@ class DefaultBindingContextTest {
   @Test
   void testConstraints() throws MetaschemaException, IOException { // NOPMD - intentional
     IConstraintLoader constraintLoader = new XmlConstraintLoader();
-    IConstraintSet constraintSet = constraintLoader.load(
+    List<IConstraintSet> constraintSet = constraintLoader.load(
         ObjectUtils.notNull(Paths.get("src/test/resources/content/constraints.xml")));
 
     ExternalConstraintsModulePostProcessor postProcessor
-        = new ExternalConstraintsModulePostProcessor(CollectionUtil.singleton(constraintSet));
+        = new ExternalConstraintsModulePostProcessor(constraintSet);
     IBindingContext bindingContext = new DefaultBindingContext(CollectionUtil.singletonList(postProcessor));
     IBoundModule module = bindingContext.registerModule(TestMetaschema.class);
 
@@ -73,12 +73,12 @@ class DefaultBindingContextTest {
 
   @Test
   void testConstraintsUsingBinding() throws MetaschemaException, IOException { // NOPMD - intentional
-    IConstraintLoader constraintLoader = new BindingConstraintLoader();
-    IConstraintSet constraintSet = constraintLoader.load(
+    IConstraintLoader constraintLoader = new BindingConstraintLoader(new DefaultBindingContext());
+    List<IConstraintSet> constraintSet = constraintLoader.load(
         ObjectUtils.notNull(Paths.get("src/test/resources/content/constraints.xml")));
 
     ExternalConstraintsModulePostProcessor postProcessor
-        = new ExternalConstraintsModulePostProcessor(CollectionUtil.singleton(constraintSet));
+        = new ExternalConstraintsModulePostProcessor(constraintSet);
     IBindingContext bindingContext = new DefaultBindingContext(CollectionUtil.singletonList(postProcessor));
     IBoundModule module = bindingContext.registerModule(TestMetaschema.class);
 

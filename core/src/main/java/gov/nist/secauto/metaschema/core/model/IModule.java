@@ -28,18 +28,20 @@ package gov.nist.secauto.metaschema.core.model;
 
 import gov.nist.secauto.metaschema.core.datatype.markup.MarkupLine;
 import gov.nist.secauto.metaschema.core.datatype.markup.MarkupMultiline;
-import gov.nist.secauto.metaschema.core.metapath.item.node.IDocumentNodeItem;
+import gov.nist.secauto.metaschema.core.metapath.EQNameUtils;
+import gov.nist.secauto.metaschema.core.metapath.StaticContext;
 
 import java.net.URI;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import javax.xml.namespace.QName;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 
-public interface IModule extends IMetapathQueryable {
+public interface IModule {
 
   String XML_NAMESPACE = "http://csrc.nist.gov/ns/oscal/metaschema/1.0";
 
@@ -347,6 +349,15 @@ public interface IModule extends IMetapathQueryable {
   IAssemblyDefinition getExportedRootAssemblyDefinitionByName(QName name);
 
   /**
+   * Get the mapping of prefix to namespace URI for use in resolving the namespace
+   * of lexical qualified named in Metapath.
+   *
+   * @return the mapping
+   */
+  @NonNull
+  Map<String, String> getNamespaceBindings();
+
+  /**
    * Used to parse a flag name reference to produce a qualified name.
    *
    * @param nameRef
@@ -355,8 +366,9 @@ public interface IModule extends IMetapathQueryable {
    */
   @NonNull
   default QName toFlagQName(@NonNull String nameRef) {
-    // TODO: handle namespace prefix
-    return new QName(nameRef);
+    return EQNameUtils.parseName(
+        nameRef,
+        getModuleStaticContext().getFlagPrefixResolver());
   }
 
   /**
@@ -370,7 +382,6 @@ public interface IModule extends IMetapathQueryable {
    */
   @NonNull
   default QName toFlagQName(@Nullable String modelNamespace, @NonNull String nameRef) {
-    // TODO: handle namespace prefix
     return modelNamespace == null
         ? new QName(nameRef)
         : new QName(modelNamespace, nameRef);
@@ -385,7 +396,9 @@ public interface IModule extends IMetapathQueryable {
    */
   @NonNull
   default QName toModelQName(@NonNull String nameRef) {
-    return toModelQName(null, nameRef);
+    return EQNameUtils.parseName(
+        nameRef,
+        getModuleStaticContext().getModelPrefixResolver());
   }
 
   /**
@@ -399,20 +412,16 @@ public interface IModule extends IMetapathQueryable {
    */
   @NonNull
   default QName toModelQName(@Nullable String modelNamespace, @NonNull String nameRef) {
-    // TODO: handle namespace prefix
     String namespace = modelNamespace == null ? getXmlNamespace().toASCIIString() : modelNamespace;
     return new QName(namespace, nameRef);
   }
 
   /**
-   * If this module is supported by an underlying Metaschema module
-   * representation, this method retrieves that representation.
+   * Get the Metapath static context for compiling Metapath expressions that query
+   * instances of this model.
    *
-   * @return the underlying document as a Metapath node item or {@code null}
+   * @return the static context
    */
-  @Override
-  @Nullable
-  default IDocumentNodeItem getNodeItem() {
-    return null;
-  }
+  @NonNull
+  StaticContext getModuleStaticContext();
 }

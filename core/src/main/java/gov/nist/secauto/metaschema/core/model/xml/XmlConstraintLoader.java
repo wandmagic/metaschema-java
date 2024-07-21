@@ -27,6 +27,7 @@
 package gov.nist.secauto.metaschema.core.model.xml;
 
 import gov.nist.secauto.metaschema.core.metapath.MetapathException;
+import gov.nist.secauto.metaschema.core.metapath.StaticContext;
 import gov.nist.secauto.metaschema.core.model.AbstractLoader;
 import gov.nist.secauto.metaschema.core.model.IConstraintLoader;
 import gov.nist.secauto.metaschema.core.model.IModule;
@@ -61,14 +62,12 @@ import org.apache.xmlbeans.impl.values.XmlValueNotSupportedException;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.Deque;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.xml.namespace.QName;
 
@@ -83,7 +82,7 @@ import edu.umd.cs.findbugs.annotations.NonNull;
  */
 @SuppressWarnings("PMD.CouplingBetweenObjects")
 public class XmlConstraintLoader
-    extends AbstractLoader<IConstraintSet>
+    extends AbstractLoader<List<IConstraintSet>>
     implements IConstraintLoader {
 
   @SuppressWarnings("PMD.UseConcurrentHashMap")
@@ -120,7 +119,7 @@ public class XmlConstraintLoader
       };
 
   @Override
-  protected IConstraintSet parseResource(@NonNull URI resource, @NonNull Deque<URI> visitedResources)
+  protected List<IConstraintSet> parseResource(@NonNull URI resource, @NonNull Deque<URI> visitedResources)
       throws IOException {
 
     // parse this metaschema
@@ -128,17 +127,17 @@ public class XmlConstraintLoader
 
     // now check if this constraint set imports other constraint sets
     int size = xmlObject.getMETASCHEMACONSTRAINTS().sizeOfImportArray();
-    @NonNull Map<URI, IConstraintSet> importedConstraints;
+    Set<IConstraintSet> importedConstraints;
     if (size == 0) {
-      importedConstraints = ObjectUtils.notNull(Collections.emptyMap());
+      importedConstraints = CollectionUtil.emptySet();
     } else {
       try {
-        importedConstraints = new LinkedHashMap<>();
+        importedConstraints = new LinkedHashSet<>();
         for (METASCHEMACONSTRAINTSDocument.METASCHEMACONSTRAINTS.Import imported : xmlObject.getMETASCHEMACONSTRAINTS()
             .getImportList()) {
           URI importedResource = URI.create(imported.getHref());
           importedResource = ObjectUtils.notNull(resource.resolve(importedResource));
-          importedConstraints.put(importedResource, loadInternal(importedResource, visitedResources));
+          importedConstraints.addAll(loadInternal(importedResource, visitedResources));
         }
       } catch (MetaschemaException ex) {
         throw new IOException(ex);
@@ -146,8 +145,10 @@ public class XmlConstraintLoader
     }
 
     // now create this constraint set
-    Collection<IConstraintSet> values = importedConstraints.values();
-    return new DefaultConstraintSet(resource, parseScopedConstraints(xmlObject, resource), new LinkedHashSet<>(values));
+    return CollectionUtil.singletonList(new DefaultConstraintSet(
+        resource,
+        parseScopedConstraints(xmlObject, resource),
+        importedConstraints));
   }
 
   /**
@@ -176,29 +177,41 @@ public class XmlConstraintLoader
    *
    * @param xmlObject
    *          the XMLBeans object
-   * @param source
-   *          the source of the constraint content
+   * @param resource
+   *          the resource containing the constraint content
    * @return the scoped constraint definitions
    */
   @SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops") // intentional
   @NonNull
   protected List<IScopedContraints> parseScopedConstraints(
       @NonNull METASCHEMACONSTRAINTSDocument xmlObject,
-      @NonNull URI source) {
+      @NonNull URI resource) {
     List<IScopedContraints> scopedConstraints = new LinkedList<>();
-    ISource constraintSource = ISource.externalSource(source);
 
-    for (Scope scope : xmlObject.getMETASCHEMACONSTRAINTS().getScopeList()) {
+    StaticContext.Builder builder = StaticContext.builder()
+        .baseUri(resource);
+
+    METASCHEMACONSTRAINTSDocument.METASCHEMACONSTRAINTS constraints = xmlObject.getMETASCHEMACONSTRAINTS();
+
+    constraints.getNamespaceBindingList().stream()
+        .forEach(binding -> builder.namespace(
+            ObjectUtils.notNull(binding.getPrefix()), ObjectUtils.notNull(binding.getUri())));
+
+    builder.useWildcardWhenNamespaceNotDefaulted(true);
+
+    ISource source = ISource.externalSource(builder.build());
+
+    for (Scope scope : constraints.getScopeList()) {
       assert scope != null;
 
       List<ITargetedConstraints> targetedConstraints = new LinkedList<>(); // NOPMD - intentional
       try {
-        SCOPE_PARSER.parse(scope, Pair.of(constraintSource, targetedConstraints));
+        SCOPE_PARSER.parse(scope, Pair.of(source, targetedConstraints));
       } catch (MetapathException | XmlValueNotSupportedException ex) {
         if (ex.getCause() instanceof MetapathException) {
           throw new MetapathException(
               String.format("Unable to compile a Metapath in '%s'. %s",
-                  constraintSource.getSource(),
+                  source.getSource(),
                   ex.getLocalizedMessage()),
               ex);
         }

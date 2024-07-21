@@ -81,11 +81,13 @@ import nl.talsmasoftware.lazy4j.Lazy;
 
 public abstract class AbstractTestSuite {
   private static final Logger LOGGER = LogManager.getLogger(AbstractTestSuite.class);
-  private static final BindingModuleLoader LOADER = new BindingModuleLoader();
+  private static final BindingModuleLoader LOADER;
 
   private static final boolean DELETE_RESULTS_ON_EXIT = false;
 
   static {
+    IBindingContext bindingContext = new DefaultBindingContext();
+    LOADER = new BindingModuleLoader(bindingContext);
     LOADER.allowEntityResolution();
   }
 
@@ -327,7 +329,7 @@ public abstract class AbstractTestSuite {
               throw new JUnitException( // NOPMD - cause is relevant, exception is not
                   "failed to generate schema", ex.getCause());
             }
-            validate(ObjectUtils.requireNonNull(supplier.get()), schemaPath);
+            validateWithSchema(ObjectUtils.requireNonNull(supplier.get()), schemaPath);
           }
         });
 
@@ -410,7 +412,7 @@ public abstract class AbstractTestSuite {
 
             assertEquals(
                 contentCase.getValidationResult(),
-                validate(
+                validateWithSchema(
                     ObjectUtils.notNull(contentValidator), ObjectUtils.notNull(contentUri.toURL())),
                 "validation did not match expectation for: " + contentUri.toASCIIString());
           });
@@ -445,7 +447,7 @@ public abstract class AbstractTestSuite {
                   ex.getCause());
             }
             assertEquals(contentCase.getValidationResult(),
-                validate(
+                validateWithSchema(
                     ObjectUtils.notNull(contentValidator),
                     ObjectUtils.notNull(convertedContetPath.toUri().toURL())),
                 String.format("validation of '%s' did not match expectation", convertedContetPath));
@@ -454,7 +456,8 @@ public abstract class AbstractTestSuite {
     return retval;
   }
 
-  private static boolean validate(@NonNull IContentValidator validator, @NonNull URL target) throws IOException {
+  private static boolean validateWithSchema(@NonNull IContentValidator validator, @NonNull URL target)
+      throws IOException {
     IValidationResult schemaValidationResult;
     try {
       schemaValidationResult = validator.validate(target);
@@ -464,7 +467,8 @@ public abstract class AbstractTestSuite {
     return processValidationResult(schemaValidationResult);
   }
 
-  protected static boolean validate(@NonNull IContentValidator validator, @NonNull Path target) throws IOException {
+  protected static boolean validateWithSchema(@NonNull IContentValidator validator, @NonNull Path target)
+      throws IOException {
     IValidationResult schemaValidationResult = validator.validate(target);
     if (!schemaValidationResult.isPassing()) {
       LOGGER.atError().log("Schema validation failed for: {}", target);

@@ -183,8 +183,7 @@ public interface IIndex {
       @NonNull INodeItem item,
       @NonNull IKeyField keyField,
       @NonNull DynamicContext dynamicContext) {
-    String keyPath = keyField.getTarget();
-    MetapathExpression keyMetapath = MetapathExpression.compile(keyPath, dynamicContext.getStaticContext());
+    MetapathExpression keyMetapath = keyField.getTargetMetapath();
 
     IItem keyItem;
     try {

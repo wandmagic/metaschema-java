@@ -24,32 +24,12 @@
  * OF THE RESULTS OF, OR USE OF, THE SOFTWARE OR SERVICES PROVIDED HEREUNDER.
  */
 
-package gov.nist.secauto.metaschema.core.metapath.item.node;
+package gov.nist.secauto.metaschema.databind.model;
 
-import gov.nist.secauto.metaschema.core.metapath.item.atomic.IAnyAtomicItem;
-import gov.nist.secauto.metaschema.core.metapath.item.atomic.IAtomicValuedItem;
-import gov.nist.secauto.metaschema.core.model.IValuedDefinition;
+import gov.nist.secauto.metaschema.core.model.IModelElement;
 
-import edu.umd.cs.findbugs.annotations.NonNull;
-import edu.umd.cs.findbugs.annotations.Nullable;
+public interface IBoundModelElement extends IModelElement {
 
-interface IFeatureNullableAtomicValuedItem
-    extends IFeatureRequiredDataItem, IAtomicValuedItem {
-
-  @NonNull
-  IValuedDefinition getDefinition();
-
-  @Nullable
-  Object getAtomicValue();
-
-  @Nullable
-  default IAnyAtomicItem newAtomicItem() {
-    Object atomicValue = getAtomicValue();
-    IAnyAtomicItem retval = null;
-    if (atomicValue != null) {
-      IValuedDefinition def = getDefinition();
-      retval = def.getJavaTypeAdapter().newItem(atomicValue);
-    }
-    return retval;
-  }
+  @Override
+  IBoundModule getContainingModule();
 }

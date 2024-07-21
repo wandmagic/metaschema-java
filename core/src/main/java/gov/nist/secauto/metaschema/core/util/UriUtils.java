@@ -59,6 +59,7 @@ public final class UriUtils {
    *           an error if the location string is not convertible to URI
    */
   @SuppressWarnings("PMD.PreserveStackTrace")
+  @NonNull
   public static URI toUri(@NonNull String location, @NonNull URI baseUri) throws URISyntaxException {
     URI asUri;
     try {
@@ -74,7 +75,7 @@ public final class UriUtils {
         throw ex;
       }
     }
-    return baseUri.resolve(asUri.normalize());
+    return ObjectUtils.notNull(baseUri.resolve(asUri.normalize()));
   }
 
   /**

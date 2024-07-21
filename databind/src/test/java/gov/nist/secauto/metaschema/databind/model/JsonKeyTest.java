@@ -28,11 +28,12 @@ package gov.nist.secauto.metaschema.databind.model;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-import gov.nist.secauto.metaschema.core.model.IMetaschemaModule;
 import gov.nist.secauto.metaschema.core.model.MetaschemaException;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
+import gov.nist.secauto.metaschema.databind.DefaultBindingContext;
 import gov.nist.secauto.metaschema.databind.IBindingContext;
 import gov.nist.secauto.metaschema.databind.model.metaschema.BindingModuleLoader;
+import gov.nist.secauto.metaschema.databind.model.metaschema.IBindingMetaschemaModule;
 
 import org.junit.jupiter.api.Test;
 
@@ -51,8 +52,9 @@ class JsonKeyTest
 
   @Test
   void testJsonKey() throws IOException, MetaschemaException {
-    IMetaschemaModule module = new BindingModuleLoader().load(ObjectUtils.requireNonNull(
-        Paths.get("src/test/resources/metaschema/json-key/metaschema.xml")));
+    IBindingMetaschemaModule module
+        = new BindingModuleLoader(new DefaultBindingContext()).load(ObjectUtils.requireNonNull(
+            Paths.get("src/test/resources/metaschema/json-key/metaschema.xml")));
 
     IBindingContext bindingContext = IBindingContext.instance();
     bindingContext.registerModule(module, ObjectUtils.notNull(generationDir));

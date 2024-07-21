@@ -29,7 +29,6 @@ package gov.nist.secauto.metaschema.databind.model.metaschema;
 import gov.nist.secauto.metaschema.core.configuration.IConfiguration;
 import gov.nist.secauto.metaschema.core.configuration.IMutableConfiguration;
 import gov.nist.secauto.metaschema.core.model.AbstractModuleLoader;
-import gov.nist.secauto.metaschema.core.model.IMetaschemaModule;
 import gov.nist.secauto.metaschema.core.model.IModuleLoader;
 import gov.nist.secauto.metaschema.core.model.MetaschemaException;
 import gov.nist.secauto.metaschema.core.util.CollectionUtil;
@@ -51,39 +50,45 @@ import java.util.stream.Collectors;
 import edu.umd.cs.findbugs.annotations.NonNull;
 
 public class BindingModuleLoader
-    extends AbstractModuleLoader<METASCHEMA, IMetaschemaModule>
+    extends AbstractModuleLoader<METASCHEMA, IBindingMetaschemaModule>
     implements IMutableConfiguration<DeserializationFeature<?>> {
-  @NonNull
-  private final IBoundLoader loader;
 
-  // @NonNull
-  // private final
+  @NonNull
+  private final IBindingContext bindingContext;
+  private IBoundLoader loader;
 
   /**
    * Construct a new Metaschema loader.
+   *
+   * @param bindingContext
+   *          the Metaschema binding context used to load bound resources
    */
-  public BindingModuleLoader() {
-    this(CollectionUtil.emptyList());
+  public BindingModuleLoader(@NonNull IBindingContext bindingContext) {
+    this(bindingContext, CollectionUtil.emptyList());
   }
 
   /**
    * Construct a new Metaschema loader, which use the provided module post
    * processors when loading a module.
    *
+   * @param bindingContext
+   *          the Metaschema binding context used to load bound resources
    * @param modulePostProcessors
    *          post processors to perform additional module customization when
    *          loading
    */
-  public BindingModuleLoader(@NonNull List<IModuleLoader.IModulePostProcessor> modulePostProcessors) {
+  public BindingModuleLoader(
+      @NonNull IBindingContext bindingContext,
+      @NonNull List<IModuleLoader.IModulePostProcessor> modulePostProcessors) {
     super(modulePostProcessors);
-    this.loader = IBindingContext.instance().newBoundLoader();
+    this.bindingContext = bindingContext;
   }
 
   @Override
-  protected IMetaschemaModule newModule(
+  protected IBindingMetaschemaModule newModule(
       URI resource,
       METASCHEMA binding,
-      List<? extends IMetaschemaModule> importedModules)
+      List<? extends IBindingMetaschemaModule> importedModules)
       throws MetaschemaException {
     return new BindingModule(
         resource,
@@ -107,7 +112,12 @@ public class BindingModuleLoader
   }
 
   protected IBoundLoader getLoader() {
-    return loader;
+    synchronized (this) {
+      if (this.loader == null) {
+        this.loader = bindingContext.newBoundLoader();
+      }
+      return this.loader;
+    }
   }
 
   @Override

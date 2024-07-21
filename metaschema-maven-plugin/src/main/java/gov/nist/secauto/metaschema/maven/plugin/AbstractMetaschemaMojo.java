@@ -29,12 +29,16 @@ package gov.nist.secauto.metaschema.maven.plugin;
 import gov.nist.secauto.metaschema.core.model.IConstraintLoader;
 import gov.nist.secauto.metaschema.core.model.MetaschemaException;
 import gov.nist.secauto.metaschema.core.model.constraint.IConstraintSet;
+import gov.nist.secauto.metaschema.core.model.xml.ExternalConstraintsModulePostProcessor;
 import gov.nist.secauto.metaschema.core.util.CollectionUtil;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
+import gov.nist.secauto.metaschema.databind.IBindingContext;
 import gov.nist.secauto.metaschema.databind.model.metaschema.BindingConstraintLoader;
+import gov.nist.secauto.metaschema.databind.model.metaschema.BindingModuleLoader;
 
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecution;
+import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
@@ -50,6 +54,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 public abstract class AbstractMetaschemaMojo
@@ -256,11 +261,12 @@ public abstract class AbstractMetaschemaMojo
     return Stream.of(ds.getIncludedFiles()).map(filename -> new File(metaschemaDir, filename)).distinct();
   }
 
-  protected List<IConstraintSet> getConstraints() throws MetaschemaException, IOException {
-    IConstraintLoader loader = new BindingConstraintLoader();
+  protected List<IConstraintSet> getConstraints(@NonNull IBindingContext bindingContext)
+      throws MetaschemaException, IOException {
+    IConstraintLoader loader = new BindingConstraintLoader(bindingContext);
     List<IConstraintSet> constraintSets = new ArrayList<>(constraints.length);
     for (File constraint : this.constraints) {
-      constraintSets.add(loader.load(ObjectUtils.notNull(constraint)));
+      constraintSets.addAll(loader.load(ObjectUtils.notNull(constraint)));
     }
     return CollectionUtil.unmodifiableList(constraintSets);
   }
@@ -339,5 +345,33 @@ public abstract class AbstractMetaschemaMojo
       }
     }
     return generate;
+  }
+
+  /**
+   * Construct a new module loader based on the provided mojo configuration.
+   *
+   * @return the module loader
+   * @throws MojoExecutionException
+   *           if an error occurred while loading the configured constraints
+   */
+  @NonNull
+  protected BindingModuleLoader newModuleLoader() throws MojoExecutionException {
+    IBindingContext bindingContext = IBindingContext.instance();
+
+    List<IConstraintSet> constraints;
+    try {
+      constraints = getConstraints(bindingContext);
+    } catch (MetaschemaException | IOException ex) {
+      throw new MojoExecutionException("Unable to load external constraints.", ex);
+    }
+
+    // generate Java sources based on provided metaschema sources
+    BindingModuleLoader loader = constraints.isEmpty()
+        ? new BindingModuleLoader(bindingContext)
+        : new BindingModuleLoader(
+            bindingContext,
+            CollectionUtil.singletonList(new ExternalConstraintsModulePostProcessor(constraints)));
+    loader.allowEntityResolution();
+    return loader;
   }
 }

@@ -44,6 +44,7 @@ import gov.nist.secauto.metaschema.core.model.IConstraintLoader;
 import gov.nist.secauto.metaschema.core.model.MetaschemaException;
 import gov.nist.secauto.metaschema.core.model.constraint.IConstraintSet;
 import gov.nist.secauto.metaschema.core.model.constraint.ValidationFeature;
+import gov.nist.secauto.metaschema.core.model.validation.AggregateValidationResult;
 import gov.nist.secauto.metaschema.core.model.validation.IValidationResult;
 import gov.nist.secauto.metaschema.core.util.CollectionUtil;
 import gov.nist.secauto.metaschema.core.util.CustomCollectors;
@@ -180,18 +181,19 @@ public abstract class AbstractValidateContentCommand
     @SuppressWarnings("PMD.OnlyOneReturn") // readability
     @Override
     public ExitStatus execute() {
-      URI cwd = Paths.get("").toAbsolutePath().toUri();
+      URI cwd = ObjectUtils.notNull(Paths.get("").toAbsolutePath().toUri());
       CommandLine cmdLine = getCommandLine();
 
       Set<IConstraintSet> constraintSets;
       if (cmdLine.hasOption(CONSTRAINTS_OPTION)) {
-        IConstraintLoader constraintLoader = new BindingConstraintLoader();
+        IConstraintLoader constraintLoader = new BindingConstraintLoader(IBindingContext.instance());
         constraintSets = new LinkedHashSet<>();
         String[] args = cmdLine.getOptionValues(CONSTRAINTS_OPTION);
         for (String arg : args) {
+          assert arg != null;
           try {
             URI constraintUri = ObjectUtils.requireNonNull(UriUtils.toUri(arg, cwd));
-            constraintSets.add(constraintLoader.load(constraintUri));
+            constraintSets.addAll(constraintLoader.load(constraintUri));
           } catch (IOException | MetaschemaException | MetapathException | URISyntaxException ex) {
             return ExitCode.IO_ERROR.exitMessage("Unable to load constraint set '" + arg + "'.").withThrowable(ex);
           }
@@ -199,6 +201,7 @@ public abstract class AbstractValidateContentCommand
       } else {
         constraintSets = CollectionUtil.emptySet();
       }
+
       IBindingContext bindingContext;
       try {
         bindingContext = getBindingContext(constraintSets);
@@ -212,7 +215,7 @@ public abstract class AbstractValidateContentCommand
 
       List<String> extraArgs = cmdLine.getArgList();
 
-      String sourceName = extraArgs.get(0);
+      String sourceName = ObjectUtils.requireNonNull(extraArgs.get(0));
       URI source;
 
       try {
@@ -264,7 +267,14 @@ public abstract class AbstractValidateContentCommand
 
       IValidationResult validationResult;
       try {
-        validationResult = bindingContext.validate(source, asFormat, this, configuration);
+        // perform schema validation
+        validationResult = this.validateWithSchema(source, asFormat);
+
+        if (validationResult.isPassing()) {
+          // perform constraint validation
+          IValidationResult constraintValidationResult = bindingContext.validateWithConstraints(source, configuration);
+          validationResult = AggregateValidationResult.aggregate(validationResult, constraintValidationResult);
+        }
       } catch (FileNotFoundException ex) {
         return ExitCode.IO_ERROR.exitMessage(String.format("Resource not found at '%s'", source)).withThrowable(ex);
 
@@ -290,9 +300,8 @@ public abstract class AbstractValidateContentCommand
         } catch (IOException ex) {
           return ExitCode.IO_ERROR.exit().withThrowable(ex);
         }
-      } else if (!validationResult.isPassing()) {
+      } else if (!validationResult.getFindings().isEmpty()) {
         LOGGER.info("Validation identified the following issues:", source);
-
         LoggingValidationHandler.instance().handleValidationResults(validationResult);
       }
 

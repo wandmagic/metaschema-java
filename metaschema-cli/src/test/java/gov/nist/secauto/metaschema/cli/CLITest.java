@@ -67,20 +67,26 @@ public class CLITest {
   private static Stream<Arguments> providesValues() {
     List<Arguments> values = new LinkedList<>() {
       {
-        add(Arguments.of(new String[] {}, ExitCode.INVALID_COMMAND, NO_EXCEPTION_CLASS));
+        add(Arguments.of(new String[] {}, ExitCode.INVALID_COMMAND,
+            NO_EXCEPTION_CLASS));
         add(Arguments.of(new String[] { "-h" }, ExitCode.OK, NO_EXCEPTION_CLASS));
         add(Arguments.of(new String[] { "generate-schema", "--help" }, ExitCode.OK,
             NO_EXCEPTION_CLASS));
-        add(Arguments.of(new String[] { "validate", "--help" }, ExitCode.OK, NO_EXCEPTION_CLASS));
+        add(Arguments.of(new String[] { "validate", "--help" }, ExitCode.OK,
+            NO_EXCEPTION_CLASS));
         add(Arguments.of(new String[] { "validate-content", "--help" }, ExitCode.OK,
             NO_EXCEPTION_CLASS));
         add(Arguments.of(
             new String[] { "validate",
-                "../databind/src/test/resources/metaschema/fields_with_flags/metaschema.xml" },
+                "../databind/src/test/resources/metaschema/fields_with_flags/metaschema.xml"
+            },
             ExitCode.OK, NO_EXCEPTION_CLASS));
-        add(Arguments.of(new String[] { "generate-schema", "--overwrite", "--as", "JSON",
-            "../databind/src/test/resources/metaschema/fields_with_flags/metaschema.xml",
-            "target/schema-test.json" }, ExitCode.OK, NO_EXCEPTION_CLASS));
+        add(Arguments.of(
+            new String[] { "generate-schema", "--overwrite", "--as",
+                "JSON",
+                "../databind/src/test/resources/metaschema/fields_with_flags/metaschema.xml",
+                "target/schema-test.json" },
+            ExitCode.OK, NO_EXCEPTION_CLASS));
         add(Arguments.of(
             new String[] { "validate-content", "--as=xml",
                 "-m=../databind/src/test/resources/metaschema/bad_index-has-key/metaschema.xml",

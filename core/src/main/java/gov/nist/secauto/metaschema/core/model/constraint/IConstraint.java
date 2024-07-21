@@ -29,7 +29,6 @@ package gov.nist.secauto.metaschema.core.model.constraint;
 import gov.nist.secauto.metaschema.core.datatype.markup.MarkupMultiline;
 import gov.nist.secauto.metaschema.core.metapath.DynamicContext;
 import gov.nist.secauto.metaschema.core.metapath.ISequence;
-import gov.nist.secauto.metaschema.core.metapath.MetapathExpression;
 import gov.nist.secauto.metaschema.core.metapath.item.node.IDefinitionNodeItem;
 import gov.nist.secauto.metaschema.core.model.IAttributable;
 import gov.nist.secauto.metaschema.core.model.IDescribable;
@@ -133,21 +132,6 @@ public interface IConstraint extends IAttributable, IDescribable {
    * Based on the provided {@code contextNodeItem}, find all nodes matching the
    * target expression.
    *
-   * @param contextNodeItem
-   *          the node item to evaluate the target expression against
-   * @return the matching nodes as a sequence
-   * @see #getTarget()
-   */
-  @NonNull
-  default ISequence<? extends IDefinitionNodeItem<?, ?>> matchTargets(
-      @NonNull IDefinitionNodeItem<?, ?> contextNodeItem) {
-    return MetapathExpression.compile(getTarget()).evaluate(contextNodeItem);
-  }
-
-  /**
-   * Based on the provided {@code contextNodeItem}, find all nodes matching the
-   * target expression.
-   *
    * @param item
    *          the node item to evaluate the target expression against
    * @param dynamicContext
@@ -156,12 +140,9 @@ public interface IConstraint extends IAttributable, IDescribable {
    * @see #getTarget()
    */
   @NonNull
-  default ISequence<? extends IDefinitionNodeItem<?, ?>> matchTargets(
+  ISequence<? extends IDefinitionNodeItem<?, ?>> matchTargets(
       @NonNull IDefinitionNodeItem<?, ?> item,
-      @NonNull DynamicContext dynamicContext) {
-    return item.hasValue() ? MetapathExpression.compile(getTarget(), dynamicContext.getStaticContext())
-        .evaluate(item, dynamicContext) : ISequence.empty();
-  }
+      @NonNull DynamicContext dynamicContext);
 
   /**
    * Retrieve the remarks associated with the constraint.

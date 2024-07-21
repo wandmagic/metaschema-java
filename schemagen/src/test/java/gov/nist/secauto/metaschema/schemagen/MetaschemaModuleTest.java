@@ -31,6 +31,8 @@ import gov.nist.secauto.metaschema.core.configuration.IMutableConfiguration;
 import gov.nist.secauto.metaschema.core.model.IModule;
 import gov.nist.secauto.metaschema.core.model.MetaschemaException;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
+import gov.nist.secauto.metaschema.databind.DefaultBindingContext;
+import gov.nist.secauto.metaschema.databind.IBindingContext;
 import gov.nist.secauto.metaschema.databind.model.metaschema.BindingModuleLoader;
 import gov.nist.secauto.metaschema.schemagen.json.JsonSchemaGenerator;
 import gov.nist.secauto.metaschema.schemagen.xml.XmlSchemaGenerator;
@@ -54,7 +56,8 @@ class MetaschemaModuleTest {
 
   @Test
   void testGenerateMetaschemaModuleJson() throws MetaschemaException, IOException {
-    BindingModuleLoader loader = new BindingModuleLoader();
+    IBindingContext context = new DefaultBindingContext();
+    BindingModuleLoader loader = new BindingModuleLoader(context);
 
     IModule module = loader.load(METASCHEMA_FILE);
 
@@ -75,7 +78,8 @@ class MetaschemaModuleTest {
 
   @Test
   void testGenerateMetaschemaModuleXml() throws MetaschemaException, IOException {
-    BindingModuleLoader loader = new BindingModuleLoader();
+    IBindingContext context = new DefaultBindingContext();
+    BindingModuleLoader loader = new BindingModuleLoader(context);
 
     IModule module = loader.load(METASCHEMA_FILE);
 

@@ -26,12 +26,14 @@
 
 package gov.nist.secauto.metaschema.databind.model;
 
+import gov.nist.secauto.metaschema.core.metapath.StaticContext;
 import gov.nist.secauto.metaschema.core.model.AbstractModule;
 import gov.nist.secauto.metaschema.core.model.IBoundObject;
 import gov.nist.secauto.metaschema.core.util.CollectionUtil;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 import gov.nist.secauto.metaschema.databind.IBindingContext;
 import gov.nist.secauto.metaschema.databind.model.annotations.MetaschemaModule;
+import gov.nist.secauto.metaschema.databind.model.annotations.NsBinding;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
@@ -40,6 +42,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -64,6 +67,8 @@ public abstract class AbstractBoundModule
   private final Lazy<Map<QName, IBoundDefinitionModelAssembly>> assemblyDefinitions;
   @NonNull
   private final Lazy<Map<QName, IBoundDefinitionModelField<?>>> fieldDefinitions;
+  @NonNull
+  private final Lazy<StaticContext> staticContext;
 
   /**
    * Create a new Module instance for a given class annotated by the
@@ -155,12 +160,46 @@ public abstract class AbstractBoundModule
         .collect(Collectors.toUnmodifiableMap(
             IBoundDefinitionModelField::getDefinitionQName,
             Function.identity()))));
+    this.staticContext = ObjectUtils.notNull(Lazy.lazy(() -> {
+      StaticContext.Builder builder = StaticContext.builder()
+          .defaultModelNamespace(getXmlNamespace());
+
+      getNamespaceBindings()
+          .forEach(
+              (prefix, ns) -> builder.namespace(
+                  ObjectUtils.requireNonNull(prefix),
+                  ObjectUtils.requireNonNull(ns)));
+      return builder.build();
+    }));
+  }
+
+  @Override
+  public StaticContext getModuleStaticContext() {
+    return ObjectUtils.notNull(staticContext.get());
   }
 
   @Override
   @NonNull
   public IBindingContext getBindingContext() {
     return bindingContext;
+  }
+
+  @Override
+  public Map<String, String> getNamespaceBindings() {
+    return ObjectUtils.notNull(Arrays.stream(getNsBindings())
+        .collect(Collectors.toMap(
+            NsBinding::prefix,
+            NsBinding::uri,
+            (v1, v2) -> v2,
+            LinkedHashMap::new)));
+  }
+
+  @SuppressWarnings({ "null" })
+  @NonNull
+  protected NsBinding[] getNsBindings() {
+    return getClass().isAnnotationPresent(MetaschemaModule.class)
+        ? getClass().getAnnotation(MetaschemaModule.class).nsBindings()
+        : (NsBinding[]) Array.newInstance(NsBinding.class, 0);
   }
 
   /**

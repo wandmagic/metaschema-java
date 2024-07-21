@@ -63,6 +63,7 @@ import gov.nist.secauto.metaschema.databind.model.annotations.MetaschemaAssembly
 import gov.nist.secauto.metaschema.databind.model.annotations.MetaschemaField;
 import gov.nist.secauto.metaschema.databind.model.annotations.MetaschemaModule;
 import gov.nist.secauto.metaschema.databind.model.annotations.MetaschemaPackage;
+import gov.nist.secauto.metaschema.databind.model.annotations.NsBinding;
 import gov.nist.secauto.metaschema.databind.model.annotations.XmlNs;
 import gov.nist.secauto.metaschema.databind.model.annotations.XmlNsForm;
 import gov.nist.secauto.metaschema.databind.model.annotations.XmlSchema;
@@ -196,7 +197,6 @@ public class DefaultMetaschemaClassFactory implements IMetaschemaClassFactory {
                 Function.identity())));
     String packageName = typeResolver.getPackageName(module);
     return new DefaultGeneratedModuleClass(module, className, classFile, definitionProductions, packageName);
-
   }
 
   @Override
@@ -294,6 +294,18 @@ public class DefaultMetaschemaClassFactory implements IMetaschemaClassFactory {
           "imports",
           "$T.class",
           typeResolver.getClassName(ObjectUtils.notNull(moduleImport)));
+    }
+
+    Map<String, String> bindings = module.getNamespaceBindings();
+    if (!bindings.isEmpty()) {
+      for (Map.Entry<String, String> binding : bindings.entrySet()) {
+        moduleAnnotation.addMember(
+            "nsBindings",
+            "$L",
+            AnnotationSpec.builder(NsBinding.class)
+                .addMember("prefix", "$S", binding.getKey())
+                .addMember("uri", "$S", binding.getValue()));
+      }
     }
 
     {

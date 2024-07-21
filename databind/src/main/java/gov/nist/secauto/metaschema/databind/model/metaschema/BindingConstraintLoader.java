@@ -27,6 +27,7 @@
 package gov.nist.secauto.metaschema.databind.model.metaschema;
 
 import gov.nist.secauto.metaschema.core.metapath.MetapathException;
+import gov.nist.secauto.metaschema.core.metapath.StaticContext;
 import gov.nist.secauto.metaschema.core.model.AbstractLoader;
 import gov.nist.secauto.metaschema.core.model.IAssemblyDefinition;
 import gov.nist.secauto.metaschema.core.model.IConstraintLoader;
@@ -67,13 +68,11 @@ import org.apache.xmlbeans.impl.values.XmlValueNotSupportedException;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Deque;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -89,65 +88,99 @@ import nl.talsmasoftware.lazy4j.Lazy;
  * automatically.
  */
 public class BindingConstraintLoader
-    extends AbstractLoader<IConstraintSet>
+    extends AbstractLoader<List<IConstraintSet>>
     implements IConstraintLoader {
 
   @NonNull
   private final IBoundLoader loader;
 
-  public BindingConstraintLoader() {
+  public BindingConstraintLoader(@NonNull IBindingContext bindingContext) {
     // ensure the bindings are registered
-    IBindingContext.instance().registerBindingMatcher(MetaschemaMetaConstraints.class);
-    IBindingContext.instance().registerBindingMatcher(MetaschemaModuleConstraints.class);
+    bindingContext.registerBindingMatcher(MetaschemaMetaConstraints.class);
+    bindingContext.registerBindingMatcher(MetaschemaModuleConstraints.class);
 
-    this.loader = IBindingContext.instance().newBoundLoader();
+    this.loader = bindingContext.newBoundLoader();
     this.loader.enableFeature(DeserializationFeature.DESERIALIZE_VALIDATE_CONSTRAINTS);
   }
 
   @Override
-  protected IConstraintSet parseResource(@NonNull URI resource, @NonNull Deque<URI> visitedResources)
+  protected List<IConstraintSet> parseResource(@NonNull URI resource, @NonNull Deque<URI> visitedResources)
       throws IOException {
 
     Object constraintsDocument = loader.load(resource);
 
-    ISource source = ISource.externalSource(resource);
+    StaticContext.Builder builder = StaticContext.builder()
+        .baseUri(resource);
 
-    IConstraintSet retval;
+    builder.useWildcardWhenNamespaceNotDefaulted(true);
+
+    List<IConstraintSet> retval;
     if (constraintsDocument instanceof MetaschemaModuleConstraints) {
       MetaschemaModuleConstraints obj = (MetaschemaModuleConstraints) constraintsDocument;
 
       // now check if this constraint set imports other constraint sets
       List<MetaschemaModuleConstraints.Import> imports = CollectionUtil.listOrEmpty(obj.getImports());
 
-      @NonNull Map<URI, IConstraintSet> importedConstraints;
+      @NonNull Set<IConstraintSet> importedConstraints;
       if (imports.isEmpty()) {
-        importedConstraints = ObjectUtils.notNull(Collections.emptyMap());
+        importedConstraints = CollectionUtil.emptySet();
       } else {
         try {
-          importedConstraints = new LinkedHashMap<>();
+          importedConstraints = new LinkedHashSet<>();
           for (MetaschemaModuleConstraints.Import imported : imports) {
             URI importedResource = imported.getHref();
             importedResource = ObjectUtils.notNull(resource.resolve(importedResource));
-            importedConstraints.put(importedResource, loadInternal(importedResource, visitedResources));
+            importedConstraints.addAll(loadInternal(importedResource, visitedResources));
           }
         } catch (MetaschemaException ex) {
           throw new IOException(ex);
         }
       }
 
+      CollectionUtil.listOrEmpty(obj.getNamespaceBindings()).stream()
+          .forEach(binding -> builder.namespace(
+              ObjectUtils.notNull(binding.getPrefix()),
+              ObjectUtils.notNull(binding.getUri())));
+      ISource source = ISource.externalSource(builder.build());
+
       // now create this constraint set
-      retval = new DefaultConstraintSet(
+      retval = CollectionUtil.singletonList(new DefaultConstraintSet(
           resource,
           parseScopedConstraints(obj, source),
-          new LinkedHashSet<>(importedConstraints.values()));
+          new LinkedHashSet<>(importedConstraints)));
     } else if (constraintsDocument instanceof MetaschemaMetaConstraints) {
       MetaschemaMetaConstraints obj = (MetaschemaMetaConstraints) constraintsDocument;
+
+      // now check if this constraint set imports other constraint sets
+      List<MetaschemaMetaConstraints.Import> imports = CollectionUtil.listOrEmpty(obj.getImports());
+
+      retval = new LinkedList<>();
+      if (!imports.isEmpty()) {
+        try {
+          for (MetaschemaMetaConstraints.Import imported : imports) {
+            URI importedResource = imported.getHref();
+            importedResource = ObjectUtils.notNull(resource.resolve(importedResource));
+            retval.addAll(loadInternal(importedResource, visitedResources));
+          }
+        } catch (MetaschemaException ex) {
+          throw new IOException(ex);
+        }
+      }
+
+      CollectionUtil.listOrEmpty(obj.getNamespaceBindings()).stream()
+          .forEach(binding -> builder.namespace(
+              ObjectUtils.notNull(binding.getPrefix()),
+              ObjectUtils.notNull(binding.getUri())));
+
+      ISource source = ISource.externalSource(builder.build());
 
       List<ITargetedConstraints> targetedConstraints = CollectionUtil.listOrEmpty(obj.getContexts()).stream()
           .flatMap(context -> parseContext(ObjectUtils.notNull(context), null, source)
               .getTargetedConstraints().stream())
           .collect(Collectors.toList());
-      retval = new MetaConstraintSet(targetedConstraints);
+      retval.add(new MetaConstraintSet(targetedConstraints));
+
+      retval = CollectionUtil.unmodifiableList(retval);
     } else {
       throw new UnsupportedOperationException(String.format("Unsupported constraint content '%s'.", resource));
     }

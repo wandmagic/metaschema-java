@@ -123,9 +123,14 @@ public final class SarifValidationHandler {
   @NonNull
   private final Map<URI, ArtifactRecord> artifacts = new LinkedHashMap<>();
   @NonNull
-  private final Map<IConstraint, RuleRecord> rules = new LinkedHashMap<>();
+  private final List<AbstractRuleRecord> rules = new LinkedList<>();
+  @NonNull
+  private final Map<IConstraint, ConstraintRuleRecord> constraintRules = new LinkedHashMap<>();
   @NonNull
   private final List<IResult> results = new LinkedList<>();
+  @NonNull
+  private final SchemaRuleRecord schemaRule = new SchemaRuleRecord();
+  private boolean schemaValid = true;
 
   public SarifValidationHandler(
       @NonNull URI source,
@@ -173,11 +178,16 @@ public final class SarifValidationHandler {
     }
   }
 
-  private RuleRecord getRuleRecord(@NonNull IConstraint constraint) {
-    RuleRecord retval = rules.get(constraint);
+  private void addRuleRecord(@NonNull AbstractRuleRecord rule) {
+    rules.add(rule);
+  }
+
+  private ConstraintRuleRecord getRuleRecord(@NonNull IConstraint constraint) {
+    ConstraintRuleRecord retval = constraintRules.get(constraint);
     if (retval == null) {
-      retval = new RuleRecord(constraint);
-      rules.put(constraint, retval);
+      retval = new ConstraintRuleRecord(constraint);
+      constraintRules.put(constraint, retval);
+      addRuleRecord(retval);
     }
     return retval;
   }
@@ -193,10 +203,16 @@ public final class SarifValidationHandler {
 
   private void addJsonValidationFinding(@NonNull JsonValidationFinding finding) {
     results.add(new SchemaResult(finding));
+    if (schemaValid && IValidationFinding.Kind.FAIL.equals(finding.getKind())) {
+      schemaValid = false;
+    }
   }
 
   private void addXmlValidationFinding(@NonNull XmlValidationFinding finding) {
     results.add(new SchemaResult(finding));
+    if (schemaValid && IValidationFinding.Kind.FAIL.equals(finding.getKind())) {
+      schemaValid = false;
+    }
   }
 
   private void addConstraintValidationFinding(@NonNull ConstraintValidationFinding finding) {
@@ -205,7 +221,7 @@ public final class SarifValidationHandler {
 
   public void write(@NonNull Path outputFile) throws IOException {
 
-    URI output = outputFile.toUri();
+    URI output = ObjectUtils.notNull(outputFile.toUri());
 
     Sarif sarif = new Sarif();
     sarif.setVersion("2.1.0");
@@ -234,7 +250,7 @@ public final class SarifValidationHandler {
         driver.setVersion(toolVersion.getVersion());
       }
 
-      for (RuleRecord rule : rules.values()) {
+      for (AbstractRuleRecord rule : rules) {
         driver.addRule(rule.generate());
       }
 
@@ -376,7 +392,7 @@ public final class SarifValidationHandler {
     }
   }
 
-  private class SchemaResult
+  private final class SchemaResult
       extends AbstractResult<IValidationFinding> {
 
     protected SchemaResult(@NonNull IValidationFinding finding) {
@@ -389,6 +405,10 @@ public final class SarifValidationHandler {
 
       Result result = new Result();
 
+      result.setRuleId(schemaRule.getId());
+      result.setRuleIndex(BigInteger.valueOf(schemaRule.getIndex()));
+      result.setGuid(schemaRule.getGuid());
+
       result.setKind(kind(finding).getLabel());
       result.setLevel(level(finding.getSeverity()).getLabel());
       message(finding, result);
@@ -398,7 +418,7 @@ public final class SarifValidationHandler {
     }
   }
 
-  private class ConstraintResult
+  private final class ConstraintResult
       extends AbstractResult<ConstraintValidationFinding> {
 
     protected ConstraintResult(@NonNull ConstraintValidationFinding finding) {
@@ -416,7 +436,7 @@ public final class SarifValidationHandler {
 
       for (IConstraint constraint : finding.getConstraints()) {
         assert constraint != null;
-        RuleRecord rule = getRuleRecord(constraint);
+        ConstraintRuleRecord rule = getRuleRecord(constraint);
 
         Result result = new Result();
 
@@ -437,17 +457,14 @@ public final class SarifValidationHandler {
     }
   }
 
-  private class RuleRecord {
+  private abstract class AbstractRuleRecord {
     private final int index;
     @NonNull
     private final UUID guid;
-    @NonNull
-    private final IConstraint constraint;
 
-    public RuleRecord(@NonNull IConstraint constraint) {
-      this.guid = ObjectUtils.notNull(UUID.randomUUID());
-      this.constraint = constraint;
+    private AbstractRuleRecord() {
       this.index = ruleIndex.addAndGet(1);
+      this.guid = ObjectUtils.notNull(UUID.randomUUID());
     }
 
     public int getIndex() {
@@ -459,18 +476,45 @@ public final class SarifValidationHandler {
       return guid;
     }
 
+    @NonNull
+    protected abstract ReportingDescriptor generate();
+  }
+
+  private final class SchemaRuleRecord
+      extends AbstractRuleRecord {
+
+    @Override
+    protected ReportingDescriptor generate() {
+      ReportingDescriptor retval = new ReportingDescriptor();
+      retval.setId(getId());
+      retval.setGuid(getGuid());
+      return retval;
+
+    }
+
+    public String getId() {
+      return "schema-valid";
+    }
+  }
+
+  private final class ConstraintRuleRecord
+      extends AbstractRuleRecord {
+    @NonNull
+    private final IConstraint constraint;
+
+    public ConstraintRuleRecord(@NonNull IConstraint constraint) {
+      this.constraint = constraint;
+    }
+
+    @NonNull
     public IConstraint getConstraint() {
       return constraint;
     }
 
-    @NonNull
-    private ReportingDescriptor generate() {
+    @Override
+    protected ReportingDescriptor generate() {
       ReportingDescriptor retval = new ReportingDescriptor();
       IConstraint constraint = getConstraint();
-      // String name = constraint.getId();
-      // if (name != null) {
-      // retval.setName(name);
-      // }
 
       String id = constraint.getId();
       if (id != null) {
@@ -494,7 +538,8 @@ public final class SarifValidationHandler {
 
   }
 
-  private class ArtifactRecord {
+  private final class ArtifactRecord {
+    @NonNull
     private final URI uri;
     private final int index;
 

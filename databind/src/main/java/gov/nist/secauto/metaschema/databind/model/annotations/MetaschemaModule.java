@@ -64,6 +64,9 @@ public @interface MetaschemaModule {
   @NonNull
   Class<? extends IBoundModule>[] imports() default {};
 
+  @NonNull
+  NsBinding[] nsBindings() default {};
+
   /**
    * Get any remarks for this metaschema.
    *

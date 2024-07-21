@@ -28,10 +28,11 @@ package gov.nist.secauto.metaschema.databind.codegen;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-import gov.nist.secauto.metaschema.core.model.IMetaschemaModule;
 import gov.nist.secauto.metaschema.core.model.MetaschemaException;
+import gov.nist.secauto.metaschema.core.model.xml.IXmlMetaschemaModule;
 import gov.nist.secauto.metaschema.core.model.xml.ModuleLoader;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
+import gov.nist.secauto.metaschema.databind.DefaultBindingContext;
 import gov.nist.secauto.metaschema.databind.IBindingContext;
 import gov.nist.secauto.metaschema.databind.io.BindingException;
 import gov.nist.secauto.metaschema.databind.io.DeserializationFeature;
@@ -40,6 +41,7 @@ import gov.nist.secauto.metaschema.databind.io.IDeserializer;
 import gov.nist.secauto.metaschema.databind.io.ISerializer;
 import gov.nist.secauto.metaschema.databind.model.binding.metaschema.METASCHEMA;
 import gov.nist.secauto.metaschema.databind.model.metaschema.BindingModuleLoader;
+import gov.nist.secauto.metaschema.databind.model.metaschema.IBindingMetaschemaModule;
 
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -113,16 +115,16 @@ class MetaschemaModuleMetaschemaTest
 
   @Test
   void testModuleLoader() throws MetaschemaException, IOException {
-    BindingModuleLoader loader = new BindingModuleLoader();
-    IMetaschemaModule module = loader.load(METASCHEMA_FILE);
+    BindingModuleLoader loader = new BindingModuleLoader(new DefaultBindingContext());
+    IBindingMetaschemaModule module = loader.load(METASCHEMA_FILE);
     assertNotNull(module);
   }
 
   @Test
   void testOscalBindingModuleLoader() throws MetaschemaException, IOException {
-    BindingModuleLoader loader = new BindingModuleLoader();
+    BindingModuleLoader loader = new BindingModuleLoader(new DefaultBindingContext());
     loader.set(DeserializationFeature.DESERIALIZE_XML_ALLOW_ENTITY_RESOLUTION, true);
-    IMetaschemaModule module = loader.load(ObjectUtils.notNull(URI.create(
+    IBindingMetaschemaModule module = loader.load(ObjectUtils.notNull(URI.create(
         "https://raw.githubusercontent.com/usnistgov/OSCAL/main/src/metaschema/oscal_complete_metaschema.xml")));
     assertNotNull(module);
   }
@@ -132,7 +134,7 @@ class MetaschemaModuleMetaschemaTest
     ModuleLoader loader = new ModuleLoader();
     // loader.set(DeserializationFeature.DESERIALIZE_XML_ALLOW_ENTITY_RESOLUTION,
     // true);
-    IMetaschemaModule module = loader.load(ObjectUtils.notNull(URI.create(
+    IXmlMetaschemaModule module = loader.load(ObjectUtils.notNull(URI.create(
         "https://raw.githubusercontent.com/usnistgov/OSCAL/main/src/metaschema/oscal_complete_metaschema.xml")));
     assertNotNull(module);
   }

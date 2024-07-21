@@ -24,53 +24,10 @@
  * OF THE RESULTS OF, OR USE OF, THE SOFTWARE OR SERVICES PROVIDED HEREUNDER.
  */
 
-package gov.nist.secauto.metaschema.core.model.constraint.impl;
+package gov.nist.secauto.metaschema.databind.model.metaschema;
 
-import gov.nist.secauto.metaschema.core.model.constraint.ISource;
+import gov.nist.secauto.metaschema.core.model.IAssemblyDefinition;
 
-import java.net.URI;
+public interface IBindingDefinitionModelAssembly extends IBindingDefinitionModel, IAssemblyDefinition {
 
-import edu.umd.cs.findbugs.annotations.NonNull;
-
-/**
- * Implements a
- * {@link gov.nist.secauto.metaschema.core.model.constraint.ISource.SourceType#MODEL}
- * source with no associated resource.
- */
-public final class UnknownInternalModelSource implements ISource {
-  @NonNull
-  private static final ISource INSTANCE = new UnknownInternalModelSource();
-
-  /**
-   * Get a new instance of an internal source associated without a resource
-   * location.
-   *
-   * @param location
-   *          the resource location containing a constraint
-   * @return the source
-   */
-  @NonNull
-  public static ISource instance() {
-    return INSTANCE;
-  }
-
-  private UnknownInternalModelSource() {
-    // reduce visibility
-  }
-
-  @Override
-  public SourceType getSourceType() {
-    return SourceType.MODEL;
-  }
-
-  @Override
-  public URI getSource() {
-    // always null
-    return null;
-  }
-
-  @Override
-  public String toString() {
-    return "internal";
-  }
 }

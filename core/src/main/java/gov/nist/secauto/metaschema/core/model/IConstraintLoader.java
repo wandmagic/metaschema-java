@@ -28,6 +28,8 @@ package gov.nist.secauto.metaschema.core.model;
 
 import gov.nist.secauto.metaschema.core.model.constraint.IConstraintSet;
 
-public interface IConstraintLoader extends ILoader<IConstraintSet> {
+import java.util.List;
+
+public interface IConstraintLoader extends ILoader<List<IConstraintSet>> {
   // no additional methods
 }

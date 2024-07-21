@@ -32,6 +32,8 @@ import gov.nist.secauto.metaschema.core.model.IModule;
 import gov.nist.secauto.metaschema.core.model.MetaschemaException;
 import gov.nist.secauto.metaschema.core.model.validation.IContentValidator;
 import gov.nist.secauto.metaschema.core.model.validation.JsonSchemaContentValidator;
+import gov.nist.secauto.metaschema.databind.DefaultBindingContext;
+import gov.nist.secauto.metaschema.databind.IBindingContext;
 import gov.nist.secauto.metaschema.databind.io.Format;
 import gov.nist.secauto.metaschema.databind.model.metaschema.BindingModuleLoader;
 import gov.nist.secauto.metaschema.schemagen.json.JsonSchemaGenerator;
@@ -131,7 +133,8 @@ class JsonSuiteTest
   @Disabled
   @Test
   void testOscalComplete() throws IOException, MetaschemaException { // NOPMD - delegated to doTest
-    BindingModuleLoader loader = new BindingModuleLoader();
+    IBindingContext context = new DefaultBindingContext();
+    BindingModuleLoader loader = new BindingModuleLoader(context);
     loader.allowEntityResolution();
 
     IModule module = loader.load(new URL(
@@ -152,7 +155,8 @@ class JsonSuiteTest
   @Disabled
   @Test
   void testTestMetaschema() throws IOException, MetaschemaException { // NOPMD - delegated to doTest
-    BindingModuleLoader loader = new BindingModuleLoader();
+    IBindingContext context = new DefaultBindingContext();
+    BindingModuleLoader loader = new BindingModuleLoader(context);
     loader.allowEntityResolution();
 
     IModule module = loader.load(new URL(

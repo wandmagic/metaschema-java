@@ -134,7 +134,7 @@ public abstract class AbstractSchemaGeneratorTestSuite
     }
 
     @SuppressWarnings("null")
-    @NonNull Function<Path, XmlSchemaContentValidator> xmlContentValidatorProvider = (path) -> {
+    @NonNull Function<Path, XmlSchemaContentValidator> xmlContentValidatorProvider = path -> {
       try {
         URL schemaResource = path.toUri().toURL();
         @SuppressWarnings("resource") StreamSource source
@@ -147,7 +147,7 @@ public abstract class AbstractSchemaGeneratorTestSuite
     };
     XML_CONTENT_VALIDATOR_PROVIDER = xmlContentValidatorProvider;
 
-    @NonNull Function<Path, JsonSchemaContentValidator> jsonContentValidatorProvider = (path) -> {
+    @NonNull Function<Path, JsonSchemaContentValidator> jsonContentValidatorProvider = path -> {
       try (InputStream is = Files.newInputStream(path, StandardOpenOption.READ)) {
         assert is != null;
         return new JsonSchemaContentValidator(is);
@@ -191,8 +191,10 @@ public abstract class AbstractSchemaGeneratorTestSuite
     Path testSuite = Paths.get("../core/metaschema/test-suite/schema-generation/");
     Path collectionPath = testSuite.resolve(collectionName);
 
+    IBindingContext context = new DefaultBindingContext();
+
     // load the metaschema module
-    BindingModuleLoader loader = new BindingModuleLoader();
+    BindingModuleLoader loader = new BindingModuleLoader(context);
     loader.enableFeature(DeserializationFeature.DESERIALIZE_XML_ALLOW_ENTITY_RESOLUTION);
     loader.allowEntityResolution();
     Path modulePath = collectionPath.resolve(metaschemaName);
@@ -205,7 +207,7 @@ public abstract class AbstractSchemaGeneratorTestSuite
     case JSON:
     case YAML:
       Path jsonSchema = produceJsonSchema(module, generationDir.resolve(generatedSchemaName + ".json"));
-      assertEquals(true, validate(JSON_SCHEMA_VALIDATOR, jsonSchema),
+      assertEquals(true, validateWithSchema(JSON_SCHEMA_VALIDATOR, jsonSchema),
           String.format("JSON schema '%s' was invalid", jsonSchema.toString()));
       schemaPath = jsonSchema;
       break;
@@ -217,7 +219,6 @@ public abstract class AbstractSchemaGeneratorTestSuite
     }
 
     // setup object binding
-    IBindingContext context = new DefaultBindingContext();
     context.registerModule(module, generationDir);
 
     // create content test cases
@@ -229,7 +230,7 @@ public abstract class AbstractSchemaGeneratorTestSuite
       }
 
       assertEquals(contentCase.isValid(),
-          validate(getContentValidatorSupplier().apply(schemaPath), contentPath),
+          validateWithSchema(getContentValidatorSupplier().apply(schemaPath), contentPath),
           String.format("validation of '%s' did not match expectation", contentPath));
     }
   }

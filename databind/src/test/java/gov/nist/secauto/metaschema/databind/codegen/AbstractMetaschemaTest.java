@@ -29,7 +29,6 @@ package gov.nist.secauto.metaschema.databind.codegen;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
 import gov.nist.secauto.metaschema.core.model.IBoundObject;
-import gov.nist.secauto.metaschema.core.model.IMetaschemaModule;
 import gov.nist.secauto.metaschema.core.model.MetaschemaException;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 import gov.nist.secauto.metaschema.databind.DefaultBindingContext;
@@ -39,6 +38,7 @@ import gov.nist.secauto.metaschema.databind.io.BindingException;
 import gov.nist.secauto.metaschema.databind.io.Format;
 import gov.nist.secauto.metaschema.databind.io.IDeserializer;
 import gov.nist.secauto.metaschema.databind.model.metaschema.BindingModuleLoader;
+import gov.nist.secauto.metaschema.databind.model.metaschema.IBindingMetaschemaModule;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -55,7 +55,7 @@ import edu.umd.cs.findbugs.annotations.Nullable;
 
 abstract class AbstractMetaschemaTest {
 
-  private static final BindingModuleLoader LOADER = new BindingModuleLoader();
+  private static final BindingModuleLoader LOADER = new BindingModuleLoader(new DefaultBindingContext());
   private static final Logger LOGGER = LogManager.getLogger(AbstractMetaschemaTest.class);
   // @TempDir
   // Path generationDir;
@@ -63,7 +63,7 @@ abstract class AbstractMetaschemaTest {
   Path generationDir = ObjectUtils.notNull(Paths.get("target/generated-test-sources/metaschema"));
 
   @NonNull
-  private static IMetaschemaModule loadModule(@NonNull Path moduleFile) throws MetaschemaException, IOException {
+  private static IBindingMetaschemaModule loadModule(@NonNull Path moduleFile) throws MetaschemaException, IOException {
     return LOADER.load(moduleFile);
   }
 
@@ -71,7 +71,7 @@ abstract class AbstractMetaschemaTest {
   public static Class<? extends IBoundObject> compileModule(@NonNull Path moduleFile, @Nullable Path bindingFile,
       @NonNull String rootClassName, @NonNull Path classDir)
       throws IOException, ClassNotFoundException, MetaschemaException {
-    IMetaschemaModule module = loadModule(moduleFile);
+    IBindingMetaschemaModule module = loadModule(moduleFile);
 
     DefaultBindingConfiguration bindingConfiguration = new DefaultBindingConfiguration();
     if (bindingFile != null && Files.exists(bindingFile) && Files.isRegularFile(bindingFile)) {

@@ -762,12 +762,23 @@ public class BuildCSTVisitor
   @NonNull
   protected INameTestExpression parseNameTest(NametestContext ctx, boolean flag) {
     ParseTree testType = ObjectUtils.requireNonNull(ctx.getChild(0));
+
+    StaticContext staticContext = getContext();
+
     INameTestExpression retval;
     if (testType instanceof EqnameContext) {
       QName qname = EQNameUtils.parseName(
           ObjectUtils.notNull(ctx.eqname().getText()),
-          flag ? getContext().getFlagPrefixResolver() : getContext().getModelPrefixResolver());
-      retval = new NameTest(qname);
+          flag ? staticContext.getFlagPrefixResolver() : staticContext.getModelPrefixResolver());
+
+      if (!flag
+          && qname.getNamespaceURI().isEmpty()
+          && staticContext.isUseWildcardWhenNamespaceNotDefaulted()) {
+        // Use a wildcard namespace
+        retval = new Wildcard(new Wildcard.MatchAnyNamespace(ObjectUtils.notNull(qname.getLocalPart())));
+      } else {
+        retval = new NameTest(qname);
+      }
     } else { // wildcard
       retval = handleWildcard((WildcardContext) testType);
     }

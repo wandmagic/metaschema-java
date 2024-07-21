@@ -28,6 +28,10 @@ package gov.nist.secauto.metaschema.core.model.constraint.impl;
 
 import gov.nist.secauto.metaschema.core.datatype.markup.MarkupLine;
 import gov.nist.secauto.metaschema.core.datatype.markup.MarkupMultiline;
+import gov.nist.secauto.metaschema.core.metapath.DynamicContext;
+import gov.nist.secauto.metaschema.core.metapath.ISequence;
+import gov.nist.secauto.metaschema.core.metapath.MetapathExpression;
+import gov.nist.secauto.metaschema.core.metapath.item.node.IDefinitionNodeItem;
 import gov.nist.secauto.metaschema.core.model.IAttributable;
 import gov.nist.secauto.metaschema.core.model.constraint.IConstraint;
 import gov.nist.secauto.metaschema.core.model.constraint.ISource;
@@ -40,6 +44,8 @@ import java.util.Set;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
+import nl.talsmasoftware.lazy4j.Lazy;
+import nl.talsmasoftware.lazy4j.LazyEvaluationException;
 
 public abstract class AbstractConstraint implements IConstraint { // NOPMD - intentional data class
   @Nullable
@@ -52,12 +58,12 @@ public abstract class AbstractConstraint implements IConstraint { // NOPMD - int
   private final ISource source;
   @NonNull
   private final Level level;
-  @NonNull
-  private final String target;
   @Nullable
   private final MarkupMultiline remarks;
   @NonNull
   private final Map<IAttributable.Key, Set<String>> properties;
+  @NonNull
+  private final Lazy<MetapathExpression> targetMetapath;
 
   /**
    * Construct a new Metaschema constraint.
@@ -95,9 +101,12 @@ public abstract class AbstractConstraint implements IConstraint { // NOPMD - int
     this.description = description;
     this.source = source;
     this.level = ObjectUtils.requireNonNull(level, "level");
-    this.target = ObjectUtils.requireNonNull(target, "target");
     this.properties = properties;
     this.remarks = remarks;
+    this.targetMetapath = ObjectUtils.notNull(
+        Lazy.lazy(() -> MetapathExpression.compile(
+            target,
+            source.getStaticContext())));
   }
 
   @Override
@@ -128,7 +137,7 @@ public abstract class AbstractConstraint implements IConstraint { // NOPMD - int
 
   @Override
   public String getTarget() {
-    return target;
+    return getTargetMetapath().getPath();
   }
 
   @Override
@@ -139,5 +148,32 @@ public abstract class AbstractConstraint implements IConstraint { // NOPMD - int
   @Override
   public MarkupMultiline getRemarks() {
     return remarks;
+  }
+
+  /**
+   * Get the compiled Metapath expression for the target.
+   *
+   * @return the compiled Metapath expression
+   */
+  @NonNull
+  public MetapathExpression getTargetMetapath() {
+    try {
+      return ObjectUtils.notNull(targetMetapath.get());
+    } catch (LazyEvaluationException ex) {
+      Throwable cause = ex.getCause();
+      if (cause instanceof RuntimeException) {
+        cause.addSuppressed(ex);
+        throw (RuntimeException) cause;
+      }
+      throw ex;
+    }
+  }
+
+  @Override
+  @NonNull
+  public ISequence<? extends IDefinitionNodeItem<?, ?>> matchTargets(
+      @NonNull IDefinitionNodeItem<?, ?> item,
+      @NonNull DynamicContext dynamicContext) {
+    return item.hasValue() ? getTargetMetapath().evaluate(item, dynamicContext) : ISequence.empty();
   }
 }

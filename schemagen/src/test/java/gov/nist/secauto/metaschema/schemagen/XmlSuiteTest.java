@@ -34,6 +34,8 @@ import gov.nist.secauto.metaschema.core.model.IModule;
 import gov.nist.secauto.metaschema.core.model.MetaschemaException;
 import gov.nist.secauto.metaschema.core.model.validation.IContentValidator;
 import gov.nist.secauto.metaschema.core.model.validation.XmlSchemaContentValidator;
+import gov.nist.secauto.metaschema.databind.DefaultBindingContext;
+import gov.nist.secauto.metaschema.databind.IBindingContext;
 import gov.nist.secauto.metaschema.databind.io.Format;
 import gov.nist.secauto.metaschema.databind.model.metaschema.BindingModuleLoader;
 import gov.nist.secauto.metaschema.schemagen.xml.XmlSchemaGenerator;
@@ -172,7 +174,8 @@ class XmlSuiteTest
 
   @Test
   void testliboscalJavaIssue181() throws IOException, MetaschemaException, XMLStreamException, JDOMException {
-    BindingModuleLoader loader = new BindingModuleLoader();
+    IBindingContext context = new DefaultBindingContext();
+    BindingModuleLoader loader = new BindingModuleLoader(context);
     loader.allowEntityResolution();
 
     IModule module = loader.load(new URL(
@@ -209,7 +212,8 @@ class XmlSuiteTest
 
   @Test
   void testLiboscalJavaIssue181() throws IOException, MetaschemaException, XMLStreamException, JDOMException {
-    BindingModuleLoader loader = new BindingModuleLoader();
+    IBindingContext context = new DefaultBindingContext();
+    BindingModuleLoader loader = new BindingModuleLoader(context);
     loader.allowEntityResolution();
 
     IModule module = loader.load(new URL(

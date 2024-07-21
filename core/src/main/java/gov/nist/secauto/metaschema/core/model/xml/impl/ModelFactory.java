@@ -276,12 +276,14 @@ public final class ModelFactory {
 
   private static void buildKeyFields(
       @NonNull KeyConstraintType xmlObject,
-      @NonNull AbstractKeyConstraintBuilder<?, ?> builder) {
+      @NonNull AbstractKeyConstraintBuilder<?, ?> builder,
+      @NonNull ISource source) {
     for (KeyConstraintType.KeyField xmlKeyField : xmlObject.getKeyFieldList()) {
       IKeyField keyField = IKeyField.of(
           ObjectUtils.requireNonNull(xmlKeyField.getTarget()),
           xmlKeyField.isSetPattern() ? xmlKeyField.getPattern() : null, // NOPMD - intentional
-          xmlKeyField.isSetRemarks() ? remarks(ObjectUtils.notNull(xmlKeyField.getRemarks())) : null);
+          xmlKeyField.isSetRemarks() ? remarks(ObjectUtils.notNull(xmlKeyField.getRemarks())) : null,
+          source);
       builder.keyField(keyField);
     }
   }
@@ -307,7 +309,7 @@ public final class ModelFactory {
       builder.remarks(remarks(ObjectUtils.notNull(xmlObject.getRemarks())));
     }
 
-    buildKeyFields(xmlObject, builder);
+    buildKeyFields(xmlObject, builder, source);
 
     return builder.build();
   }
@@ -333,7 +335,7 @@ public final class ModelFactory {
       builder.remarks(remarks(ObjectUtils.notNull(xmlObject.getRemarks())));
     }
 
-    buildKeyFields(xmlObject, builder);
+    buildKeyFields(xmlObject, builder, source);
 
     return builder.build();
   }
@@ -368,7 +370,6 @@ public final class ModelFactory {
       @NonNull IndexHasKeyConstraintType xmlObject,
       @NonNull ISource source) {
     return newIndexHasKeyConstraint(xmlObject, IConstraint.DEFAULT_TARGET_METAPATH, source);
-
   }
 
   @NonNull
@@ -385,7 +386,7 @@ public final class ModelFactory {
       builder.remarks(remarks(ObjectUtils.notNull(xmlObject.getRemarks())));
     }
 
-    buildKeyFields(xmlObject, builder);
+    buildKeyFields(xmlObject, builder, source);
 
     return builder.build();
   }

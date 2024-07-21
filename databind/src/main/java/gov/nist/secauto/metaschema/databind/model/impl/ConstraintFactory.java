@@ -238,14 +238,17 @@ final class ConstraintFactory {
   }
 
   @NonNull
-  static <T extends AbstractKeyConstraintBuilder<T, ?>> T applyKeyFields(@NonNull T builder,
+  static <T extends AbstractKeyConstraintBuilder<T, ?>> T applyKeyFields(
+      @NonNull T builder,
+      @NonNull ISource source,
       @NonNull KeyField... keyFields) {
     for (KeyField keyField : keyFields) {
       @SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops") // ok
       IKeyField field = IKeyField.of(
           toMetapath(keyField.target()),
           toPattern(keyField.pattern()),
-          toRemarks(keyField.remarks()));
+          toRemarks(keyField.remarks()),
+          source);
       builder.keyField(field);
     }
     return builder;
@@ -264,7 +267,7 @@ final class ConstraintFactory {
     applyProperties(builder, constraint.properties());
     applyRemarks(builder, constraint.remarks());
 
-    applyKeyFields(builder, constraint.keyFields());
+    applyKeyFields(builder, source, constraint.keyFields());
 
     return builder.build();
   }
@@ -282,7 +285,7 @@ final class ConstraintFactory {
     applyProperties(builder, constraint.properties());
     applyRemarks(builder, constraint.remarks());
 
-    applyKeyFields(builder, constraint.keyFields());
+    applyKeyFields(builder, source, constraint.keyFields());
 
     return builder.build();
   }
@@ -302,7 +305,7 @@ final class ConstraintFactory {
     applyProperties(builder, constraint.properties());
     applyRemarks(builder, constraint.remarks());
 
-    applyKeyFields(builder, constraint.keyFields());
+    applyKeyFields(builder, source, constraint.keyFields());
 
     return builder.build();
   }

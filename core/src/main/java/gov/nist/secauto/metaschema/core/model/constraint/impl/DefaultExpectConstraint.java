@@ -35,15 +35,17 @@ import gov.nist.secauto.metaschema.core.metapath.item.node.INodeItem;
 import gov.nist.secauto.metaschema.core.model.IAttributable;
 import gov.nist.secauto.metaschema.core.model.constraint.IExpectConstraint;
 import gov.nist.secauto.metaschema.core.model.constraint.ISource;
+import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 import gov.nist.secauto.metaschema.core.util.ReplacementScanner;
 
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Pattern;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
+import nl.talsmasoftware.lazy4j.Lazy;
+import nl.talsmasoftware.lazy4j.LazyEvaluationException;
 
 public final class DefaultExpectConstraint
     extends AbstractConstraint
@@ -53,7 +55,7 @@ public final class DefaultExpectConstraint
   private static final Pattern METAPATH_VALUE_TEMPLATE_PATTERN
       = Pattern.compile("(?<!\\\\)(\\{\\s*((?:(?:\\\\})|[^}])*)\\s*\\})");
   @NonNull
-  private final String test;
+  private final Lazy<MetapathExpression> testMetapath;
   private final String message;
 
   /**
@@ -96,13 +98,35 @@ public final class DefaultExpectConstraint
       @Nullable String message,
       @Nullable MarkupMultiline remarks) {
     super(id, formalName, description, source, level, target, properties, remarks);
-    this.test = Objects.requireNonNull(test);
+    this.testMetapath = ObjectUtils.notNull(
+        Lazy.lazy(() -> MetapathExpression.compile(
+            test,
+            source.getStaticContext())));
     this.message = message;
+  }
+
+  /**
+   * Get the compiled Metapath expression for the test.
+   *
+   * @return the compiled Metapath expression
+   */
+  @NonNull
+  public MetapathExpression getTestMetapath() {
+    try {
+      return ObjectUtils.notNull(testMetapath.get());
+    } catch (LazyEvaluationException ex) {
+      Throwable cause = ex.getCause();
+      if (cause instanceof RuntimeException) {
+        cause.addSuppressed(ex);
+        throw (RuntimeException) cause;
+      }
+      throw ex;
+    }
   }
 
   @Override
   public String getTest() {
-    return test;
+    return getTestMetapath().getPath();
   }
 
   @Override
@@ -118,7 +142,7 @@ public final class DefaultExpectConstraint
         : ReplacementScanner.replaceTokens(message, METAPATH_VALUE_TEMPLATE_PATTERN, match -> {
           @SuppressWarnings("null")
           @NonNull String metapath = match.group(2);
-          MetapathExpression expr = MetapathExpression.compile(metapath);
+          MetapathExpression expr = MetapathExpression.compile(metapath, context.getStaticContext());
           return expr.evaluateAs(item, MetapathExpression.ResultType.STRING, context);
         }).toString();
   }

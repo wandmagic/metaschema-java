@@ -43,7 +43,7 @@ public final class FunctionService {
   @NonNull
   private final ServiceLoader<IFunctionLibrary> loader;
   @NonNull
-  private final IFunctionLibrary library;
+  private final Lazy<IFunctionLibrary> library;
 
   /**
    * Get the singleton instance of the function service.
@@ -62,12 +62,14 @@ public final class FunctionService {
     this.loader = ServiceLoader.load(IFunctionLibrary.class);
     ServiceLoader<IFunctionLibrary> loader = getLoader();
 
-    FunctionLibrary functionLibrary = new FunctionLibrary();
-    loader.stream()
-        .map(Provider<IFunctionLibrary>::get)
-        .flatMap(IFunctionLibrary::stream)
-        .forEachOrdered(function -> functionLibrary.registerFunction(ObjectUtils.notNull(function)));
-    this.library = functionLibrary;
+    this.library = Lazy.lazy(() -> {
+      FunctionLibrary functionLibrary = new FunctionLibrary();
+      loader.stream()
+          .map(Provider<IFunctionLibrary>::get)
+          .flatMap(IFunctionLibrary::stream)
+          .forEachOrdered(function -> functionLibrary.registerFunction(ObjectUtils.notNull(function)));
+      return functionLibrary;
+    });
   }
 
   /**
@@ -80,13 +82,18 @@ public final class FunctionService {
     return loader;
   }
 
+  @NonNull
+  private IFunctionLibrary getLibrary() {
+    return ObjectUtils.notNull(library.get());
+  }
+
   /**
    * Retrieve the collection of function signatures in this library as a stream.
    *
    * @return a stream of function signatures
    */
   public Stream<IFunction> stream() {
-    return this.library.stream();
+    return getLibrary().stream();
   }
 
   /**
@@ -105,7 +112,7 @@ public final class FunctionService {
   public IFunction getFunction(@NonNull String name, int arity) {
     IFunction retval;
     synchronized (this) {
-      retval = library.getFunction(name, arity);
+      retval = getLibrary().getFunction(name, arity);
     }
 
     if (retval == null) {
@@ -131,7 +138,7 @@ public final class FunctionService {
   public IFunction getFunction(@NonNull QName name, int arity) {
     IFunction retval;
     synchronized (this) {
-      retval = library.getFunction(name, arity);
+      retval = getLibrary().getFunction(name, arity);
     }
 
     if (retval == null) {

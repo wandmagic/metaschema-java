@@ -27,7 +27,6 @@
 package gov.nist.secauto.metaschema.cli.commands;
 
 import gov.nist.secauto.metaschema.cli.processor.CLIProcessor.CallingContext;
-import gov.nist.secauto.metaschema.cli.processor.InvalidArgumentException;
 import gov.nist.secauto.metaschema.cli.processor.command.ICommandExecutor;
 import gov.nist.secauto.metaschema.core.configuration.DefaultConfiguration;
 import gov.nist.secauto.metaschema.core.configuration.IMutableConfiguration;
@@ -41,6 +40,7 @@ import gov.nist.secauto.metaschema.core.model.xml.ModuleLoader;
 import gov.nist.secauto.metaschema.core.util.CollectionUtil;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 import gov.nist.secauto.metaschema.core.util.UriUtils;
+import gov.nist.secauto.metaschema.databind.DefaultBindingContext;
 import gov.nist.secauto.metaschema.databind.IBindingContext;
 import gov.nist.secauto.metaschema.schemagen.ISchemaGenerator;
 import gov.nist.secauto.metaschema.schemagen.ISchemaGenerator.SchemaFormat;
@@ -95,23 +95,6 @@ public class ValidateContentUsingModuleCommand
   }
 
   @Override
-  public void validateOptions(CallingContext callingContext, CommandLine cmdLine) throws InvalidArgumentException {
-    // super.validateOptions(callingContext, cmdLine);
-    //
-    // String metaschemaName =
-    // cmdLine.getOptionValue(MetaschemaCommandSupport.METASCHEMA_OPTION);
-    // Path metaschema = Paths.get(metaschemaName);
-    // if (!Files.exists(metaschema)) {
-    // throw new InvalidArgumentException("The provided module '" + metaschema + "'
-    // does not exist.");
-    // }
-    // if (!Files.isReadable(metaschema)) {
-    // throw new InvalidArgumentException("The provided module '" + metaschema + "'
-    // is not readable.");
-    // }
-  }
-
-  @Override
   public ICommandExecutor newExecutor(CallingContext callingContext, CommandLine commandLine) {
     return new OscalCommandExecutor(callingContext, commandLine);
   }
@@ -161,6 +144,11 @@ public class ValidateContentUsingModuleCommand
             = new ExternalConstraintsModulePostProcessor(constraintSets);
 
         ModuleLoader loader = new ModuleLoader(CollectionUtil.singletonList(postProcessor));
+
+        // BindingModuleLoader loader
+        // = new BindingModuleLoader(new DefaultBindingContext(),
+        // CollectionUtil.singletonList(postProcessor));
+
         loader.allowEntityResolution();
         module = loader.load(moduleUri);
       }
@@ -178,7 +166,9 @@ public class ValidateContentUsingModuleCommand
     protected IBindingContext getBindingContext(@NonNull Set<IConstraintSet> constraintSets)
         throws MetaschemaException, IOException {
 
-      return IBindingContext.instance().registerModule(getModule(constraintSets), getTempDir());
+      IBindingContext retval = new DefaultBindingContext();
+      retval.registerModule(getModule(constraintSets), getTempDir());
+      return retval;
     }
 
     @Override

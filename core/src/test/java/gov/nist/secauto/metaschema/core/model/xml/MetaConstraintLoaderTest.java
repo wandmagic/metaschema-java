@@ -30,13 +30,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import gov.nist.secauto.metaschema.core.datatype.adapter.MetaschemaDataTypeProvider;
 import gov.nist.secauto.metaschema.core.metapath.MetapathExpression;
-import gov.nist.secauto.metaschema.core.metapath.StaticContext;
 import gov.nist.secauto.metaschema.core.metapath.function.library.FnPath;
 import gov.nist.secauto.metaschema.core.metapath.item.IItem;
 import gov.nist.secauto.metaschema.core.metapath.item.node.IDefinitionNodeItem;
 import gov.nist.secauto.metaschema.core.metapath.item.node.IModuleNodeItem;
 import gov.nist.secauto.metaschema.core.metapath.item.node.INodeItemFactory;
-import gov.nist.secauto.metaschema.core.model.IMetaschemaModule;
 import gov.nist.secauto.metaschema.core.model.MetaschemaException;
 import gov.nist.secauto.metaschema.core.model.constraint.IConstraintSet;
 import gov.nist.secauto.metaschema.core.util.CollectionUtil;
@@ -47,27 +45,24 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Paths;
+import java.util.List;
 
 public class MetaConstraintLoaderTest {
 
   @Test
   void test() throws MetaschemaException, IOException {
 
-    IConstraintSet constraintSet = new XmlMetaConstraintLoader()
+    List<IConstraintSet> constraintSet = new XmlMetaConstraintLoader()
         .load(ObjectUtils.requireNonNull(Paths.get("src/test/resources/computer-metaschema-meta-constraints.xml")));
 
     ExternalConstraintsModulePostProcessor postProcessor
-        = new ExternalConstraintsModulePostProcessor(CollectionUtil.singleton(constraintSet));
+        = new ExternalConstraintsModulePostProcessor(constraintSet);
     ModuleLoader loader = new ModuleLoader(CollectionUtil.singletonList(postProcessor));
     URI moduleUri = ObjectUtils.notNull(
         Paths.get("metaschema/examples/computer-example.xml").toUri());
-    IMetaschemaModule module = loader.load(moduleUri);
+    IXmlMetaschemaModule module = loader.load(moduleUri);
 
-    StaticContext staticContext = StaticContext.builder()
-        .defaultModelNamespace(module.getXmlNamespace())
-        .build();
-
-    MetapathExpression expression = MetapathExpression.compile("//@id", staticContext);
+    MetapathExpression expression = MetapathExpression.compile("//@id", module.getModuleStaticContext());
     IModuleNodeItem moduleItem = INodeItemFactory.instance().newModuleNodeItem(module);
     for (IItem item : expression.evaluate(moduleItem)) {
       IDefinitionNodeItem<?, ?> nodeItem = (IDefinitionNodeItem<?, ?>) item;

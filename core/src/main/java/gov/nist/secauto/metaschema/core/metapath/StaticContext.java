@@ -89,6 +89,7 @@ public final class StaticContext {
   private final URI defaultModelNamespace;
   @Nullable
   private final URI defaultFunctionNamespace;
+  private final boolean useWildcardWhenNamespaceNotDefaulted;
 
   /**
    * Get the mapping of prefix to namespace URI for all well-known namespaces
@@ -143,6 +144,7 @@ public final class StaticContext {
     this.knownNamespaces = CollectionUtil.unmodifiableMap(ObjectUtils.notNull(Map.copyOf(builder.namespaces)));
     this.defaultModelNamespace = builder.defaultModelNamespace;
     this.defaultFunctionNamespace = builder.defaultFunctionNamespace;
+    this.useWildcardWhenNamespaceNotDefaulted = builder.useWildcardWhenNamespaceNotDefaulted;
   }
 
   /**
@@ -357,6 +359,18 @@ public final class StaticContext {
   }
 
   /**
+   * Indicates if a name match should use a wildcard for the namespace is the
+   * namespace does not have a value and the {@link #getDefaultModelNamespace()}
+   * is {@code null}.
+   *
+   * @return {@code true} if a wildcard match on the name space should be used or
+   *         {@code false} otherwise
+   */
+  public boolean isUseWildcardWhenNamespaceNotDefaulted() {
+    return useWildcardWhenNamespaceNotDefaulted && getDefaultModelNamespace() == null;
+  }
+
+  /**
    * Create a new static context builder that allows for fine-grained adjustments
    * when creating a new static context.
    *
@@ -371,6 +385,7 @@ public final class StaticContext {
    * A builder used to generate the static context.
    */
   public static final class Builder {
+    public boolean useWildcardWhenNamespaceNotDefaulted; // false
     @Nullable
     private URI baseUri;
     @NonNull
@@ -513,6 +528,18 @@ public final class StaticContext {
     @NonNull
     public Builder defaultFunctionNamespace(@NonNull String uri) {
       return defaultFunctionNamespace(ObjectUtils.notNull(URI.create(uri)));
+    }
+
+    /**
+     * Set the name matching behavior for when a model node has no namespace.
+     *
+     * @param value
+     *          {@code true} if on or {@code false} otherwise
+     * @return this builder
+     */
+    public Builder useWildcardWhenNamespaceNotDefaulted(boolean value) {
+      this.useWildcardWhenNamespaceNotDefaulted = value;
+      return this;
     }
 
     /**

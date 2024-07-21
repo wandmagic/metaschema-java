@@ -238,14 +238,16 @@ public final class ConstraintBindingSupport {
   @NonNull
   private static <T extends AbstractKeyConstraintBuilder<T, ?>> T handleKeyConstraints(
       @NonNull List<KeyConstraintField> keys,
-      @NonNull T builder) {
+      @NonNull T builder,
+      @NonNull ISource source) {
     for (KeyConstraintField value : keys) {
       assert value != null;
 
       IKeyField keyField = IKeyField.of(
           target(ObjectUtils.requireNonNull(value.getTarget())),
           pattern(value.getPattern()),
-          ModelSupport.remarks(value.getRemarks()));
+          ModelSupport.remarks(value.getRemarks()),
+          source);
       builder.keyField(keyField);
     }
     return builder;
@@ -257,7 +259,7 @@ public final class ConstraintBindingSupport {
       @NonNull ISource source) {
     IIndexHasKeyConstraint.Builder builder = IIndexHasKeyConstraint.builder(ObjectUtils.requireNonNull(obj.getName()));
     applyCommonValues(obj, null, source, builder);
-    handleKeyConstraints(ObjectUtils.requireNonNull(obj.getKeyFields()), builder);
+    handleKeyConstraints(ObjectUtils.requireNonNull(obj.getKeyFields()), builder, source);
     return builder.build();
   }
 
@@ -267,7 +269,7 @@ public final class ConstraintBindingSupport {
       @NonNull ISource source) {
     IIndexHasKeyConstraint.Builder builder = IIndexHasKeyConstraint.builder(ObjectUtils.requireNonNull(obj.getName()));
     applyCommonValues(obj, obj.getTarget(), source, builder);
-    handleKeyConstraints(ObjectUtils.requireNonNull(obj.getKeyFields()), builder);
+    handleKeyConstraints(ObjectUtils.requireNonNull(obj.getKeyFields()), builder, source);
     return builder.build();
   }
 
@@ -319,7 +321,7 @@ public final class ConstraintBindingSupport {
       @NonNull ISource source) {
     IIndexConstraint.Builder builder = IIndexConstraint.builder(ObjectUtils.requireNonNull(obj.getName()));
     applyCommonValues(obj, obj.getTarget(), source, builder);
-    handleKeyConstraints(ObjectUtils.requireNonNull(obj.getKeyFields()), builder);
+    handleKeyConstraints(ObjectUtils.requireNonNull(obj.getKeyFields()), builder, source);
 
     return builder.build();
   }
@@ -350,7 +352,7 @@ public final class ConstraintBindingSupport {
       @NonNull ISource source) {
     IUniqueConstraint.Builder builder = IUniqueConstraint.builder();
     applyCommonValues(obj, obj.getTarget(), source, builder);
-    handleKeyConstraints(ObjectUtils.requireNonNull(obj.getKeyFields()), builder);
+    handleKeyConstraints(ObjectUtils.requireNonNull(obj.getKeyFields()), builder, source);
 
     return builder.build();
   }
