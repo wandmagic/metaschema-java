@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang=""><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ValidateContentUsingModuleCommand.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Metaschema Command Line Tool</a> &gt; <a href="index.source.html" class="el_package">gov.nist.secauto.metaschema.cli.commands</a> &gt; <span class="el_source">ValidateContentUsingModuleCommand.java</span></div><h1>ValidateContentUsingModuleCommand.java</h1><pre class="source lang-java linenums">/*
+ * SPDX-FileCopyrightText: none
+ * SPDX-License-Identifier: CC0-1.0
+ */
+
+package gov.nist.secauto.metaschema.cli.commands;
+
+import gov.nist.secauto.metaschema.cli.processor.CLIProcessor.CallingContext;
+import gov.nist.secauto.metaschema.cli.processor.command.ICommandExecutor;
+import gov.nist.secauto.metaschema.core.configuration.DefaultConfiguration;
+import gov.nist.secauto.metaschema.core.configuration.IMutableConfiguration;
+import gov.nist.secauto.metaschema.core.model.IModule;
+import gov.nist.secauto.metaschema.core.model.MetaschemaException;
+import gov.nist.secauto.metaschema.core.model.constraint.IConstraintSet;
+import gov.nist.secauto.metaschema.core.model.util.JsonUtil;
+import gov.nist.secauto.metaschema.core.model.util.XmlUtil;
+import gov.nist.secauto.metaschema.core.model.xml.ExternalConstraintsModulePostProcessor;
+import gov.nist.secauto.metaschema.core.model.xml.ModuleLoader;
+import gov.nist.secauto.metaschema.core.util.CollectionUtil;
+import gov.nist.secauto.metaschema.core.util.ObjectUtils;
+import gov.nist.secauto.metaschema.core.util.UriUtils;
+import gov.nist.secauto.metaschema.databind.DefaultBindingContext;
+import gov.nist.secauto.metaschema.databind.IBindingContext;
+import gov.nist.secauto.metaschema.schemagen.ISchemaGenerator;
+import gov.nist.secauto.metaschema.schemagen.ISchemaGenerator.SchemaFormat;
+import gov.nist.secauto.metaschema.schemagen.SchemaGenerationFeature;
+
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Option;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
+
+import javax.xml.transform.Source;
+
+import edu.umd.cs.findbugs.annotations.NonNull;
+
+<span class="fc" id="L50">public class ValidateContentUsingModuleCommand</span>
+    extends AbstractValidateContentCommand {
+  @NonNull
+  private static final String COMMAND = &quot;validate-content&quot;;
+
+  @Override
+  public String getName() {
+<span class="fc" id="L57">    return COMMAND;</span>
+  }
+
+  @Override
+  public String getDescription() {
+<span class="fc" id="L62">    return &quot;Verify that the provided resource is well-formed and valid to the provided Module-based model.&quot;;</span>
+  }
+
+  @Override
+  public Collection&lt;? extends Option&gt; gatherOptions() {
+<span class="fc" id="L67">    Collection&lt;? extends Option&gt; orig = super.gatherOptions();</span>
+
+<span class="fc" id="L69">    List&lt;Option&gt; retval = new ArrayList&lt;&gt;(orig.size() + 1);</span>
+<span class="fc" id="L70">    retval.addAll(orig);</span>
+<span class="fc" id="L71">    retval.add(MetaschemaCommandSupport.METASCHEMA_OPTION);</span>
+
+<span class="fc" id="L73">    return CollectionUtil.unmodifiableCollection(retval);</span>
+  }
+
+  @Override
+  public ICommandExecutor newExecutor(CallingContext callingContext, CommandLine commandLine) {
+<span class="fc" id="L78">    return new OscalCommandExecutor(callingContext, commandLine);</span>
+  }
+
+<span class="fc" id="L81">  private final class OscalCommandExecutor</span>
+      extends AbstractValidationCommandExecutor {
+
+    private Path tempDir;
+    private IModule module;
+
+    private OscalCommandExecutor(
+        @NonNull CallingContext callingContext,
+<span class="fc" id="L89">        @NonNull CommandLine commandLine) {</span>
+<span class="fc" id="L90">      super(callingContext, commandLine);</span>
+<span class="fc" id="L91">    }</span>
+
+    private Path getTempDir() throws IOException {
+<span class="fc bfc" id="L94" title="All 2 branches covered.">      if (tempDir == null) {</span>
+<span class="fc" id="L95">        tempDir = Files.createTempDirectory(&quot;validation-&quot;);</span>
+<span class="fc" id="L96">        tempDir.toFile().deleteOnExit();</span>
+      }
+<span class="fc" id="L98">      return tempDir;</span>
+    }
+
+    @NonNull
+    private IModule getModule(@NonNull Set&lt;IConstraintSet&gt; constraintSets)
+        throws MetaschemaException, IOException {
+<span class="fc" id="L104">      URI cwd = Paths.get(&quot;&quot;).toAbsolutePath().toUri();</span>
+
+<span class="pc bpc" id="L106" title="1 of 2 branches missed.">      if (module == null) {</span>
+<span class="fc" id="L107">        String moduleName</span>
+<span class="fc" id="L108">            = ObjectUtils.requireNonNull(getCommandLine().getOptionValue(MetaschemaCommandSupport.METASCHEMA_OPTION));</span>
+        URI moduleUri;
+
+        try {
+<span class="fc" id="L112">          moduleUri = UriUtils.toUri(moduleName, cwd);</span>
+<span class="nc" id="L113">        } catch (URISyntaxException ex) {</span>
+<span class="nc" id="L114">          IOException newEx = new IOException( // NOPMD - intentional</span>
+<span class="nc" id="L115">              String.format(&quot;Cannot load module as '%s' is not a valid file or URL.&quot;, moduleName));</span>
+<span class="nc" id="L116">          newEx.addSuppressed(ex);</span>
+<span class="nc" id="L117">          throw newEx;</span>
+<span class="fc" id="L118">        }</span>
+
+<span class="pc bpc" id="L120" title="1 of 2 branches missed.">        assert moduleUri != null;</span>
+
+<span class="fc" id="L122">        ExternalConstraintsModulePostProcessor postProcessor</span>
+            = new ExternalConstraintsModulePostProcessor(constraintSets);
+
+<span class="fc" id="L125">        ModuleLoader loader = new ModuleLoader(CollectionUtil.singletonList(postProcessor));</span>
+
+        // BindingModuleLoader loader
+        // = new BindingModuleLoader(new DefaultBindingContext(),
+        // CollectionUtil.singletonList(postProcessor));
+
+<span class="fc" id="L131">        loader.allowEntityResolution();</span>
+<span class="fc" id="L132">        module = loader.load(moduleUri);</span>
+      }
+<span class="pc bpc" id="L134" title="1 of 2 branches missed.">      assert module != null;</span>
+<span class="fc" id="L135">      return module;</span>
+    }
+
+    @NonNull
+    private IModule getModule() {
+      // should be initialized already
+<span class="fc" id="L141">      return ObjectUtils.requireNonNull(module);</span>
+    }
+
+    @Override
+    protected IBindingContext getBindingContext(@NonNull Set&lt;IConstraintSet&gt; constraintSets)
+        throws MetaschemaException, IOException {
+
+<span class="fc" id="L148">      IBindingContext retval = new DefaultBindingContext();</span>
+<span class="fc" id="L149">      retval.registerModule(getModule(constraintSets), getTempDir());</span>
+<span class="fc" id="L150">      return retval;</span>
+    }
+
+    @Override
+    public List&lt;Source&gt; getXmlSchemas(@NonNull URL targetResource) throws IOException {
+<span class="fc" id="L155">      Path schemaFile = Files.createTempFile(getTempDir(), &quot;schema-&quot;, &quot;.xml&quot;);</span>
+<span class="pc bpc" id="L156" title="1 of 2 branches missed.">      assert schemaFile != null;</span>
+<span class="fc" id="L157">      IMutableConfiguration&lt;SchemaGenerationFeature&lt;?&gt;&gt; configuration = new DefaultConfiguration&lt;&gt;();</span>
+<span class="fc" id="L158">      ISchemaGenerator.generateSchema(getModule(), schemaFile, SchemaFormat.XML, configuration);</span>
+<span class="fc" id="L159">      return ObjectUtils.requireNonNull(List.of(</span>
+<span class="fc" id="L160">          XmlUtil.getStreamSource(schemaFile.toUri().toURL())));</span>
+    }
+
+    @Override
+    public JSONObject getJsonSchema(@NonNull JSONObject json) throws IOException {
+<span class="fc" id="L165">      Path schemaFile = Files.createTempFile(getTempDir(), &quot;schema-&quot;, &quot;.json&quot;);</span>
+<span class="pc bpc" id="L166" title="1 of 2 branches missed.">      assert schemaFile != null;</span>
+<span class="fc" id="L167">      IMutableConfiguration&lt;SchemaGenerationFeature&lt;?&gt;&gt; configuration = new DefaultConfiguration&lt;&gt;();</span>
+<span class="fc" id="L168">      ISchemaGenerator.generateSchema(getModule(), schemaFile, SchemaFormat.JSON, configuration);</span>
+<span class="fc" id="L169">      try (BufferedReader reader = ObjectUtils.notNull(Files.newBufferedReader(schemaFile, StandardCharsets.UTF_8))) {</span>
+<span class="fc" id="L170">        return JsonUtil.toJsonObject(reader);</span>
+      }
+    }
+  }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

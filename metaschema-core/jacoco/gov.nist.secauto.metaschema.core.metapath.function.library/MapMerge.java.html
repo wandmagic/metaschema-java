@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang=""><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MapMerge.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Metaschema Core API</a> &gt; <a href="index.source.html" class="el_package">gov.nist.secauto.metaschema.core.metapath.function.library</a> &gt; <span class="el_source">MapMerge.java</span></div><h1>MapMerge.java</h1><pre class="source lang-java linenums">/*
+ * SPDX-FileCopyrightText: none
+ * SPDX-License-Identifier: CC0-1.0
+ */
+
+package gov.nist.secauto.metaschema.core.metapath.function.library;
+
+import gov.nist.secauto.metaschema.core.metapath.DynamicContext;
+import gov.nist.secauto.metaschema.core.metapath.ICollectionValue;
+import gov.nist.secauto.metaschema.core.metapath.ISequence;
+import gov.nist.secauto.metaschema.core.metapath.MetapathConstants;
+import gov.nist.secauto.metaschema.core.metapath.function.FunctionUtils;
+import gov.nist.secauto.metaschema.core.metapath.function.IArgument;
+import gov.nist.secauto.metaschema.core.metapath.function.IFunction;
+import gov.nist.secauto.metaschema.core.metapath.function.JsonFunctionException;
+import gov.nist.secauto.metaschema.core.metapath.item.IItem;
+import gov.nist.secauto.metaschema.core.metapath.item.atomic.IAnyAtomicItem;
+import gov.nist.secauto.metaschema.core.metapath.item.atomic.IStringItem;
+import gov.nist.secauto.metaschema.core.metapath.item.function.IMapItem;
+import gov.nist.secauto.metaschema.core.metapath.item.function.IMapKey;
+import gov.nist.secauto.metaschema.core.util.CollectionUtil;
+import gov.nist.secauto.metaschema.core.util.CustomCollectors;
+import gov.nist.secauto.metaschema.core.util.ObjectUtils;
+
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.stream.Stream;
+
+import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.Nullable;
+
+public final class MapMerge {
+<span class="fc" id="L37">  private static final Random RANDOM = new Random();</span>
+<span class="fc" id="L38">  private static final IMapKey DUPLICATES_OPTION = IStringItem.valueOf(&quot;duplicates&quot;).asMapKey();</span>
+
+  @NonNull
+<span class="fc" id="L41">  static final IFunction SIGNATURE_ONE_ARG = IFunction.builder()</span>
+<span class="fc" id="L42">      .name(&quot;merge&quot;)</span>
+<span class="fc" id="L43">      .namespace(MetapathConstants.NS_METAPATH_FUNCTIONS_MAP)</span>
+<span class="fc" id="L44">      .deterministic()</span>
+<span class="fc" id="L45">      .contextIndependent()</span>
+<span class="fc" id="L46">      .focusIndependent()</span>
+<span class="fc" id="L47">      .argument(IArgument.builder()</span>
+<span class="fc" id="L48">          .name(&quot;maps&quot;)</span>
+<span class="fc" id="L49">          .type(IMapItem.class)</span>
+<span class="fc" id="L50">          .zeroOrMore()</span>
+<span class="fc" id="L51">          .build())</span>
+<span class="fc" id="L52">      .returnType(IMapItem.class)</span>
+<span class="fc" id="L53">      .returnOne()</span>
+<span class="fc" id="L54">      .functionHandler(MapMerge::executeOneArg)</span>
+<span class="fc" id="L55">      .build();</span>
+
+  @NonNull
+<span class="fc" id="L58">  static final IFunction SIGNATURE_TWO_ARG = IFunction.builder()</span>
+<span class="fc" id="L59">      .name(&quot;merge&quot;)</span>
+<span class="fc" id="L60">      .namespace(MetapathConstants.NS_METAPATH_FUNCTIONS_MAP)</span>
+<span class="fc" id="L61">      .deterministic()</span>
+<span class="fc" id="L62">      .contextIndependent()</span>
+<span class="fc" id="L63">      .focusIndependent()</span>
+<span class="fc" id="L64">      .argument(IArgument.builder()</span>
+<span class="fc" id="L65">          .name(&quot;maps&quot;)</span>
+<span class="fc" id="L66">          .type(IMapItem.class)</span>
+<span class="fc" id="L67">          .zeroOrMore()</span>
+<span class="fc" id="L68">          .build())</span>
+<span class="fc" id="L69">      .argument(IArgument.builder()</span>
+<span class="fc" id="L70">          .name(&quot;options&quot;)</span>
+<span class="fc" id="L71">          .type(IMapItem.class)</span>
+<span class="fc" id="L72">          .one()</span>
+<span class="fc" id="L73">          .build())</span>
+<span class="fc" id="L74">      .returnType(IMapItem.class)</span>
+<span class="fc" id="L75">      .returnOne()</span>
+<span class="fc" id="L76">      .functionHandler(MapMerge::executeTwoArg)</span>
+<span class="fc" id="L77">      .build();</span>
+
+<span class="fc" id="L79">  private enum Duplicates {</span>
+<span class="fc" id="L80">    REJECT(&quot;reject&quot;, (key, v1, v2) -&gt; {</span>
+<span class="nc" id="L81">      throw new JsonFunctionException(</span>
+          JsonFunctionException.DUPLICATE_KEYS,
+<span class="nc" id="L83">          String.format(&quot;Duplicate key '%s' not allowed.&quot;, key.getKey().asString()));</span>
+    }),
+
+<span class="fc" id="L86">    USE_FIRST(&quot;use-first&quot;, (key, v1, v2) -&gt; v1),</span>
+<span class="fc" id="L87">    USE_LAST(&quot;use-last&quot;, (key, v1, v2) -&gt; v2),</span>
+<span class="pc bnc" id="L88" title="All 2 branches missed.">    USE_ANY(&quot;use-any&quot;, (key, v1, v2) -&gt; RANDOM.nextBoolean() ? v1 : v2),</span>
+<span class="fc" id="L89">    @SuppressWarnings(&quot;null&quot;)</span>
+    COMBINE(&quot;combine&quot;, (key, v1, v2) -&gt; {
+<span class="fc" id="L91">      return Stream.concat(</span>
+<span class="fc" id="L92">          v1.asSequence().stream(),</span>
+<span class="fc" id="L93">          v2.asSequence().stream()).collect(ISequence.toSequence());</span>
+    });
+
+    private static final Map&lt;String, Duplicates&gt; BY_NAME;
+
+    @NonNull
+    private final String name;
+    @NonNull
+    private final CustomCollectors.DuplicateHandler&lt;IMapKey, ICollectionValue&gt; duplicateHander;
+
+    static {
+<span class="fc" id="L104">      @SuppressWarnings(&quot;PMD.UseConcurrentHashMap&quot;) Map&lt;String, Duplicates&gt; map = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L105" title="All 2 branches covered.">      for (Duplicates value : values()) {</span>
+<span class="fc" id="L106">        map.put(value.getName(), value);</span>
+      }
+<span class="fc" id="L108">      BY_NAME = Collections.unmodifiableMap(map);</span>
+<span class="fc" id="L109">    }</span>
+
+    @Nullable
+    public static Duplicates lookup(@NonNull String name) {
+<span class="fc" id="L113">      return BY_NAME.get(name);</span>
+    }
+
+    Duplicates(@NonNull String name,
+<span class="fc" id="L117">        @NonNull CustomCollectors.DuplicateHandler&lt;IMapKey, ICollectionValue&gt; duplicateHander) {</span>
+<span class="fc" id="L118">      this.name = name;</span>
+<span class="fc" id="L119">      this.duplicateHander = duplicateHander;</span>
+<span class="fc" id="L120">    }</span>
+
+    public String getName() {
+<span class="fc" id="L123">      return name;</span>
+    }
+
+    public CustomCollectors.DuplicateHandler&lt;IMapKey, ICollectionValue&gt; getDuplicateHander() {
+<span class="fc" id="L127">      return duplicateHander;</span>
+    }
+  }
+
+  private MapMerge() {
+    // disable construction
+  }
+
+  @SuppressWarnings(&quot;unused&quot;)
+  @NonNull
+  private static ISequence&lt;?&gt; executeOneArg(@NonNull IFunction function,
+      @NonNull List&lt;ISequence&lt;?&gt;&gt; arguments,
+      @NonNull DynamicContext dynamicContext,
+      IItem focus) {
+<span class="fc" id="L141">    ISequence&lt;IMapItem&lt;?&gt;&gt; maps = FunctionUtils.asType(ObjectUtils.requireNonNull(arguments.get(0)));</span>
+
+<span class="fc" id="L143">    return ISequence.of(merge(maps, CollectionUtil.emptyMap()));</span>
+  }
+
+  @SuppressWarnings(&quot;unused&quot;)
+  @NonNull
+  private static ISequence&lt;?&gt; executeTwoArg(@NonNull IFunction function,
+      @NonNull List&lt;ISequence&lt;?&gt;&gt; arguments,
+      @NonNull DynamicContext dynamicContext,
+      IItem focus) {
+<span class="fc" id="L152">    ISequence&lt;IMapItem&lt;?&gt;&gt; maps = FunctionUtils.asType(ObjectUtils.requireNonNull(arguments.get(0)));</span>
+<span class="fc" id="L153">    IMapItem&lt;?&gt; options = FunctionUtils.asType(ObjectUtils.requireNonNull(arguments.get(1).getFirstItem(true)));</span>
+
+<span class="fc" id="L155">    return ISequence.of(merge(maps, options));</span>
+  }
+
+  /**
+   * An implementation of XPath 3.1 &lt;a href=
+   * &quot;https://www.w3.org/TR/xpath-functions-31/#func-map-merge&quot;&gt;map:merge&lt;/a&gt;.
+   *
+   * @param maps
+   *          a collection of maps to merge
+   * @param options
+   *          settings that affect the merge behavior
+   * @return a map containing the merged entries
+   */
+  @SuppressWarnings({ &quot;null&quot;, &quot;PMD.OnlyOneReturn&quot; })
+  @NonNull
+  public static IMapItem&lt;?&gt; merge(@NonNull Collection&lt;? extends Map&lt;IMapKey, ? extends ICollectionValue&gt;&gt; maps,
+      @NonNull Map&lt;IMapKey, ? extends ICollectionValue&gt; options) {
+<span class="fc bfc" id="L172" title="All 2 branches covered.">    if (maps.isEmpty()) {</span>
+<span class="fc" id="L173">      return IMapItem.empty();</span>
+    }
+
+    // handle the &quot;duplicates&quot; option
+<span class="fc" id="L177">    ICollectionValue duplicatesOption = options.get(DUPLICATES_OPTION);</span>
+
+    Duplicates duplicates;
+<span class="fc bfc" id="L180" title="All 2 branches covered.">    if (duplicatesOption == null) {</span>
+      // default option
+<span class="fc" id="L182">      duplicates = Duplicates.USE_FIRST;</span>
+    } else {
+      // resolve the provided option
+<span class="fc" id="L185">      IAnyAtomicItem atomicValue = FnData.fnData(duplicatesOption.asSequence()).getFirstItem(true);</span>
+<span class="pc bpc" id="L186" title="1 of 2 branches missed.">      if (atomicValue == null) {</span>
+<span class="nc" id="L187">        throw new JsonFunctionException(</span>
+            JsonFunctionException.INVALID_OPTION,
+<span class="nc" id="L189">            String.format(&quot;Missing '%s' option value.&quot;, DUPLICATES_OPTION.getKey().asString()));</span>
+      }
+<span class="fc" id="L191">      String duplicatesValue = IStringItem.cast(atomicValue).asString();</span>
+<span class="fc" id="L192">      duplicates = Duplicates.lookup(duplicatesValue);</span>
+<span class="pc bpc" id="L193" title="1 of 2 branches missed.">      if (duplicates == null) {</span>
+<span class="nc" id="L194">        throw new JsonFunctionException(</span>
+            JsonFunctionException.INVALID_OPTION,
+<span class="nc" id="L196">            String.format(&quot;Invalid '%s' option value '%s'.&quot;, DUPLICATES_OPTION.getKey().asString(), duplicatesValue));</span>
+      }
+    }
+
+    // merge the maps
+<span class="fc" id="L201">    return IMapItem.ofCollection(maps.stream()</span>
+<span class="fc" id="L202">        .flatMap(map -&gt; map.entrySet().stream())</span>
+        // collect the entries into a new map
+<span class="fc" id="L204">        .collect(CustomCollectors.toMap(Map.Entry::getKey, Map.Entry::getValue, duplicates.getDuplicateHander(),</span>
+            HashMap::new)));
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

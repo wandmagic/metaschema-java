@@ -1,0 +1,263 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang=""><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>XmlSchemaContentValidator.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Metaschema Core API</a> &gt; <a href="index.source.html" class="el_package">gov.nist.secauto.metaschema.core.model.validation</a> &gt; <span class="el_source">XmlSchemaContentValidator.java</span></div><h1>XmlSchemaContentValidator.java</h1><pre class="source lang-java linenums">/*
+ * SPDX-FileCopyrightText: none
+ * SPDX-License-Identifier: CC0-1.0
+ */
+
+package gov.nist.secauto.metaschema.core.model.validation;
+
+import gov.nist.secauto.metaschema.core.model.IResourceLocation;
+import gov.nist.secauto.metaschema.core.model.constraint.IConstraint.Level;
+import gov.nist.secauto.metaschema.core.util.ObjectUtils;
+
+import org.xml.sax.ErrorHandler;
+import org.xml.sax.SAXException;
+import org.xml.sax.SAXParseException;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+
+import javax.xml.XMLConstants;
+import javax.xml.transform.Source;
+import javax.xml.transform.stream.StreamSource;
+import javax.xml.validation.Schema;
+import javax.xml.validation.SchemaFactory;
+import javax.xml.validation.Validator;
+
+import edu.umd.cs.findbugs.annotations.NonNull;
+
+/**
+ * Supports validating an XML resource using an XML schema.
+ */
+public class XmlSchemaContentValidator
+    extends AbstractContentValidator {
+  private final Schema schema;
+
+  @SuppressWarnings(&quot;null&quot;)
+  @NonNull
+  private static Schema toSchema(@NonNull List&lt;? extends Source&gt; schemaSources) throws SAXException {
+<span class="nc" id="L42">    SchemaFactory schemafactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);</span>
+    // schemafactory.setResourceResolver(new ClasspathResourceResolver());
+    Schema retval;
+<span class="nc bnc" id="L45" title="All 2 branches missed.">    if (schemaSources.isEmpty()) {</span>
+<span class="nc" id="L46">      retval = schemafactory.newSchema();</span>
+    } else {
+<span class="nc" id="L48">      retval = schemafactory.newSchema(schemaSources.toArray(new Source[0]));</span>
+    }
+
+    // TODO verify source input streams are closed
+<span class="nc" id="L52">    return retval;</span>
+  }
+
+  /**
+   * Construct a new XML schema validator using the provided XML schema sources.
+   *
+   * @param schemaSources
+   *          the XML schemas to use for validation
+   * @throws SAXException
+   *           if an error occurred while parsing the provided XML schemas
+   */
+  public XmlSchemaContentValidator(@NonNull List&lt;? extends Source&gt; schemaSources) throws SAXException {
+<span class="nc" id="L64">    this(toSchema(ObjectUtils.requireNonNull(schemaSources, &quot;schemaSources&quot;)));</span>
+<span class="nc" id="L65">  }</span>
+
+  /**
+   * Construct a new XML schema validator using the provided pre-parsed XML
+   * schema(s).
+   *
+   * @param schema
+   *          the pre-parsed XML schema(s) to use for validation
+   */
+<span class="nc" id="L74">  protected XmlSchemaContentValidator(@NonNull Schema schema) {</span>
+<span class="nc" id="L75">    this.schema = ObjectUtils.requireNonNull(schema, &quot;schema&quot;);</span>
+<span class="nc" id="L76">  }</span>
+
+  private Schema getSchema() {
+<span class="nc" id="L79">    return schema;</span>
+  }
+
+  @Override
+  public IValidationResult validate(InputStream is, URI documentUri) throws IOException {
+<span class="nc" id="L84">    Source xmlSource = new StreamSource(is, documentUri.toASCIIString());</span>
+
+<span class="nc" id="L86">    Validator validator = getSchema().newValidator();</span>
+<span class="nc" id="L87">    XmlValidationErrorHandler errorHandler = new XmlValidationErrorHandler(documentUri);</span>
+<span class="nc" id="L88">    validator.setErrorHandler(errorHandler);</span>
+    try {
+<span class="nc" id="L90">      validator.validate(xmlSource);</span>
+<span class="nc" id="L91">    } catch (SAXException ex) {</span>
+<span class="nc" id="L92">      throw new IOException(String.format(&quot;Unexpected failure during validation of '%s'&quot;, documentUri), ex);</span>
+<span class="nc" id="L93">    }</span>
+<span class="nc" id="L94">    return errorHandler;</span>
+  }
+
+  /**
+   * Records an identified individual validation result found during XML schema
+   * validation.
+   */
+  public static class XmlValidationFinding implements IValidationFinding, IResourceLocation {
+    @NonNull
+    private final URI documentUri;
+    @NonNull
+    private final SAXParseException exception;
+    @NonNull
+    private final Level severity;
+
+    /**
+     * Construct a new XML schema validation finding, which represents an issue
+     * identified during XML schema validation.
+     *
+     * @param severity
+     *          the finding significance
+     * @param exception
+     *          the XML schema validation exception generated during schema
+     *          validation representing the issue
+     * @param resourceUri
+     *          the resource the issue was found in
+     */
+    public XmlValidationFinding(
+        @NonNull Level severity,
+        @NonNull SAXParseException exception,
+<span class="nc" id="L124">        @NonNull URI resourceUri) {</span>
+<span class="nc" id="L125">      this.severity = ObjectUtils.requireNonNull(severity, &quot;severity&quot;);</span>
+<span class="nc" id="L126">      this.exception = ObjectUtils.requireNonNull(exception, &quot;exception&quot;);</span>
+<span class="nc" id="L127">      this.documentUri = ObjectUtils.requireNonNull(resourceUri, &quot;documentUri&quot;);</span>
+<span class="nc" id="L128">    }</span>
+
+    @Override
+    public String getIdentifier() {
+      // always null
+<span class="nc" id="L133">      return null;</span>
+    }
+
+    @Override
+    public Kind getKind() {
+<span class="nc bnc" id="L138" title="All 2 branches missed.">      return Level.WARNING.equals(getSeverity()) ? Kind.PASS : Kind.FAIL;</span>
+    }
+
+    @Override
+    public Level getSeverity() {
+<span class="nc" id="L143">      return severity;</span>
+    }
+
+    @SuppressWarnings(&quot;null&quot;)
+    @Override
+    public URI getDocumentUri() {
+<span class="nc" id="L149">      String systemId = getCause().getSystemId();</span>
+<span class="nc bnc" id="L150" title="All 2 branches missed.">      return systemId == null ? documentUri : URI.create(systemId);</span>
+    }
+
+    @Override
+    public int getLine() {
+<span class="nc" id="L155">      return getCause().getLineNumber();</span>
+    }
+
+    @Override
+    public int getColumn() {
+<span class="nc" id="L160">      return getCause().getColumnNumber();</span>
+    }
+
+    @Override
+    public long getCharOffset() {
+      // not known
+<span class="nc" id="L166">      return -1;</span>
+    }
+
+    @Override
+    public long getByteOffset() {
+      // not known
+<span class="nc" id="L172">      return -1;</span>
+    }
+
+    @Override
+    public IResourceLocation getLocation() {
+      // TODO Auto-generated method stub
+<span class="nc" id="L178">      return this;</span>
+    }
+
+    @Override
+    public String getPathKind() {
+      // not known
+<span class="nc" id="L184">      return null;</span>
+    }
+
+    @Override
+    public String getPath() {
+      // not known
+<span class="nc" id="L190">      return null;</span>
+    }
+
+    @SuppressWarnings(&quot;null&quot;)
+    @Override
+    public String getMessage() {
+<span class="nc" id="L196">      return getCause().getLocalizedMessage();</span>
+    }
+
+    @NonNull
+    @Override
+    public SAXParseException getCause() {
+<span class="nc" id="L202">      return exception;</span>
+    }
+  }
+
+  private static class XmlValidationErrorHandler implements ErrorHandler, IValidationResult {
+    @NonNull
+    private final URI documentUri;
+<span class="nc" id="L209">    @NonNull</span>
+    private final List&lt;XmlValidationFinding&gt; findings = new LinkedList&lt;&gt;();
+<span class="nc" id="L211">    @NonNull</span>
+    private Level highestSeverity = Level.INFORMATIONAL;
+
+<span class="nc" id="L214">    public XmlValidationErrorHandler(@NonNull URI documentUri) {</span>
+<span class="nc" id="L215">      this.documentUri = ObjectUtils.requireNonNull(documentUri, &quot;documentUri&quot;);</span>
+<span class="nc" id="L216">    }</span>
+
+    @NonNull
+    public URI getDocumentUri() {
+<span class="nc" id="L220">      return documentUri;</span>
+    }
+
+    private void adjustHighestSeverity(@NonNull Level severity) {
+<span class="nc bnc" id="L224" title="All 2 branches missed.">      if (highestSeverity.ordinal() &lt; severity.ordinal()) {</span>
+<span class="nc" id="L225">        highestSeverity = severity;</span>
+      }
+<span class="nc" id="L227">    }</span>
+
+    @SuppressWarnings(&quot;null&quot;)
+    @Override
+    public void warning(SAXParseException ex) throws SAXException {
+<span class="nc" id="L232">      findings.add(new XmlValidationFinding(Level.WARNING, ex, getDocumentUri()));</span>
+<span class="nc" id="L233">      adjustHighestSeverity(Level.WARNING);</span>
+<span class="nc" id="L234">    }</span>
+
+    @SuppressWarnings(&quot;null&quot;)
+    @Override
+    public void error(SAXParseException ex) throws SAXException {
+<span class="nc" id="L239">      findings.add(new XmlValidationFinding(Level.ERROR, ex, getDocumentUri()));</span>
+<span class="nc" id="L240">      adjustHighestSeverity(Level.ERROR);</span>
+<span class="nc" id="L241">    }</span>
+
+    @SuppressWarnings(&quot;null&quot;)
+    @Override
+    public void fatalError(SAXParseException ex) throws SAXException {
+<span class="nc" id="L246">      findings.add(new XmlValidationFinding(Level.CRITICAL, ex, getDocumentUri()));</span>
+<span class="nc" id="L247">      adjustHighestSeverity(Level.CRITICAL);</span>
+<span class="nc" id="L248">    }</span>
+
+    @SuppressWarnings(&quot;null&quot;)
+    @Override
+    @NonNull
+    public List&lt;XmlValidationFinding&gt; getFindings() {
+<span class="nc" id="L254">      return Collections.unmodifiableList(findings);</span>
+    }
+
+    @Override
+    public Level getHighestSeverity() {
+<span class="nc" id="L259">      return highestSeverity;</span>
+    }
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

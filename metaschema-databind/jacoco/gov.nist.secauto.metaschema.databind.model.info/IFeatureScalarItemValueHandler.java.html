@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang=""><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>IFeatureScalarItemValueHandler.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Metaschema Java Data Binding and Code Generation</a> &gt; <a href="index.source.html" class="el_package">gov.nist.secauto.metaschema.databind.model.info</a> &gt; <span class="el_source">IFeatureScalarItemValueHandler.java</span></div><h1>IFeatureScalarItemValueHandler.java</h1><pre class="source lang-java linenums">/*
+ * SPDX-FileCopyrightText: none
+ * SPDX-License-Identifier: CC0-1.0
+ */
+
+package gov.nist.secauto.metaschema.databind.model.info;
+
+import gov.nist.secauto.metaschema.core.datatype.IDataTypeAdapter;
+import gov.nist.secauto.metaschema.core.model.IBoundObject;
+import gov.nist.secauto.metaschema.databind.io.BindingException;
+import gov.nist.secauto.metaschema.databind.model.IValuedMutable;
+
+import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.Nullable;
+
+public interface IFeatureScalarItemValueHandler
+    extends IItemValueHandler&lt;Object&gt;, IValuedMutable {
+
+  default void setValue(@NonNull Object parent, @NonNull String text) {
+<span class="fc" id="L20">    Object item = getValueFromString(text);</span>
+<span class="fc" id="L21">    setValue(parent, item);</span>
+<span class="fc" id="L22">  }</span>
+
+  @Nullable
+  default String toStringFromItem(@NonNull Object parent) {
+<span class="nc" id="L26">    Object item = getValue(parent);</span>
+<span class="nc bnc" id="L27" title="All 2 branches missed.">    return item == null ? null : getJavaTypeAdapter().asString(item);</span>
+  }
+
+  default Object getValueFromString(@NonNull String text) {
+<span class="fc" id="L31">    return getJavaTypeAdapter().parse(text);</span>
+  }
+
+  /**
+   * Get the data type adapter supporting the scalar value.
+   *
+   * @return the data type adapter
+   */
+  @NonNull
+  IDataTypeAdapter&lt;?&gt; getJavaTypeAdapter();
+
+  @Override
+  default Object deepCopyItem(Object source, IBoundObject parentInstance) throws BindingException {
+<span class="nc" id="L44">    return getJavaTypeAdapter().copy(source);</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

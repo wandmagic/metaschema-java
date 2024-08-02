@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang=""><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FnMinMax.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Metaschema Core API</a> &gt; <a href="index.source.html" class="el_package">gov.nist.secauto.metaschema.core.metapath.function.library</a> &gt; <span class="el_source">FnMinMax.java</span></div><h1>FnMinMax.java</h1><pre class="source lang-java linenums">/*
+ * SPDX-FileCopyrightText: none
+ * SPDX-License-Identifier: CC0-1.0
+ */
+
+package gov.nist.secauto.metaschema.core.metapath.function.library;
+
+import gov.nist.secauto.metaschema.core.metapath.DynamicContext;
+import gov.nist.secauto.metaschema.core.metapath.ISequence;
+import gov.nist.secauto.metaschema.core.metapath.MetapathConstants;
+import gov.nist.secauto.metaschema.core.metapath.function.FunctionUtils;
+import gov.nist.secauto.metaschema.core.metapath.function.IArgument;
+import gov.nist.secauto.metaschema.core.metapath.function.IFunction;
+import gov.nist.secauto.metaschema.core.metapath.function.InvalidArgumentFunctionException;
+import gov.nist.secauto.metaschema.core.metapath.item.IItem;
+import gov.nist.secauto.metaschema.core.metapath.item.atomic.IAnyAtomicItem;
+import gov.nist.secauto.metaschema.core.metapath.item.atomic.IAnyUriItem;
+import gov.nist.secauto.metaschema.core.metapath.item.atomic.IDecimalItem;
+import gov.nist.secauto.metaschema.core.metapath.item.atomic.IStringItem;
+import gov.nist.secauto.metaschema.core.metapath.item.atomic.IUntypedAtomicItem;
+import gov.nist.secauto.metaschema.core.util.ObjectUtils;
+
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.Nullable;
+
+public final class FnMinMax {
+  private static final String NAME_MIN = &quot;min&quot;;
+  private static final String NAME_MAX = &quot;max&quot;;
+
+  @NonNull
+<span class="fc" id="L36">  static final IFunction SIGNATURE_MIN = IFunction.builder()</span>
+<span class="fc" id="L37">      .name(NAME_MIN)</span>
+<span class="fc" id="L38">      .namespace(MetapathConstants.NS_METAPATH_FUNCTIONS)</span>
+<span class="fc" id="L39">      .deterministic()</span>
+<span class="fc" id="L40">      .contextIndependent()</span>
+<span class="fc" id="L41">      .focusIndependent()</span>
+<span class="fc" id="L42">      .argument(IArgument.builder()</span>
+<span class="fc" id="L43">          .name(&quot;arg&quot;)</span>
+<span class="fc" id="L44">          .type(IAnyAtomicItem.class)</span>
+<span class="fc" id="L45">          .zeroOrMore()</span>
+<span class="fc" id="L46">          .build())</span>
+<span class="fc" id="L47">      .returnType(IAnyAtomicItem.class)</span>
+<span class="fc" id="L48">      .returnZeroOrOne()</span>
+<span class="fc" id="L49">      .functionHandler(FnMinMax::executeMin)</span>
+<span class="fc" id="L50">      .build();</span>
+
+  @NonNull
+<span class="fc" id="L53">  static final IFunction SIGNATURE_MAX = IFunction.builder()</span>
+<span class="fc" id="L54">      .name(NAME_MAX)</span>
+<span class="fc" id="L55">      .namespace(MetapathConstants.NS_METAPATH_FUNCTIONS)</span>
+<span class="fc" id="L56">      .deterministic()</span>
+<span class="fc" id="L57">      .contextIndependent()</span>
+<span class="fc" id="L58">      .focusIndependent()</span>
+<span class="fc" id="L59">      .argument(IArgument.builder()</span>
+<span class="fc" id="L60">          .name(&quot;arg&quot;)</span>
+<span class="fc" id="L61">          .type(IAnyAtomicItem.class)</span>
+<span class="fc" id="L62">          .zeroOrMore()</span>
+<span class="fc" id="L63">          .build())</span>
+<span class="fc" id="L64">      .returnType(IAnyAtomicItem.class)</span>
+<span class="fc" id="L65">      .returnZeroOrOne()</span>
+<span class="fc" id="L66">      .functionHandler(FnMinMax::executeMax)</span>
+<span class="fc" id="L67">      .build();</span>
+
+  private FnMinMax() {
+    // disable construction
+  }
+
+  @SuppressWarnings(&quot;unused&quot;)
+  @NonNull
+  private static ISequence&lt;IAnyAtomicItem&gt; executeMin(
+      @NonNull IFunction function,
+      @NonNull List&lt;ISequence&lt;?&gt;&gt; arguments,
+      @NonNull DynamicContext dynamicContext,
+      IItem focus) {
+<span class="fc" id="L80">    ISequence&lt;? extends IAnyAtomicItem&gt; sequence = FunctionUtils.asType(</span>
+<span class="fc" id="L81">        ObjectUtils.requireNonNull(arguments.get(0)));</span>
+
+<span class="fc" id="L83">    return ISequence.of(min(sequence.getValue()));</span>
+  }
+
+  @SuppressWarnings(&quot;unused&quot;)
+  @NonNull
+  private static ISequence&lt;IAnyAtomicItem&gt; executeMax(
+      @NonNull IFunction function,
+      @NonNull List&lt;ISequence&lt;?&gt;&gt; arguments,
+      @NonNull DynamicContext dynamicContext,
+      IItem focus) {
+<span class="fc" id="L93">    ISequence&lt;? extends IAnyAtomicItem&gt; sequence = FunctionUtils.asType(</span>
+<span class="fc" id="L94">        ObjectUtils.requireNonNull(arguments.get(0)));</span>
+
+<span class="fc" id="L96">    return ISequence.of(max(sequence.getValue()));</span>
+  }
+
+  /**
+   * An implementation of XPath 3.1
+   * &lt;a href=&quot;https://www.w3.org/TR/xpath-functions-31/#func-min&quot;&gt;fn:min&lt;/a&gt;.
+   *
+   * @param items
+   *          the items to find the minimum value for
+   * @return the average
+   */
+  @Nullable
+  public static IAnyAtomicItem min(@NonNull List&lt;? extends IAnyAtomicItem&gt; items) {
+<span class="fc" id="L109">    return normalize(items)</span>
+<span class="fc" id="L110">        .min((item1, item2) -&gt; {</span>
+<span class="pc bpc" id="L111" title="1 of 2 branches missed.">          assert item2 != null;</span>
+<span class="fc" id="L112">          return item1.compareTo(item2);</span>
+        })
+<span class="fc" id="L114">        .orElse(null);</span>
+  }
+
+  /**
+   * An implementation of XPath 3.1
+   * &lt;a href=&quot;https://www.w3.org/TR/xpath-functions-31/#func-max&quot;&gt;fn:max&lt;/a&gt;.
+   *
+   * @param items
+   *          the items to find the maximum value for
+   * @return the average
+   */
+  @Nullable
+  public static IAnyAtomicItem max(@NonNull List&lt;? extends IAnyAtomicItem&gt; items) {
+<span class="fc" id="L127">    return normalize(items)</span>
+<span class="fc" id="L128">        .max((item1, item2) -&gt; {</span>
+<span class="pc bpc" id="L129" title="1 of 2 branches missed.">          assert item2 != null;</span>
+<span class="fc" id="L130">          return item1.compareTo(item2);</span>
+        })
+<span class="fc" id="L132">        .orElse(null);</span>
+  }
+
+  @SuppressWarnings(&quot;PMD.OnlyOneReturn&quot;) // readability
+  private static Stream&lt;? extends IAnyAtomicItem&gt; normalize(
+      @NonNull List&lt;? extends IAnyAtomicItem&gt; items) {
+<span class="fc bfc" id="L138" title="All 2 branches covered.">    if (items.isEmpty()) {</span>
+<span class="fc" id="L139">      return Stream.empty();</span>
+    }
+
+<span class="fc bfc" id="L142" title="All 2 branches covered.">    if (items.size() == 1) {</span>
+<span class="fc" id="L143">      return Stream.of(items.get(0));</span>
+    }
+
+<span class="fc" id="L146">    List&lt;? extends IAnyAtomicItem&gt; resultingItems = ObjectUtils.notNull(items.stream()</span>
+<span class="pc bpc" id="L147" title="1 of 2 branches missed.">        .map(item -&gt; item instanceof IUntypedAtomicItem ? IDecimalItem.cast(item) : item)</span>
+<span class="fc" id="L148">        .collect(Collectors.toList()));</span>
+
+<span class="fc" id="L150">    Map&lt;Class&lt;? extends IAnyAtomicItem&gt;, Integer&gt; counts = FunctionUtils.countTypes(</span>
+        IAnyAtomicItem.PRIMITIVE_ITEM_TYPES,
+        resultingItems);
+
+<span class="fc" id="L154">    Stream&lt;? extends IAnyAtomicItem&gt; stream = null;</span>
+<span class="fc bfc" id="L155" title="All 2 branches covered.">    if (counts.size() == 1) {</span>
+<span class="fc" id="L156">      stream = resultingItems.stream();</span>
+<span class="pc bpc" id="L157" title="1 of 2 branches missed.">    } else if (counts.size() &gt; 1) {</span>
+<span class="fc" id="L158">      int size = resultingItems.size();</span>
+<span class="fc bfc" id="L159" title="All 2 branches covered.">      if (counts.getOrDefault(IStringItem.class, 0) + counts.getOrDefault(IAnyUriItem.class, 0) == size) {</span>
+<span class="fc" id="L160">        stream = resultingItems.stream()</span>
+<span class="fc" id="L161">            .map(IAnyAtomicItem::asStringItem);</span>
+<span class="pc bpc" id="L162" title="1 of 2 branches missed.">      } else if (counts.getOrDefault(IDecimalItem.class, 0) == size) {</span>
+<span class="nc" id="L163">        stream = resultingItems.stream()</span>
+<span class="nc" id="L164">            .map(item -&gt; (IDecimalItem) item);</span>
+      }
+    }
+
+<span class="fc bfc" id="L168" title="All 2 branches covered.">    if (stream == null) {</span>
+<span class="fc" id="L169">      throw new InvalidArgumentFunctionException(</span>
+          InvalidArgumentFunctionException.INVALID_ARGUMENT_TYPE,
+<span class="fc" id="L171">          String.format(&quot;Values must all be of a single atomic type. Their types are '%s'.&quot;,</span>
+<span class="fc" id="L172">              FunctionUtils.getTypes(resultingItems).stream()</span>
+<span class="fc" id="L173">                  .map(Class::getName)</span>
+<span class="fc" id="L174">                  .collect(Collectors.joining(&quot;,&quot;))));</span>
+    }
+<span class="fc" id="L176">    return stream;</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

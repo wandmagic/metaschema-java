@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang=""><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AbstractBoundModule.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Metaschema Java Data Binding and Code Generation</a> &gt; <a href="index.source.html" class="el_package">gov.nist.secauto.metaschema.databind.model</a> &gt; <span class="el_source">AbstractBoundModule.java</span></div><h1>AbstractBoundModule.java</h1><pre class="source lang-java linenums">/*
+ * SPDX-FileCopyrightText: none
+ * SPDX-License-Identifier: CC0-1.0
+ */
+
+package gov.nist.secauto.metaschema.databind.model;
+
+import gov.nist.secauto.metaschema.core.metapath.StaticContext;
+import gov.nist.secauto.metaschema.core.model.AbstractModule;
+import gov.nist.secauto.metaschema.core.model.IBoundObject;
+import gov.nist.secauto.metaschema.core.util.CollectionUtil;
+import gov.nist.secauto.metaschema.core.util.ObjectUtils;
+import gov.nist.secauto.metaschema.databind.IBindingContext;
+import gov.nist.secauto.metaschema.databind.model.annotations.MetaschemaModule;
+import gov.nist.secauto.metaschema.databind.model.annotations.NsBinding;
+
+import java.lang.reflect.Array;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+import javax.xml.namespace.QName;
+
+import edu.umd.cs.findbugs.annotations.NonNull;
+import nl.talsmasoftware.lazy4j.Lazy;
+
+<span class="fc" id="L35">public abstract class AbstractBoundModule</span>
+    extends AbstractModule&lt;
+        IBoundModule,
+        IBoundDefinitionModelComplex,
+        IBoundDefinitionFlag,
+        IBoundDefinitionModelField&lt;?&gt;,
+        IBoundDefinitionModelAssembly&gt;
+    implements IBoundModule {
+  @NonNull
+  private final IBindingContext bindingContext;
+  @NonNull
+  private final Lazy&lt;Map&lt;QName, IBoundDefinitionModelAssembly&gt;&gt; assemblyDefinitions;
+  @NonNull
+  private final Lazy&lt;Map&lt;QName, IBoundDefinitionModelField&lt;?&gt;&gt;&gt; fieldDefinitions;
+  @NonNull
+  private final Lazy&lt;StaticContext&gt; staticContext;
+
+  /**
+   * Create a new Module instance for a given class annotated by the
+   * {@link MetaschemaModule} annotation.
+   * &lt;p&gt;
+   * Will also load any imported Metaschemas.
+   *
+   *
+   * @param clazz
+   *          the Module class
+   * @param bindingContext
+   *          the Module binding context
+   * @return the new Module instance
+   */
+  @NonNull
+  public static IBoundModule createInstance(
+      @NonNull Class&lt;? extends IBoundModule&gt; clazz,
+      @NonNull IBindingContext bindingContext) {
+
+<span class="pc bpc" id="L70" title="1 of 2 branches missed.">    if (!clazz.isAnnotationPresent(MetaschemaModule.class)) {</span>
+<span class="nc" id="L71">      throw new IllegalStateException(String.format(&quot;The class '%s' is missing the '%s' annotation&quot;,</span>
+<span class="nc" id="L72">          clazz.getCanonicalName(), MetaschemaModule.class.getCanonicalName()));</span>
+    }
+
+<span class="fc" id="L75">    MetaschemaModule moduleAnnotation = clazz.getAnnotation(MetaschemaModule.class);</span>
+
+    List&lt;IBoundModule&gt; importedModules;
+<span class="fc bfc" id="L78" title="All 2 branches covered.">    if (moduleAnnotation.imports().length &gt; 0) {</span>
+<span class="fc" id="L79">      importedModules = new ArrayList&lt;&gt;(moduleAnnotation.imports().length);</span>
+<span class="fc bfc" id="L80" title="All 2 branches covered.">      for (Class&lt;? extends IBoundModule&gt; importClass : moduleAnnotation.imports()) {</span>
+<span class="pc bpc" id="L81" title="1 of 2 branches missed.">        assert importClass != null;</span>
+<span class="fc" id="L82">        IBoundModule moduleImport = bindingContext.registerModule(importClass);</span>
+<span class="fc" id="L83">        importedModules.add(moduleImport);</span>
+      }
+    } else {
+<span class="fc" id="L86">      importedModules = CollectionUtil.emptyList();</span>
+    }
+<span class="fc" id="L88">    return createInstance(clazz, bindingContext, importedModules);</span>
+  }
+
+  @NonNull
+  private static IBoundModule createInstance(
+      @NonNull Class&lt;? extends IBoundModule&gt; clazz,
+      @NonNull IBindingContext bindingContext,
+      @NonNull List&lt;? extends IBoundModule&gt; importedModules) {
+
+    Constructor&lt;? extends IBoundModule&gt; constructor;
+    try {
+<span class="fc" id="L99">      constructor = clazz.getDeclaredConstructor(List.class, IBindingContext.class);</span>
+<span class="nc" id="L100">    } catch (NoSuchMethodException ex) {</span>
+<span class="nc" id="L101">      throw new IllegalArgumentException(ex);</span>
+<span class="fc" id="L102">    }</span>
+
+    try {
+<span class="fc" id="L105">      return ObjectUtils.notNull(constructor.newInstance(importedModules, bindingContext));</span>
+<span class="nc" id="L106">    } catch (InstantiationException | IllegalAccessException | InvocationTargetException ex) {</span>
+<span class="nc" id="L107">      throw new IllegalArgumentException(ex);</span>
+    }
+  }
+
+  /**
+   * Construct a new Module instance.
+   *
+   * @param importedModules
+   *          Module imports associated with the Metaschema module
+   * @param bindingContext
+   *          the Module binding context
+   */
+  protected AbstractBoundModule(
+      @NonNull List&lt;? extends IBoundModule&gt; importedModules,
+      @NonNull IBindingContext bindingContext) {
+<span class="fc" id="L122">    super(importedModules);</span>
+<span class="fc" id="L123">    this.bindingContext = bindingContext;</span>
+<span class="fc" id="L124">    this.assemblyDefinitions = ObjectUtils.notNull(Lazy.lazy(() -&gt; Arrays.stream(getAssemblyClasses())</span>
+<span class="fc" id="L125">        .map(clazz -&gt; {</span>
+<span class="pc bpc" id="L126" title="1 of 2 branches missed.">          assert clazz != null;</span>
+<span class="fc" id="L127">          return (IBoundDefinitionModelAssembly) ObjectUtils</span>
+<span class="fc" id="L128">              .requireNonNull(bindingContext.getBoundDefinitionForClass(clazz));</span>
+        })
+<span class="fc" id="L130">        .collect(Collectors.toUnmodifiableMap(</span>
+            IBoundDefinitionModelAssembly::getDefinitionQName,
+<span class="fc" id="L132">            Function.identity()))));</span>
+<span class="fc" id="L133">    this.fieldDefinitions = ObjectUtils.notNull(Lazy.lazy(() -&gt; Arrays.stream(getFieldClasses())</span>
+<span class="fc" id="L134">        .map(clazz -&gt; {</span>
+<span class="pc bpc" id="L135" title="1 of 2 branches missed.">          assert clazz != null;</span>
+<span class="fc" id="L136">          return (IBoundDefinitionModelField&lt;?&gt;) ObjectUtils</span>
+<span class="fc" id="L137">              .requireNonNull(bindingContext.getBoundDefinitionForClass(clazz));</span>
+        })
+<span class="fc" id="L139">        .collect(Collectors.toUnmodifiableMap(</span>
+            IBoundDefinitionModelField::getDefinitionQName,
+<span class="fc" id="L141">            Function.identity()))));</span>
+<span class="fc" id="L142">    this.staticContext = ObjectUtils.notNull(Lazy.lazy(() -&gt; {</span>
+<span class="fc" id="L143">      StaticContext.Builder builder = StaticContext.builder()</span>
+<span class="fc" id="L144">          .defaultModelNamespace(getXmlNamespace());</span>
+
+<span class="fc" id="L146">      getNamespaceBindings()</span>
+<span class="fc" id="L147">          .forEach(</span>
+<span class="nc" id="L148">              (prefix, ns) -&gt; builder.namespace(</span>
+<span class="nc" id="L149">                  ObjectUtils.requireNonNull(prefix),</span>
+<span class="nc" id="L150">                  ObjectUtils.requireNonNull(ns)));</span>
+<span class="fc" id="L151">      return builder.build();</span>
+    }));
+<span class="fc" id="L153">  }</span>
+
+  @Override
+  public StaticContext getModuleStaticContext() {
+<span class="fc" id="L157">    return ObjectUtils.notNull(staticContext.get());</span>
+  }
+
+  @Override
+  @NonNull
+  public IBindingContext getBindingContext() {
+<span class="nc" id="L163">    return bindingContext;</span>
+  }
+
+  @Override
+  public Map&lt;String, String&gt; getNamespaceBindings() {
+<span class="fc" id="L168">    return ObjectUtils.notNull(Arrays.stream(getNsBindings())</span>
+<span class="fc" id="L169">        .collect(Collectors.toMap(</span>
+            NsBinding::prefix,
+            NsBinding::uri,
+<span class="nc" id="L172">            (v1, v2) -&gt; v2,</span>
+            LinkedHashMap::new)));
+  }
+
+  @SuppressWarnings({ &quot;null&quot; })
+  @NonNull
+  protected NsBinding[] getNsBindings() {
+<span class="pc bpc" id="L179" title="1 of 2 branches missed.">    return getClass().isAnnotationPresent(MetaschemaModule.class)</span>
+<span class="fc" id="L180">        ? getClass().getAnnotation(MetaschemaModule.class).nsBindings()</span>
+<span class="nc" id="L181">        : (NsBinding[]) Array.newInstance(NsBinding.class, 0);</span>
+  }
+
+  /**
+   * Get the assembly instance annotations associated with this bound choice
+   * group.
+   *
+   * @return the annotations
+   */
+  @SuppressWarnings({ &quot;null&quot;, &quot;unchecked&quot; })
+  @NonNull
+  protected Class&lt;? extends IBoundObject&gt;[] getAssemblyClasses() {
+<span class="pc bpc" id="L193" title="1 of 2 branches missed.">    return getClass().isAnnotationPresent(MetaschemaModule.class)</span>
+<span class="fc" id="L194">        ? getClass().getAnnotation(MetaschemaModule.class).assemblies()</span>
+<span class="nc" id="L195">        : (Class&lt;? extends IBoundObject&gt;[]) Array.newInstance(Class.class, 0);</span>
+  }
+
+  /**
+   * Get the field instance annotations associated with this bound choice group.
+   *
+   * @return the annotations
+   */
+  @SuppressWarnings({ &quot;null&quot;, &quot;unchecked&quot; })
+  @NonNull
+  protected Class&lt;? extends IBoundObject&gt;[] getFieldClasses() {
+<span class="pc bpc" id="L206" title="1 of 2 branches missed.">    return getClass().isAnnotationPresent(MetaschemaModule.class)</span>
+<span class="fc" id="L207">        ? getClass().getAnnotation(MetaschemaModule.class).fields()</span>
+<span class="nc" id="L208">        : (Class&lt;? extends IBoundObject&gt;[]) Array.newInstance(Class.class, 0);</span>
+  }
+
+  /**
+   * Get the mapping of assembly definition effective name to definition.
+   *
+   * @return the mapping
+   */
+  protected Map&lt;QName, IBoundDefinitionModelAssembly&gt; getAssemblyDefinitionMap() {
+<span class="fc" id="L217">    return assemblyDefinitions.get();</span>
+  }
+
+  @SuppressWarnings(&quot;null&quot;)
+  @Override
+  public Collection&lt;IBoundDefinitionModelAssembly&gt; getAssemblyDefinitions() {
+<span class="fc" id="L223">    return getAssemblyDefinitionMap().values();</span>
+  }
+
+  @Override
+  public IBoundDefinitionModelAssembly getAssemblyDefinitionByName(@NonNull QName name) {
+<span class="nc" id="L228">    return getAssemblyDefinitionMap().get(name);</span>
+  }
+
+  /**
+   * Get the mapping of field definition effective name to definition.
+   *
+   * @return the mapping
+   */
+  protected Map&lt;QName, IBoundDefinitionModelField&lt;?&gt;&gt; getFieldDefinitionMap() {
+<span class="fc" id="L237">    return fieldDefinitions.get();</span>
+  }
+
+  @SuppressWarnings(&quot;null&quot;)
+  @Override
+  public Collection&lt;IBoundDefinitionModelField&lt;?&gt;&gt; getFieldDefinitions() {
+<span class="fc" id="L243">    return getFieldDefinitionMap().values();</span>
+  }
+
+  @Override
+  public IBoundDefinitionModelField&lt;?&gt; getFieldDefinitionByName(@NonNull QName name) {
+<span class="nc" id="L248">    return getFieldDefinitionMap().get(name);</span>
+  }
+
+  @SuppressWarnings(&quot;null&quot;)
+  @Override
+  public Collection&lt;IBoundDefinitionFlag&gt; getFlagDefinitions() {
+    // Flags are always inline, so they do not have separate definitions
+<span class="fc" id="L255">    return Collections.emptyList();</span>
+  }
+
+  @Override
+  public IBoundDefinitionFlag getFlagDefinitionByName(@NonNull QName name) {
+    // Flags are always inline, so they do not have separate definitions
+<span class="nc" id="L261">    return null;</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -1,0 +1,290 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang=""><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DefaultTypeResolver.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Metaschema Java Data Binding and Code Generation</a> &gt; <a href="index.source.html" class="el_package">gov.nist.secauto.metaschema.databind.codegen.typeinfo</a> &gt; <span class="el_source">DefaultTypeResolver.java</span></div><h1>DefaultTypeResolver.java</h1><pre class="source lang-java linenums">/*
+ * SPDX-FileCopyrightText: none
+ * SPDX-License-Identifier: CC0-1.0
+ */
+
+package gov.nist.secauto.metaschema.databind.codegen.typeinfo;
+
+import com.squareup.javapoet.ClassName;
+
+import gov.nist.secauto.metaschema.core.model.IAssemblyDefinition;
+import gov.nist.secauto.metaschema.core.model.IAssemblyInstanceGrouped;
+import gov.nist.secauto.metaschema.core.model.IChoiceGroupInstance;
+import gov.nist.secauto.metaschema.core.model.IFieldDefinition;
+import gov.nist.secauto.metaschema.core.model.IFieldInstanceGrouped;
+import gov.nist.secauto.metaschema.core.model.IModelDefinition;
+import gov.nist.secauto.metaschema.core.model.IModule;
+import gov.nist.secauto.metaschema.core.model.INamedInstance;
+import gov.nist.secauto.metaschema.core.model.INamedModelInstanceGrouped;
+import gov.nist.secauto.metaschema.core.util.ObjectUtils;
+import gov.nist.secauto.metaschema.databind.codegen.ClassUtils;
+import gov.nist.secauto.metaschema.databind.codegen.config.IBindingConfiguration;
+import gov.nist.secauto.metaschema.databind.codegen.typeinfo.def.IAssemblyDefinitionTypeInfo;
+import gov.nist.secauto.metaschema.databind.codegen.typeinfo.def.IDefinitionTypeInfo;
+import gov.nist.secauto.metaschema.databind.codegen.typeinfo.def.IFieldDefinitionTypeInfo;
+import gov.nist.secauto.metaschema.databind.codegen.typeinfo.def.IModelDefinitionTypeInfo;
+
+import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
+
+import edu.umd.cs.findbugs.annotations.NonNull;
+
+class DefaultTypeResolver implements ITypeResolver {
+<span class="fc" id="L43">  private static final Logger LOGGER = LogManager.getLogger(DefaultTypeResolver.class);</span>
+
+<span class="fc" id="L45">  private final Map&lt;String, Set&lt;String&gt;&gt; packageToClassNamesMap = new ConcurrentHashMap&lt;&gt;();</span>
+<span class="fc" id="L46">  private final Map&lt;IModelDefinition, ClassName&gt; definitionToTypeMap = new ConcurrentHashMap&lt;&gt;();</span>
+<span class="fc" id="L47">  private final Map&lt;IModule, ClassName&gt; moduleToTypeMap = new ConcurrentHashMap&lt;&gt;();</span>
+<span class="fc" id="L48">  private final Map&lt;IAssemblyDefinition, IAssemblyDefinitionTypeInfo&gt; assemblyDefinitionToTypeInfoMap</span>
+      = new ConcurrentHashMap&lt;&gt;();
+<span class="fc" id="L50">  private final Map&lt;IFieldDefinition, IFieldDefinitionTypeInfo&gt; fieldDefinitionToTypeInfoMap</span>
+      = new ConcurrentHashMap&lt;&gt;();
+<span class="fc" id="L52">  private final Map&lt;IDefinitionTypeInfo, Set&lt;String&gt;&gt; typeInfoToPropertyNameMap = new ConcurrentHashMap&lt;&gt;();</span>
+
+  @NonNull
+  private final IBindingConfiguration bindingConfiguration;
+
+<span class="fc" id="L57">  public DefaultTypeResolver(@NonNull IBindingConfiguration bindingConfiguration) {</span>
+<span class="fc" id="L58">    this.bindingConfiguration = bindingConfiguration;</span>
+<span class="fc" id="L59">  }</span>
+
+  protected IBindingConfiguration getBindingConfiguration() {
+<span class="fc" id="L62">    return bindingConfiguration;</span>
+  }
+
+  @Override
+  public IAssemblyDefinitionTypeInfo getTypeInfo(@NonNull IAssemblyDefinition definition) {
+<span class="fc" id="L67">    return ObjectUtils.notNull(assemblyDefinitionToTypeInfoMap.computeIfAbsent(</span>
+        definition,
+<span class="fc" id="L69">        def -&gt; IAssemblyDefinitionTypeInfo.newTypeInfo(ObjectUtils.notNull(def),</span>
+            this)));
+  }
+
+  @Override
+  public IFieldDefinitionTypeInfo getTypeInfo(@NonNull IFieldDefinition definition) {
+<span class="fc" id="L75">    return ObjectUtils.notNull(fieldDefinitionToTypeInfoMap.computeIfAbsent(</span>
+        definition,
+<span class="fc" id="L77">        def -&gt; IFieldDefinitionTypeInfo.newTypeInfo(ObjectUtils.notNull(def),</span>
+            this)));
+  }
+
+  @Override
+  public IModelDefinitionTypeInfo getTypeInfo(@NonNull IModelDefinition definition) {
+    IModelDefinitionTypeInfo retval;
+<span class="fc bfc" id="L84" title="All 2 branches covered.">    if (definition instanceof IAssemblyDefinition) {</span>
+<span class="fc" id="L85">      retval = getTypeInfo((IAssemblyDefinition) definition);</span>
+<span class="pc bpc" id="L86" title="1 of 2 branches missed.">    } else if (definition instanceof IFieldDefinition) {</span>
+<span class="fc" id="L87">      retval = getTypeInfo((IFieldDefinition) definition);</span>
+    } else {
+<span class="nc" id="L89">      throw new IllegalStateException(String.format(&quot;Unknown type '%s'&quot;,</span>
+<span class="nc" id="L90">          definition.getClass().getName()));</span>
+    }
+<span class="fc" id="L92">    return retval;</span>
+  }
+
+  @Override
+  public IGroupedNamedModelInstanceTypeInfo getTypeInfo(
+      @NonNull INamedModelInstanceGrouped modelInstance,
+      @NonNull IChoiceGroupTypeInfo choiceGroupTypeInfo) {
+    IGroupedNamedModelInstanceTypeInfo retval;
+<span class="pc bpc" id="L100" title="1 of 2 branches missed.">    if (modelInstance instanceof IAssemblyInstanceGrouped) {</span>
+<span class="fc" id="L101">      retval = getTypeInfo((IAssemblyInstanceGrouped) modelInstance, choiceGroupTypeInfo);</span>
+<span class="nc bnc" id="L102" title="All 2 branches missed.">    } else if (modelInstance instanceof IFieldInstanceGrouped) {</span>
+<span class="nc" id="L103">      retval = getTypeInfo((IFieldInstanceGrouped) modelInstance, choiceGroupTypeInfo);</span>
+    } else {
+<span class="nc" id="L105">      throw new IllegalStateException(String.format(&quot;Unknown type '%s'&quot;,</span>
+<span class="nc" id="L106">          modelInstance.getClass().getName()));</span>
+    }
+<span class="fc" id="L108">    return retval;</span>
+  }
+
+  @NonNull
+  private static IGroupedAssemblyInstanceTypeInfo getTypeInfo(
+      @NonNull IAssemblyInstanceGrouped modelInstance,
+      @NonNull IChoiceGroupTypeInfo choiceGroupTypeInfo) {
+<span class="fc" id="L115">    return new GroupedAssemblyInstanceTypeInfo(modelInstance, choiceGroupTypeInfo);</span>
+  }
+
+  @NonNull
+  private static IGroupedFieldInstanceTypeInfo getTypeInfo(
+      @NonNull IFieldInstanceGrouped modelInstance,
+      @NonNull IChoiceGroupTypeInfo choiceGroupTypeInfo) {
+<span class="nc" id="L122">    return new GroupedFieldInstanceTypeInfo(modelInstance, choiceGroupTypeInfo);</span>
+  }
+
+  @NonNull
+  private ClassName getFlagContainerClassName(
+      @NonNull IModelDefinition definition,
+      @NonNull String packageName,
+      @NonNull String suggestedClassName) {
+    ClassName retval;
+<span class="fc bfc" id="L131" title="All 2 branches covered.">    if (definition.isInline()) {</span>
+      // this is a local definition, which means a child class needs to be generated
+<span class="fc" id="L133">      INamedInstance inlineInstance = definition.getInlineInstance();</span>
+<span class="fc" id="L134">      IModelDefinition parentDefinition = inlineInstance.getContainingDefinition();</span>
+<span class="fc" id="L135">      ClassName parentClassName = getClassName(parentDefinition);</span>
+<span class="fc" id="L136">      retval = getSubclassName(parentClassName, suggestedClassName, definition);</span>
+<span class="fc" id="L137">    } else {</span>
+<span class="fc" id="L138">      String className = generateClassName(packageName, suggestedClassName, definition);</span>
+<span class="fc" id="L139">      retval = ObjectUtils.notNull(ClassName.get(packageName, className));</span>
+    }
+<span class="fc" id="L141">    return retval;</span>
+  }
+
+  @Override
+  public ClassName getSubclassName(
+      @NonNull ClassName parentClass,
+      @NonNull String suggestedClassName,
+      @NonNull IModelDefinition definition) {
+<span class="fc" id="L149">    String name = generateClassName(</span>
+<span class="fc" id="L150">        ObjectUtils.notNull(parentClass.canonicalName()),</span>
+<span class="fc" id="L151">        ClassUtils.toClassName(suggestedClassName),</span>
+        definition);
+<span class="fc" id="L153">    return ObjectUtils.notNull(parentClass.nestedClass(name));</span>
+  }
+
+  @Override
+  @NonNull
+  public ClassName getClassName(@NonNull IModelDefinition definition) {
+<span class="fc" id="L159">    return ObjectUtils.notNull(definitionToTypeMap.computeIfAbsent(</span>
+        definition,
+        def -&gt; {
+<span class="fc" id="L162">          String packageName = getBindingConfiguration().getPackageNameForModule(def.getContainingModule());</span>
+<span class="fc" id="L163">          String suggestedClassName = getBindingConfiguration().getClassName(definition);</span>
+<span class="fc" id="L164">          return getFlagContainerClassName(def, packageName, suggestedClassName);</span>
+        }));
+  }
+
+  @Override
+  public ClassName getClassName(@NonNull INamedModelInstanceTypeInfo typeInfo) {
+<span class="fc" id="L170">    return getClassName(typeInfo.getInstance().getDefinition());</span>
+  }
+
+  @Override
+  public ClassName getClassName(IChoiceGroupInstance instance) {
+    // TODO: Support some form of binding override for a common interface type
+<span class="fc" id="L176">    return ObjectUtils.notNull(ClassName.get(Object.class));</span>
+  }
+
+  @Override
+  public ClassName getClassName(IModule module) {
+<span class="fc" id="L181">    return ObjectUtils.notNull(moduleToTypeMap.computeIfAbsent(</span>
+        module,
+        mod -&gt; {
+<span class="pc bpc" id="L184" title="1 of 2 branches missed.">          assert mod != null;</span>
+<span class="fc" id="L185">          String packageName = getBindingConfiguration().getPackageNameForModule(mod);</span>
+<span class="fc" id="L186">          String className = getBindingConfiguration().getClassName(mod);</span>
+<span class="fc" id="L187">          String classNameBase = className;</span>
+<span class="fc" id="L188">          int index = 1;</span>
+<span class="pc bpc" id="L189" title="1 of 2 branches missed.">          while (isClassNameClash(packageName, className)) {</span>
+<span class="nc" id="L190">            className = classNameBase + Integer.toString(index);</span>
+          }
+<span class="fc" id="L192">          addClassName(packageName, className);</span>
+<span class="fc" id="L193">          return ClassName.get(packageName, className);</span>
+        }));
+  }
+
+  @NonNull
+  protected Set&lt;String&gt; getClassNamesFor(@NonNull String packageOrTypeName) {
+<span class="fc" id="L199">    return ObjectUtils.notNull(packageToClassNamesMap.computeIfAbsent(</span>
+        packageOrTypeName,
+<span class="fc" id="L201">        pkg -&gt; Collections.synchronizedSet(new LinkedHashSet&lt;&gt;())));</span>
+  }
+
+  protected boolean isClassNameClash(@NonNull String packageOrTypeName, @NonNull String className) {
+<span class="fc" id="L205">    return getClassNamesFor(packageOrTypeName).contains(className);</span>
+  }
+
+  protected boolean addClassName(@NonNull String packageOrTypeName, @NonNull String className) {
+<span class="fc" id="L209">    return getClassNamesFor(packageOrTypeName).add(className);</span>
+  }
+
+  private String generateClassName(
+      @NonNull String packageOrTypeName,
+      @NonNull String suggestedClassName,
+      @NonNull IModelDefinition definition) {
+<span class="fc" id="L216">    @NonNull String retval = suggestedClassName;</span>
+<span class="fc" id="L217">    Set&lt;String&gt; classNames = getClassNamesFor(packageOrTypeName);</span>
+<span class="fc" id="L218">    synchronized (classNames) {</span>
+<span class="fc" id="L219">      boolean clash = false;</span>
+<span class="fc bfc" id="L220" title="All 2 branches covered.">      if (classNames.contains(suggestedClassName)) {</span>
+<span class="fc" id="L221">        clash = true;</span>
+        // first try to append the metaschema's short name
+<span class="fc" id="L223">        String metaschemaShortName = definition.getContainingModule().getShortName();</span>
+<span class="fc" id="L224">        retval = ClassUtils.toClassName(suggestedClassName + StringUtils.capitalize(metaschemaShortName));</span>
+      }
+
+<span class="fc" id="L227">      String classNameBase = retval;</span>
+<span class="fc" id="L228">      int index = 1;</span>
+<span class="pc bpc" id="L229" title="1 of 2 branches missed.">      while (classNames.contains(retval)) {</span>
+<span class="nc" id="L230">        retval = classNameBase + Integer.toString(index++);</span>
+      }
+<span class="fc" id="L232">      classNames.add(retval);</span>
+
+<span class="pc bpc" id="L234" title="1 of 4 branches missed.">      if (clash &amp;&amp; LOGGER.isWarnEnabled()) {</span>
+<span class="fc" id="L235">        LOGGER.warn(String.format(</span>
+            &quot;Class name '%s', based on '%s' in '%s', clashes with another bound class. Using '%s' instead.&quot;,
+            suggestedClassName,
+<span class="fc" id="L238">            definition.getName(),</span>
+<span class="fc" id="L239">            definition.getContainingModule().getLocation(),</span>
+            retval));
+      }
+<span class="fc" id="L242">    }</span>
+<span class="fc" id="L243">    return retval;</span>
+  }
+
+  @Override
+  public ClassName getBaseClassName(IModelDefinition definition) {
+<span class="fc" id="L248">    String className = bindingConfiguration.getQualifiedBaseClassName(definition);</span>
+<span class="fc" id="L249">    ClassName retval = null;</span>
+<span class="pc bpc" id="L250" title="1 of 2 branches missed.">    if (className != null) {</span>
+<span class="nc" id="L251">      retval = ClassName.bestGuess(className);</span>
+    }
+<span class="fc" id="L253">    return retval;</span>
+  }
+
+  @Override
+  public List&lt;ClassName&gt; getSuperinterfaces(IModelDefinition definition) {
+<span class="fc" id="L258">    List&lt;String&gt; classNames = bindingConfiguration.getQualifiedSuperinterfaceClassNames(definition);</span>
+<span class="fc" id="L259">    return ObjectUtils.notNull(classNames.stream()</span>
+<span class="fc" id="L260">        .map(ClassName::bestGuess)</span>
+<span class="fc" id="L261">        .collect(Collectors.toUnmodifiableList()));</span>
+  }
+
+  @Override
+  public String getPackageName(@NonNull IModule module) {
+<span class="fc" id="L266">    return bindingConfiguration.getPackageNameForModule(module);</span>
+  }
+
+  @Override
+  @NonNull
+  public String getPropertyName(IDefinitionTypeInfo parent, String name) {
+<span class="fc" id="L272">    synchronized (typeInfoToPropertyNameMap) {</span>
+<span class="fc" id="L273">      Set&lt;String&gt; propertyNames = typeInfoToPropertyNameMap.get(parent);</span>
+<span class="pc bpc" id="L274" title="1 of 2 branches missed.">      if (propertyNames == null) {</span>
+<span class="fc" id="L275">        propertyNames = new HashSet&lt;&gt;();</span>
+      }
+
+<span class="fc" id="L278">      String retval = name;</span>
+<span class="fc" id="L279">      int index = 0;</span>
+<span class="pc bpc" id="L280" title="1 of 2 branches missed.">      while (propertyNames.contains(retval)) {</span>
+        // append an integer value to make the name unique
+<span class="nc" id="L282">        retval = ClassUtils.toPropertyName(name + Integer.toString(++index));</span>
+      }
+<span class="fc" id="L284">      propertyNames.add(retval);</span>
+<span class="fc" id="L285">      return retval;</span>
+    }
+  }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang=""><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AbstractDataTypeAdapter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Metaschema Core API</a> &gt; <a href="index.source.html" class="el_package">gov.nist.secauto.metaschema.core.datatype</a> &gt; <span class="el_source">AbstractDataTypeAdapter.java</span></div><h1>AbstractDataTypeAdapter.java</h1><pre class="source lang-java linenums">/*
+ * SPDX-FileCopyrightText: none
+ * SPDX-License-Identifier: CC0-1.0
+ */
+
+package gov.nist.secauto.metaschema.core.datatype;
+
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonParser;
+
+import gov.nist.secauto.metaschema.core.metapath.function.InvalidValueForCastFunctionException;
+import gov.nist.secauto.metaschema.core.metapath.item.atomic.IAnyAtomicItem;
+import gov.nist.secauto.metaschema.core.model.util.XmlEventUtil;
+
+import org.codehaus.stax2.XMLEventReader2;
+import org.codehaus.stax2.XMLStreamWriter2;
+import org.codehaus.stax2.evt.XMLEventFactory2;
+
+import java.io.IOException;
+
+import javax.xml.namespace.QName;
+import javax.xml.stream.XMLEventWriter;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.events.Characters;
+import javax.xml.stream.events.StartElement;
+import javax.xml.stream.events.XMLEvent;
+
+import edu.umd.cs.findbugs.annotations.NonNull;
+
+/**
+ * Provides a basic Java type adapter implementation. This implementation should
+ * be the parent class of all Java type adapter implementations.
+ *
+ * @param &lt;TYPE&gt;
+ *          the raw Java type this adapter supports
+ * @param &lt;ITEM_TYPE&gt;
+ *          the metapath item type corresponding to the raw Java type supported
+ *          by the adapter
+ */
+public abstract class AbstractDataTypeAdapter&lt;TYPE, ITEM_TYPE extends IAnyAtomicItem&gt;
+    implements IDataTypeAdapter&lt;TYPE&gt; {
+  public static final String DEFAULT_JSON_FIELD_NAME = &quot;STRVALUE&quot;;
+
+  @NonNull
+  private final Class&lt;TYPE&gt; clazz;
+
+  /**
+   * Construct a new Java type adapter for a provided class.
+   *
+   * @param clazz
+   *          the Java type this adapter supports
+   */
+<span class="fc" id="L53">  protected AbstractDataTypeAdapter(@NonNull Class&lt;TYPE&gt; clazz) {</span>
+<span class="fc" id="L54">    this.clazz = clazz;</span>
+<span class="fc" id="L55">  }</span>
+
+  @Override
+  @SuppressWarnings(&quot;unchecked&quot;)
+  public TYPE toValue(Object value) {
+<span class="fc" id="L60">    return (TYPE) value;</span>
+  }
+
+  @Override
+  public Class&lt;TYPE&gt; getJavaClass() {
+<span class="nc" id="L65">    return clazz;</span>
+  }
+
+  @Override
+  public boolean isParsingStartElement() {
+<span class="nc" id="L70">    return false;</span>
+  }
+
+  @Override
+  public boolean canHandleQName(QName nextQName) {
+<span class="nc" id="L75">    return false;</span>
+  }
+
+  @Override
+  public String getDefaultJsonValueKey() {
+<span class="nc" id="L80">    return DEFAULT_JSON_FIELD_NAME;</span>
+  }
+
+  @Override
+  public boolean isUnrappedValueAllowedInXml() {
+<span class="nc" id="L85">    return false;</span>
+  }
+
+  @Override
+  public boolean isXmlMixed() {
+<span class="nc" id="L90">    return false;</span>
+  }
+
+  @Override
+  public TYPE parse(XMLEventReader2 eventReader) throws IOException {
+<span class="nc" id="L95">    StringBuilder builder = new StringBuilder();</span>
+    try {
+      XMLEvent nextEvent;
+<span class="nc bnc" id="L98" title="All 2 branches missed.">      while (!(nextEvent = eventReader.peek()).isEndElement()) {</span>
+<span class="nc bnc" id="L99" title="All 2 branches missed.">        if (nextEvent.isCharacters()) {</span>
+<span class="nc" id="L100">          Characters characters = nextEvent.asCharacters();</span>
+<span class="nc" id="L101">          builder.append(characters.getData());</span>
+          // advance past current event
+<span class="nc" id="L103">          eventReader.nextEvent();</span>
+<span class="nc" id="L104">        } else {</span>
+<span class="nc" id="L105">          throw new IOException(String.format(&quot;Invalid content '%s' at %s&quot;, XmlEventUtil.toString(nextEvent),</span>
+<span class="nc" id="L106">              XmlEventUtil.toString(nextEvent.getLocation())));</span>
+        }
+      }
+
+      // trim leading and trailing whitespace
+      @SuppressWarnings(&quot;null&quot;)
+<span class="nc" id="L112">      @NonNull String value = builder.toString().trim();</span>
+<span class="nc" id="L113">      return parse(value);</span>
+<span class="nc" id="L114">    } catch (XMLStreamException ex) {</span>
+<span class="nc" id="L115">      throw new IOException(ex);</span>
+    }
+  }
+
+  /**
+   * This default implementation will parse the value as a string and delegate to
+   * the string-based parsing method.
+   */
+  @Override
+  public TYPE parse(JsonParser parser) throws IOException {
+<span class="nc" id="L125">    String value = parser.getValueAsString();</span>
+<span class="nc bnc" id="L126" title="All 2 branches missed.">    if (value == null) {</span>
+<span class="nc" id="L127">      throw new IOException(&quot;Unable to parse field value as text&quot;);</span>
+    }
+    // skip over value
+<span class="nc" id="L130">    parser.nextToken();</span>
+<span class="nc" id="L131">    return parse(value);</span>
+  }
+
+  @SuppressWarnings(&quot;null&quot;)
+  @Override
+  public String asString(Object value) {
+<span class="fc" id="L137">    return value.toString();</span>
+  }
+
+  @Override
+  public void writeXmlValue(
+      Object value,
+      StartElement parent,
+      XMLEventFactory2 eventFactory,
+      XMLEventWriter eventWriter)
+      throws IOException, XMLStreamException {
+    try {
+<span class="nc" id="L148">      String content = asString(value);</span>
+<span class="nc" id="L149">      Characters characters = eventFactory.createCharacters(content);</span>
+<span class="nc" id="L150">      eventWriter.add(characters);</span>
+<span class="nc" id="L151">    } catch (XMLStreamException ex) {</span>
+<span class="nc" id="L152">      throw new IOException(ex);</span>
+<span class="nc" id="L153">    }</span>
+<span class="nc" id="L154">  }</span>
+
+  @Override
+  public void writeXmlValue(Object value, QName parentName, XMLStreamWriter2 writer) throws XMLStreamException {
+<span class="nc" id="L158">    String content = asString(value);</span>
+<span class="nc" id="L159">    writer.writeCharacters(content);</span>
+<span class="nc" id="L160">  }</span>
+
+  @Override
+  public void writeJsonValue(Object value, JsonGenerator generator) throws IOException {
+<span class="nc" id="L164">    generator.writeString(asString(value));</span>
+<span class="nc" id="L165">  }</span>
+
+  @Override
+  public abstract Class&lt;ITEM_TYPE&gt; getItemClass();
+
+  @Override
+  public abstract ITEM_TYPE newItem(Object value);
+
+  @Override
+  public ITEM_TYPE cast(IAnyAtomicItem item) {
+    ITEM_TYPE retval;
+<span class="pc bpc" id="L176" title="1 of 2 branches missed.">    if (item == null) {</span>
+<span class="nc" id="L177">      throw new InvalidValueForCastFunctionException(&quot;item is null&quot;);</span>
+<span class="fc bfc" id="L178" title="All 2 branches covered.">    } else if (getItemClass().isAssignableFrom(item.getClass())) {</span>
+<span class="fc" id="L179">      @SuppressWarnings(&quot;unchecked&quot;) ITEM_TYPE typedItem = (ITEM_TYPE) item;</span>
+<span class="fc" id="L180">      retval = typedItem;</span>
+<span class="fc" id="L181">    } else {</span>
+<span class="fc" id="L182">      retval = castInternal(item);</span>
+    }
+<span class="fc" id="L184">    return retval;</span>
+  }
+
+  /**
+   * Attempt to cast the provided item to this adapter's item type.
+   * &lt;p&gt;
+   * The default implementation of this will attempt to parse the provided item as
+   * a string using the {@link #parse(String)} method. If this behavior is
+   * undesirable, then a subclass should override this method.
+   *
+   * @param item
+   *          the item to cast
+   * @return the item casted to this adapter's item type
+   * @throws InvalidValueForCastFunctionException
+   *           if the casting of the item is not possible because the item
+   *           represents an invalid value for this adapter's item type
+   */
+  @NonNull
+  protected ITEM_TYPE castInternal(@NonNull IAnyAtomicItem item) {
+    // try string based casting as a fallback
+<span class="fc" id="L204">    String itemString = item.asString();</span>
+    try {
+<span class="fc" id="L206">      TYPE value = parse(itemString);</span>
+<span class="fc" id="L207">      return newItem(value);</span>
+<span class="fc" id="L208">    } catch (IllegalArgumentException ex) {</span>
+<span class="fc" id="L209">      throw new InvalidValueForCastFunctionException(</span>
+<span class="fc" id="L210">          String.format(&quot;The value '%s' is not compatible with the type '%s'&quot;, itemString, getItemClass().getName()),</span>
+          ex);
+    }
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

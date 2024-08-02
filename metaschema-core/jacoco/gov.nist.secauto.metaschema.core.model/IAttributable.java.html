@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang=""><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>IAttributable.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Metaschema Core API</a> &gt; <a href="index.source.html" class="el_package">gov.nist.secauto.metaschema.core.model</a> &gt; <span class="el_source">IAttributable.java</span></div><h1>IAttributable.java</h1><pre class="source lang-java linenums">/*
+ * SPDX-FileCopyrightText: none
+ * SPDX-License-Identifier: CC0-1.0
+ */
+
+package gov.nist.secauto.metaschema.core.model;
+
+import gov.nist.secauto.metaschema.core.util.CollectionUtil;
+
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+
+import edu.umd.cs.findbugs.annotations.NonNull;
+
+/**
+ * A marker interface for implementations that support a mapping of a namespaced
+ * key to a set of values.
+ */
+public interface IAttributable {
+  @NonNull
+  String DEFAULT_PROPERY_NAMESPACE = IModule.XML_NAMESPACE;
+
+  @NonNull
+<span class="fc" id="L25">  Map&lt;Key, Set&lt;String&gt;&gt; EMPTY = CollectionUtil.emptyMap();</span>
+
+  /**
+   * Get the mapping of property key to values.
+   *
+   * @return the mapping
+   */
+  @NonNull
+  default Map&lt;Key, Set&lt;String&gt;&gt; getProperties() {
+<span class="nc" id="L34">    return EMPTY;</span>
+  }
+
+  /**
+   * Determine if a property is defined.
+   *
+   * @param key
+   *          the key of the property
+   * @return {@code true} if the property is defined or {@code false} otherwise
+   */
+  default boolean hasProperty(@NonNull Key key) {
+<span class="nc" id="L45">    return getProperties().containsKey(key);</span>
+  }
+
+  /**
+   * Get the values associated with a given property key.
+   *
+   * @param key
+   *          the key of the property
+   * @return the values or an empty set
+   */
+  @NonNull
+  default Set&lt;String&gt; getPropertyValues(@NonNull Key key) {
+<span class="nc" id="L57">    Set&lt;String&gt; retval = getProperties().get(key);</span>
+<span class="nc bnc" id="L58" title="All 2 branches missed.">    if (retval == null) {</span>
+<span class="nc" id="L59">      retval = CollectionUtil.emptySet();</span>
+    }
+<span class="nc" id="L61">    return retval;</span>
+  }
+
+  /**
+   * Determine if a given property, with a given {@code key}, has the identified
+   * {@code value}.
+   *
+   * @param key
+   *          the key of the property
+   * @param value
+   *          the expected property value
+   * @return {@code true} if the property value is defined or {@code false}
+   *         otherwise
+   */
+  default boolean hasPropertyValue(@NonNull Key key, @NonNull String value) {
+<span class="nc" id="L76">    Set&lt;String&gt; values = getProperties().get(key);</span>
+<span class="nc bnc" id="L77" title="All 4 branches missed.">    return values != null &amp;&amp; values.contains(value);</span>
+  }
+
+  /**
+   * Get a property key based on the provided name and namespace.
+   *
+   * @param name
+   *          the name portion of a property key
+   * @param namespace
+   *          the namespace portion of a property key
+   * @return the property key
+   */
+  @NonNull
+  static Key key(@NonNull String name, @NonNull String namespace) {
+<span class="nc" id="L91">    return new Key(name, namespace);</span>
+  }
+
+  /**
+   * Get a property key based on the provided name and the default namespace.
+   *
+   * @param name
+   *          the name portion of a property key
+   * @return the property key
+   * @see #DEFAULT_PROPERY_NAMESPACE
+   */
+  @NonNull
+  static Key key(@NonNull String name) {
+<span class="nc" id="L104">    return new Key(name);</span>
+  }
+
+  /**
+   * Represents a property key based on a name and a namespace.
+   */
+  @SuppressWarnings(&quot;PMD.ShortClassName&quot;)
+  final class Key {
+    @NonNull
+    private final String name;
+    @NonNull
+    private final String namespace;
+
+    private Key(@NonNull String name) {
+<span class="nc" id="L118">      this(name, DEFAULT_PROPERY_NAMESPACE);</span>
+<span class="nc" id="L119">    }</span>
+
+<span class="nc" id="L121">    private Key(@NonNull String name, @NonNull String namespace) {</span>
+<span class="nc" id="L122">      this.name = name;</span>
+<span class="nc" id="L123">      this.namespace = namespace;</span>
+<span class="nc" id="L124">    }</span>
+
+    /**
+     * Get the property key's name portion.
+     *
+     * @return the name
+     */
+    @NonNull
+    public String getName() {
+<span class="nc" id="L133">      return name;</span>
+    }
+
+    /**
+     * Get the property key's namespace portion.
+     *
+     * @return the name
+     */
+    @NonNull
+    public String getNamespace() {
+<span class="nc" id="L143">      return namespace;</span>
+    }
+
+    @Override
+    public int hashCode() {
+<span class="nc" id="L148">      return Objects.hash(name, namespace);</span>
+    }
+
+    @SuppressWarnings(&quot;PMD.OnlyOneReturn&quot;)
+    @Override
+    public boolean equals(Object obj) {
+<span class="nc bnc" id="L154" title="All 2 branches missed.">      if (this == obj) {</span>
+<span class="nc" id="L155">        return true;</span>
+      }
+<span class="nc bnc" id="L157" title="All 2 branches missed.">      if (!(obj instanceof Key)) {</span>
+<span class="nc" id="L158">        return false;</span>
+      }
+<span class="nc" id="L160">      Key other = (Key) obj;</span>
+<span class="nc bnc" id="L161" title="All 4 branches missed.">      return Objects.equals(name, other.name) &amp;&amp; Objects.equals(namespace, other.namespace);</span>
+    }
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

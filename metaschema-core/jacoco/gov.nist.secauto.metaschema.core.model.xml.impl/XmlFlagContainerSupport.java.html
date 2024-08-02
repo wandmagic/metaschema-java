@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang=""><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>XmlFlagContainerSupport.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Metaschema Core API</a> &gt; <a href="index.source.html" class="el_package">gov.nist.secauto.metaschema.core.model.xml.impl</a> &gt; <span class="el_source">XmlFlagContainerSupport.java</span></div><h1>XmlFlagContainerSupport.java</h1><pre class="source lang-java linenums">/*
+ * SPDX-FileCopyrightText: none
+ * SPDX-License-Identifier: CC0-1.0
+ */
+
+package gov.nist.secauto.metaschema.core.model.xml.impl;
+
+import gov.nist.secauto.metaschema.core.model.IAssemblyDefinition;
+import gov.nist.secauto.metaschema.core.model.IContainerFlagSupport;
+import gov.nist.secauto.metaschema.core.model.IFieldDefinition;
+import gov.nist.secauto.metaschema.core.model.IFlagContainerBuilder;
+import gov.nist.secauto.metaschema.core.model.IFlagInstance;
+import gov.nist.secauto.metaschema.core.model.IModelDefinition;
+import gov.nist.secauto.metaschema.core.model.IModule;
+import gov.nist.secauto.metaschema.core.model.xml.xmlbeans.FlagReferenceType;
+import gov.nist.secauto.metaschema.core.model.xml.xmlbeans.GlobalAssemblyDefinitionType;
+import gov.nist.secauto.metaschema.core.model.xml.xmlbeans.GlobalFieldDefinitionType;
+import gov.nist.secauto.metaschema.core.model.xml.xmlbeans.GroupedInlineAssemblyDefinitionType;
+import gov.nist.secauto.metaschema.core.model.xml.xmlbeans.GroupedInlineFieldDefinitionType;
+import gov.nist.secauto.metaschema.core.model.xml.xmlbeans.InlineAssemblyDefinitionType;
+import gov.nist.secauto.metaschema.core.model.xml.xmlbeans.InlineFieldDefinitionType;
+import gov.nist.secauto.metaschema.core.model.xml.xmlbeans.InlineFlagDefinitionType;
+import gov.nist.secauto.metaschema.core.util.ObjectUtils;
+
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.xmlbeans.XmlCursor;
+import org.apache.xmlbeans.XmlObject;
+
+import java.util.Map;
+
+import javax.xml.namespace.QName;
+
+import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.Nullable;
+
+/**
+ * Supports parsing Metaschema assembly and field XMLBeans objects that contain
+ * flags.
+ */
+final class XmlFlagContainerSupport {
+  @SuppressWarnings(&quot;PMD.UseConcurrentHashMap&quot;)
+  @NonNull
+<span class="fc" id="L43">  private static final XmlObjectParser&lt;Pair&lt;IModelDefinition, IFlagContainerBuilder&lt;IFlagInstance&gt;&gt;&gt; XML_MODEL_PARSER</span>
+<span class="fc" id="L44">      = new XmlObjectParser&lt;&gt;(ObjectUtils.notNull(</span>
+<span class="fc" id="L45">          Map.ofEntries(</span>
+<span class="fc" id="L46">              Map.entry(new QName(IModule.XML_NAMESPACE, &quot;flag&quot;),</span>
+                  XmlFlagContainerSupport::handleFlag),
+<span class="fc" id="L48">              Map.entry(new QName(IModule.XML_NAMESPACE, &quot;define-flag&quot;),</span>
+<span class="fc" id="L49">                  XmlFlagContainerSupport::handleDefineFlag)))) {</span>
+
+        @Override
+        protected Handler&lt;Pair&lt;IModelDefinition, IFlagContainerBuilder&lt;IFlagInstance&gt;&gt;&gt; identifyHandler(
+            XmlCursor cursor,
+            XmlObject obj) {
+          Handler&lt;Pair&lt;IModelDefinition, IFlagContainerBuilder&lt;IFlagInstance&gt;&gt;&gt; retval;
+<span class="pc bpc" id="L56" title="1 of 2 branches missed.">          if (obj instanceof FlagReferenceType) {</span>
+<span class="nc" id="L57">            retval = XmlFlagContainerSupport::handleFlag;</span>
+<span class="pc bpc" id="L58" title="1 of 2 branches missed.">          } else if (obj instanceof InlineFlagDefinitionType) {</span>
+<span class="fc" id="L59">            retval = XmlFlagContainerSupport::handleDefineFlag;</span>
+          } else {
+<span class="nc" id="L61">            retval = super.identifyHandler(cursor, obj);</span>
+          }
+<span class="fc" id="L63">          return retval;</span>
+        }
+      };
+
+  private static void handleFlag( // NOPMD false positive
+      @NonNull XmlObject obj,
+      Pair&lt;IModelDefinition, IFlagContainerBuilder&lt;IFlagInstance&gt;&gt; state) {
+<span class="nc" id="L70">    XmlFlagInstance flagInstance = new XmlFlagInstance(</span>
+        (FlagReferenceType) obj,
+<span class="nc" id="L72">        ObjectUtils.notNull(state.getLeft()));</span>
+<span class="nc" id="L73">    state.getRight().flag(flagInstance);</span>
+<span class="nc" id="L74">  }</span>
+
+  private static void handleDefineFlag( // NOPMD false positive
+      @NonNull XmlObject obj,
+      Pair&lt;IModelDefinition, IFlagContainerBuilder&lt;IFlagInstance&gt;&gt; state) {
+<span class="fc" id="L79">    XmlInlineFlagDefinition flagInstance = new XmlInlineFlagDefinition(</span>
+        (InlineFlagDefinitionType) obj,
+<span class="fc" id="L81">        ObjectUtils.notNull(state.getLeft()));</span>
+<span class="fc" id="L82">    state.getRight().flag(flagInstance);</span>
+<span class="fc" id="L83">  }</span>
+
+  /**
+   * Generate a flag container from the provided XMLBeans instance.
+   *
+   * @param xmlField
+   *          the XMLBeans instance
+   * @param container
+   *          the field containing the flag
+   */
+  @SuppressWarnings(&quot;PMD.OnlyOneReturn&quot;)
+  static IContainerFlagSupport&lt;IFlagInstance&gt; newInstance(
+      @NonNull GlobalFieldDefinitionType xmlField,
+      @NonNull IFieldDefinition container) {
+<span class="pc bpc" id="L97" title="1 of 4 branches missed.">    if (!xmlField.getFlagList().isEmpty() || !xmlField.getDefineFlagList().isEmpty()) {</span>
+<span class="pc bpc" id="L98" title="1 of 2 branches missed.">      IFlagContainerBuilder&lt;IFlagInstance&gt; builder = xmlField.isSetJsonKey()</span>
+<span class="nc" id="L99">          ? IContainerFlagSupport.builder(container.getContainingModule().toFlagQName(</span>
+<span class="nc" id="L100">              ObjectUtils.requireNonNull(xmlField.getJsonKey().getFlagRef())))</span>
+<span class="fc" id="L101">          : IContainerFlagSupport.builder();</span>
+<span class="fc" id="L102">      parseLocalFlags(xmlField, container, builder);</span>
+<span class="fc" id="L103">      return builder.build();</span>
+    }
+<span class="fc" id="L105">    return IContainerFlagSupport.empty();</span>
+  }
+
+  /**
+   * Generate a flag container from the provided XMLBeans instance.
+   *
+   * @param xmlField
+   *          the XMLBeans instance
+   * @param container
+   *          the field containing the flag
+   */
+  @SuppressWarnings(&quot;PMD.OnlyOneReturn&quot;)
+  static IContainerFlagSupport&lt;IFlagInstance&gt; newInstance(
+      @NonNull InlineFieldDefinitionType xmlField,
+      @NonNull IFieldDefinition container) {
+<span class="pc bpc" id="L120" title="2 of 4 branches missed.">    if (!xmlField.getFlagList().isEmpty() || !xmlField.getDefineFlagList().isEmpty()) {</span>
+<span class="nc bnc" id="L121" title="All 2 branches missed.">      IFlagContainerBuilder&lt;IFlagInstance&gt; builder = xmlField.isSetJsonKey()</span>
+<span class="nc" id="L122">          ? IContainerFlagSupport.builder(container.getContainingModule().toFlagQName(</span>
+<span class="nc" id="L123">              ObjectUtils.requireNonNull(xmlField.getJsonKey().getFlagRef())))</span>
+<span class="nc" id="L124">          : IContainerFlagSupport.builder();</span>
+<span class="nc" id="L125">      parseLocalFlags(xmlField, container, builder);</span>
+<span class="nc" id="L126">      return builder.build();</span>
+    }
+<span class="fc" id="L128">    return IContainerFlagSupport.empty();</span>
+  }
+
+  /**
+   * Generate a flag container from the provided XMLBeans instance.
+   *
+   * @param xmlField
+   *          the XMLBeans instance
+   * @param container
+   *          the field containing the flag
+   */
+  @SuppressWarnings(&quot;PMD.OnlyOneReturn&quot;)
+  static IContainerFlagSupport&lt;IFlagInstance&gt; newInstance(
+      @NonNull GroupedInlineFieldDefinitionType xmlField,
+      @NonNull IFieldDefinition container,
+      @Nullable String jsonKeyName) {
+<span class="nc bnc" id="L144" title="All 4 branches missed.">    if (!xmlField.getFlagList().isEmpty() || !xmlField.getDefineFlagList().isEmpty()) {</span>
+<span class="nc bnc" id="L145" title="All 2 branches missed.">      IFlagContainerBuilder&lt;IFlagInstance&gt; builder = jsonKeyName == null</span>
+<span class="nc" id="L146">          ? IContainerFlagSupport.builder()</span>
+<span class="nc" id="L147">          : IContainerFlagSupport.builder(container.getContainingModule().toFlagQName(jsonKeyName));</span>
+<span class="nc" id="L148">      parseLocalFlags(xmlField, container, builder);</span>
+<span class="nc" id="L149">      return builder.build();</span>
+    }
+<span class="nc" id="L151">    return IContainerFlagSupport.empty();</span>
+  }
+
+  /**
+   * Generate a flag container from the provided XMLBeans instance.
+   *
+   * @param xmlField
+   *          the XMLBeans instance
+   * @param container
+   *          the field containing the flag
+   */
+  @SuppressWarnings(&quot;PMD.OnlyOneReturn&quot;)
+  static IContainerFlagSupport&lt;IFlagInstance&gt; newInstance(
+      @NonNull GlobalAssemblyDefinitionType xmlAssembly,
+      @NonNull IAssemblyDefinition container) {
+<span class="pc bpc" id="L166" title="2 of 4 branches missed.">    if (!xmlAssembly.getFlagList().isEmpty() || !xmlAssembly.getDefineFlagList().isEmpty()) {</span>
+<span class="pc bpc" id="L167" title="1 of 2 branches missed.">      IFlagContainerBuilder&lt;IFlagInstance&gt; builder = xmlAssembly.isSetJsonKey()</span>
+<span class="nc" id="L168">          ? IContainerFlagSupport.builder(container.getContainingModule().toFlagQName(</span>
+<span class="nc" id="L169">              ObjectUtils.requireNonNull(xmlAssembly.getJsonKey().getFlagRef())))</span>
+<span class="fc" id="L170">          : IContainerFlagSupport.builder();</span>
+<span class="fc" id="L171">      parseLocalFlags(xmlAssembly, container, builder);</span>
+<span class="fc" id="L172">      return builder.build();</span>
+    }
+<span class="nc" id="L174">    return IContainerFlagSupport.empty();</span>
+  }
+
+  /**
+   * Generate a flag container from the provided XMLBeans instance.
+   *
+   * @param xmlField
+   *          the XMLBeans instance
+   * @param container
+   *          the field containing the flag
+   */
+  @SuppressWarnings(&quot;PMD.OnlyOneReturn&quot;)
+  static IContainerFlagSupport&lt;IFlagInstance&gt; newInstance(
+      @NonNull InlineAssemblyDefinitionType xmlAssembly,
+      @NonNull IAssemblyDefinition container) {
+<span class="pc bpc" id="L189" title="1 of 4 branches missed.">    if (!xmlAssembly.getFlagList().isEmpty() || !xmlAssembly.getDefineFlagList().isEmpty()) {</span>
+<span class="pc bpc" id="L190" title="1 of 2 branches missed.">      IFlagContainerBuilder&lt;IFlagInstance&gt; builder = xmlAssembly.isSetJsonKey()</span>
+<span class="fc" id="L191">          ? IContainerFlagSupport.builder(container.getContainingModule().toFlagQName(</span>
+<span class="fc" id="L192">              ObjectUtils.requireNonNull(xmlAssembly.getJsonKey().getFlagRef())))</span>
+<span class="pc" id="L193">          : IContainerFlagSupport.builder();</span>
+<span class="fc" id="L194">      parseLocalFlags(xmlAssembly, container, builder);</span>
+<span class="fc" id="L195">      return builder.build();</span>
+    }
+<span class="fc" id="L197">    return IContainerFlagSupport.empty();</span>
+  }
+
+  /**
+   * Generate a flag container from the provided XMLBeans instance.
+   *
+   * @param xmlField
+   *          the XMLBeans instance
+   * @param container
+   *          the field containing the flag
+   */
+  @SuppressWarnings(&quot;PMD.OnlyOneReturn&quot;)
+  static IContainerFlagSupport&lt;IFlagInstance&gt; newInstance(
+      @NonNull GroupedInlineAssemblyDefinitionType xmlAssembly,
+      @NonNull IAssemblyDefinition container,
+      @Nullable String jsonKeyName) {
+<span class="nc bnc" id="L213" title="All 4 branches missed.">    if (!xmlAssembly.getFlagList().isEmpty() || !xmlAssembly.getDefineFlagList().isEmpty()) {</span>
+<span class="nc bnc" id="L214" title="All 2 branches missed.">      IFlagContainerBuilder&lt;IFlagInstance&gt; builder = jsonKeyName == null</span>
+<span class="nc" id="L215">          ? IContainerFlagSupport.builder()</span>
+<span class="nc" id="L216">          : IContainerFlagSupport.builder(container.getContainingModule().toFlagQName(jsonKeyName));</span>
+<span class="nc" id="L217">      parseLocalFlags(xmlAssembly, container, builder);</span>
+<span class="nc" id="L218">      return builder.build();</span>
+    }
+<span class="nc" id="L220">    return IContainerFlagSupport.empty();</span>
+  }
+
+  private static void parseLocalFlags(
+      @NonNull XmlObject xmlObject,
+      @NonNull IModelDefinition parent,
+      @NonNull IFlagContainerBuilder&lt;IFlagInstance&gt; builder) {
+    // handle flags
+<span class="fc" id="L228">    XML_MODEL_PARSER.parse(xmlObject, Pair.of(parent, builder));</span>
+<span class="fc" id="L229">  }</span>
+
+  private XmlFlagContainerSupport() {
+    // disable construction
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

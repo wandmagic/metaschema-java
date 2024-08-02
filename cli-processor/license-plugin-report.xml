@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<licensePluginReport goal="FORMAT" timestamp="1722612845206">
+    <module artifactId="cli-processor" groupId="dev.metaschema.java" version="1.0.0"/>
+    <files>
+        <file path="src/test/java/gov/nist/secauto/metaschema/cli/processor/ExitCodeTest.java" result="NOOP"/>
+    </files>
+</licensePluginReport>

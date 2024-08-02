@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang=""><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FunctionLibrary.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Metaschema Core API</a> &gt; <a href="index.source.html" class="el_package">gov.nist.secauto.metaschema.core.metapath.function</a> &gt; <span class="el_source">FunctionLibrary.java</span></div><h1>FunctionLibrary.java</h1><pre class="source lang-java linenums">/*
+ * SPDX-FileCopyrightText: none
+ * SPDX-License-Identifier: CC0-1.0
+ */
+
+package gov.nist.secauto.metaschema.core.metapath.function;
+
+import gov.nist.secauto.metaschema.core.util.ObjectUtils;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.Stream;
+
+import javax.xml.namespace.QName;
+
+import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.Nullable;
+
+<span class="fc" id="L19">public class FunctionLibrary implements IFunctionLibrary {</span>
+
+<span class="fc" id="L21">  @NonNull</span>
+  private final Map&lt;QName, NamedFunctionSet&gt; libraryByQName = new HashMap&lt;&gt;(); // NOPMD - intentional
+<span class="fc" id="L23">  @NonNull</span>
+  private final Map&lt;String, NamedFunctionSet&gt; libraryByName = new HashMap&lt;&gt;(); // NOPMD - intentional
+
+  /**
+   * Register the provided function signature.
+   *
+   * @param function
+   *          the function signature to register
+   * @throws IllegalArgumentException
+   *           if the provided function has the same arity as a previously
+   *           registered function with the same name
+   */
+  public final void registerFunction(@NonNull IFunction function) {
+<span class="fc" id="L36">    registerFunctionByQName(function);</span>
+<span class="fc" id="L37">    registerFunctionByName(function);</span>
+<span class="fc" id="L38">  }</span>
+
+  private void registerFunctionByQName(@NonNull IFunction function) {
+<span class="fc" id="L41">    QName qname = function.getQName();</span>
+    IFunction duplicate;
+<span class="fc" id="L43">    synchronized (this) {</span>
+<span class="fc" id="L44">      NamedFunctionSet functions = libraryByQName.get(qname);</span>
+<span class="fc bfc" id="L45" title="All 2 branches covered.">      if (functions == null) {</span>
+<span class="fc" id="L46">        functions = new NamedFunctionSet();</span>
+<span class="fc" id="L47">        libraryByQName.put(qname, functions);</span>
+      }
+<span class="fc" id="L49">      duplicate = functions.addFunction(function);</span>
+<span class="fc" id="L50">    }</span>
+<span class="pc bpc" id="L51" title="1 of 2 branches missed.">    if (duplicate != null) {</span>
+<span class="nc" id="L52">      throw new IllegalArgumentException(String.format(&quot;Duplicate functions with same arity: %s shadows %s&quot;,</span>
+<span class="nc" id="L53">          duplicate.toSignature(), function.toSignature()));</span>
+    }
+<span class="fc" id="L55">  }</span>
+
+  private void registerFunctionByName(@NonNull IFunction function) {
+<span class="fc" id="L58">    String name = function.getName();</span>
+<span class="fc" id="L59">    synchronized (this) {</span>
+<span class="fc" id="L60">      NamedFunctionSet functions = libraryByName.get(name);</span>
+<span class="fc bfc" id="L61" title="All 2 branches covered.">      if (functions == null) {</span>
+<span class="fc" id="L62">        functions = new NamedFunctionSet();</span>
+<span class="fc" id="L63">        libraryByName.put(name, functions);</span>
+      }
+      // replace duplicates
+<span class="fc" id="L66">      functions.addFunction(function);</span>
+<span class="fc" id="L67">    }</span>
+<span class="fc" id="L68">  }</span>
+
+  @Override
+  public Stream&lt;IFunction&gt; stream() {
+<span class="fc" id="L72">    synchronized (this) {</span>
+<span class="fc" id="L73">      return ObjectUtils.notNull(libraryByQName.values().stream().flatMap(NamedFunctionSet::getFunctionsAsStream));</span>
+    }
+  }
+
+  @Override
+  public IFunction getFunction(@NonNull String name, int arity) {
+<span class="nc" id="L79">    IFunction retval = null;</span>
+<span class="nc" id="L80">    synchronized (this) {</span>
+<span class="nc" id="L81">      NamedFunctionSet functions = libraryByName.get(name);</span>
+<span class="nc bnc" id="L82" title="All 2 branches missed.">      if (functions != null) {</span>
+<span class="nc" id="L83">        retval = functions.getFunctionWithArity(arity);</span>
+      }
+<span class="nc" id="L85">    }</span>
+<span class="nc" id="L86">    return retval;</span>
+  }
+
+  @Override
+  public IFunction getFunction(@NonNull QName name, int arity) {
+<span class="fc" id="L91">    IFunction retval = null;</span>
+<span class="fc" id="L92">    synchronized (this) {</span>
+<span class="fc" id="L93">      NamedFunctionSet functions = libraryByQName.get(name);</span>
+<span class="pc bpc" id="L94" title="1 of 2 branches missed.">      if (functions != null) {</span>
+<span class="fc" id="L95">        retval = functions.getFunctionWithArity(arity);</span>
+      }
+<span class="fc" id="L97">    }</span>
+<span class="fc" id="L98">    return retval;</span>
+  }
+
+  private static class NamedFunctionSet {
+    private final Map&lt;Integer, IFunction&gt; arityToFunctionMap;
+    private IFunction unboundedArity;
+
+<span class="fc" id="L105">    public NamedFunctionSet() {</span>
+<span class="fc" id="L106">      this.arityToFunctionMap = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L107">    }</span>
+
+    @SuppressWarnings(&quot;null&quot;)
+    @NonNull
+    public Stream&lt;IFunction&gt; getFunctionsAsStream() {
+<span class="fc" id="L112">      return arityToFunctionMap.values().stream();</span>
+    }
+
+    @Nullable
+    public IFunction getFunctionWithArity(int arity) {
+<span class="fc" id="L117">      IFunction retval = arityToFunctionMap.get(arity);</span>
+<span class="pc bpc" id="L118" title="2 of 6 branches missed.">      if (retval == null &amp;&amp; unboundedArity != null &amp;&amp; unboundedArity.arity() &lt; arity) {</span>
+<span class="fc" id="L119">        retval = unboundedArity;</span>
+      }
+<span class="fc" id="L121">      return retval;</span>
+    }
+
+    @Nullable
+    public IFunction addFunction(@NonNull IFunction function) {
+<span class="fc" id="L126">      IFunction old = arityToFunctionMap.put(function.arity(), function);</span>
+<span class="fc bfc" id="L127" title="All 2 branches covered.">      if (function.isArityUnbounded()) {</span>
+<span class="fc" id="L128">        unboundedArity = function;</span>
+      }
+<span class="fc" id="L130">      return old;</span>
+    }
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

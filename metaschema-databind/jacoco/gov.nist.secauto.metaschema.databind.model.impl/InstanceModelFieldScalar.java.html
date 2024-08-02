@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang=""><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>InstanceModelFieldScalar.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Metaschema Java Data Binding and Code Generation</a> &gt; <a href="index.source.html" class="el_package">gov.nist.secauto.metaschema.databind.model.impl</a> &gt; <span class="el_source">InstanceModelFieldScalar.java</span></div><h1>InstanceModelFieldScalar.java</h1><pre class="source lang-java linenums">/*
+ * SPDX-FileCopyrightText: none
+ * SPDX-License-Identifier: CC0-1.0
+ */
+
+package gov.nist.secauto.metaschema.databind.model.impl;
+
+import gov.nist.secauto.metaschema.core.datatype.IDataTypeAdapter;
+import gov.nist.secauto.metaschema.core.datatype.markup.MarkupLine;
+import gov.nist.secauto.metaschema.core.datatype.markup.MarkupMultiline;
+import gov.nist.secauto.metaschema.core.model.AbstractInlineFieldDefinition;
+import gov.nist.secauto.metaschema.core.model.IModule;
+import gov.nist.secauto.metaschema.core.model.constraint.ISource;
+import gov.nist.secauto.metaschema.core.model.constraint.IValueConstrained;
+import gov.nist.secauto.metaschema.core.model.constraint.ValueConstraintSet;
+import gov.nist.secauto.metaschema.core.util.ObjectUtils;
+import gov.nist.secauto.metaschema.databind.IBindingContext;
+import gov.nist.secauto.metaschema.databind.model.IBoundDefinitionModelAssembly;
+import gov.nist.secauto.metaschema.databind.model.IBoundDefinitionModelField;
+import gov.nist.secauto.metaschema.databind.model.IBoundInstanceFlag;
+import gov.nist.secauto.metaschema.databind.model.IBoundInstanceModelFieldScalar;
+import gov.nist.secauto.metaschema.databind.model.IBoundModule;
+import gov.nist.secauto.metaschema.databind.model.IGroupAs;
+import gov.nist.secauto.metaschema.databind.model.annotations.BoundField;
+import gov.nist.secauto.metaschema.databind.model.annotations.GroupAs;
+import gov.nist.secauto.metaschema.databind.model.annotations.ModelUtil;
+import gov.nist.secauto.metaschema.databind.model.annotations.ValueConstraints;
+import gov.nist.secauto.metaschema.databind.model.info.IModelInstanceCollectionInfo;
+
+import java.lang.reflect.Field;
+import java.util.Optional;
+
+import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.Nullable;
+import nl.talsmasoftware.lazy4j.Lazy;
+
+public final class InstanceModelFieldScalar
+    extends AbstractInlineFieldDefinition&lt;
+        IBoundDefinitionModelAssembly,
+        IBoundDefinitionModelField&lt;Object&gt;,
+        IBoundInstanceModelFieldScalar,
+        IBoundDefinitionModelAssembly,
+        IBoundInstanceFlag&gt;
+    implements IBoundInstanceModelFieldScalar, IFeatureInstanceModelGroupAs&lt;Object&gt; {
+  @NonNull
+  private final Field javaField;
+  @NonNull
+  private final BoundField annotation;
+  @NonNull
+  private final Lazy&lt;IModelInstanceCollectionInfo&lt;Object&gt;&gt; collectionInfo;
+  @NonNull
+  private final IGroupAs groupAs;
+  @NonNull
+  private final IDataTypeAdapter&lt;?&gt; javaTypeAdapter;
+  @Nullable
+  private final Object defaultValue;
+  @NonNull
+  private final Lazy&lt;IValueConstrained&gt; constraints;
+
+  /**
+   * Construct a new field instance bound to a Java field.
+   *
+   * @param javaField
+   *          the Java field bound to this instance
+   * @param annotation
+   *          the field binding annotation
+   * @param groupAs
+   *          the grouping info for the model instance
+   * @param containingDefinition
+   *          the definition containing this instance
+   * @return the instance
+   */
+  @NonNull
+  public static InstanceModelFieldScalar newInstance(
+      @NonNull Field javaField,
+      @NonNull IBoundDefinitionModelAssembly containingDefinition) {
+<span class="fc" id="L77">    BoundField annotation = ModelUtil.getAnnotation(javaField, BoundField.class);</span>
+<span class="fc" id="L78">    IGroupAs groupAs = ModelUtil.resolveDefaultGroupAs(</span>
+<span class="fc" id="L79">        annotation.groupAs(),</span>
+<span class="fc" id="L80">        containingDefinition.getContainingModule());</span>
+
+<span class="pc bpc" id="L82" title="1 of 4 branches missed.">    if (annotation.maxOccurs() == -1 || annotation.maxOccurs() &gt; 1) {</span>
+<span class="pc bpc" id="L83" title="1 of 2 branches missed.">      if (IGroupAs.SINGLETON_GROUP_AS.equals(groupAs)) {</span>
+<span class="nc" id="L84">        throw new IllegalStateException(String.format(&quot;Field '%s' on class '%s' is missing the '%s' annotation.&quot;,</span>
+<span class="nc" id="L85">            javaField.getName(),</span>
+<span class="nc" id="L86">            javaField.getDeclaringClass().getName(),</span>
+<span class="nc" id="L87">            GroupAs.class.getName())); // NOPMD false positive</span>
+      }
+<span class="pc bpc" id="L89" title="1 of 2 branches missed.">    } else if (!IGroupAs.SINGLETON_GROUP_AS.equals(groupAs)) {</span>
+      // max is 1 and a groupAs is set
+<span class="nc" id="L91">      throw new IllegalStateException(</span>
+<span class="nc" id="L92">          String.format(</span>
+              &quot;Field '%s' on class '%s' has the '%s' annotation, but maxOccurs=1. A groupAs must not be specfied.&quot;,
+<span class="nc" id="L94">              javaField.getName(),</span>
+<span class="nc" id="L95">              javaField.getDeclaringClass().getName(),</span>
+<span class="nc" id="L96">              GroupAs.class.getName())); // NOPMD false positive</span>
+    }
+
+<span class="fc" id="L99">    return new InstanceModelFieldScalar(</span>
+        javaField,
+        annotation,
+        groupAs,
+        containingDefinition);
+  }
+
+  private InstanceModelFieldScalar(
+      @NonNull Field javaField,
+      @NonNull BoundField annotation,
+      @NonNull IGroupAs groupAs,
+      @NonNull IBoundDefinitionModelAssembly containingDefinition) {
+<span class="fc" id="L111">    super(containingDefinition);</span>
+<span class="fc" id="L112">    this.javaField = javaField;</span>
+<span class="fc" id="L113">    this.annotation = annotation;</span>
+<span class="fc" id="L114">    this.collectionInfo = ObjectUtils.notNull(Lazy.lazy(() -&gt; IModelInstanceCollectionInfo.of(this)));</span>
+<span class="fc" id="L115">    this.groupAs = groupAs;</span>
+<span class="fc" id="L116">    this.javaTypeAdapter = ModelUtil.getDataTypeAdapter(</span>
+<span class="fc" id="L117">        annotation.typeAdapter(),</span>
+<span class="fc" id="L118">        containingDefinition.getBindingContext());</span>
+<span class="fc" id="L119">    this.defaultValue = ModelUtil.resolveDefaultValue(annotation.defaultValue(), this.javaTypeAdapter);</span>
+
+<span class="fc" id="L121">    IModule module = getContainingModule();</span>
+
+<span class="fc" id="L123">    this.constraints = ObjectUtils.notNull(Lazy.lazy(() -&gt; {</span>
+<span class="fc" id="L124">      IValueConstrained retval = new ValueConstraintSet();</span>
+<span class="fc" id="L125">      ValueConstraints valueAnnotation = annotation.valueConstraints();</span>
+<span class="fc" id="L126">      ConstraintSupport.parse(valueAnnotation, ISource.modelSource(module), retval);</span>
+<span class="fc" id="L127">      return retval;</span>
+    }));
+<span class="fc" id="L129">  }</span>
+
+  // ------------------------------------------
+  // - Start annotation driven code - CPD-OFF -
+  // ------------------------------------------
+
+  @Override
+  public IBindingContext getBindingContext() {
+<span class="nc" id="L137">    return getContainingDefinition().getBindingContext();</span>
+  }
+
+  @Override
+  public IBoundModule getContainingModule() {
+<span class="fc" id="L142">    return getContainingDefinition().getContainingModule();</span>
+  }
+
+  @Override
+  public Field getField() {
+<span class="fc" id="L147">    return javaField;</span>
+  }
+
+  /**
+   * Get the binding Java annotation.
+   *
+   * @return the binding Java annotation
+   */
+  @NonNull
+  public BoundField getAnnotation() {
+<span class="fc" id="L157">    return annotation;</span>
+  }
+
+  @SuppressWarnings(&quot;null&quot;)
+  @Override
+  public IModelInstanceCollectionInfo&lt;Object&gt; getCollectionInfo() {
+<span class="fc" id="L163">    return collectionInfo.get();</span>
+  }
+
+  @SuppressWarnings(&quot;null&quot;)
+  @Override
+  @NonNull
+  public IValueConstrained getConstraintSupport() {
+<span class="fc" id="L170">    return constraints.get();</span>
+  }
+
+  @Override
+  public IDataTypeAdapter&lt;?&gt; getJavaTypeAdapter() {
+<span class="fc" id="L175">    return javaTypeAdapter;</span>
+  }
+
+  @Override
+  public Object getDefaultValue() {
+<span class="fc" id="L180">    return defaultValue;</span>
+  }
+
+  @Override
+  public IGroupAs getGroupAs() {
+<span class="fc" id="L185">    return groupAs;</span>
+  }
+
+  @Override
+  public String getFormalName() {
+<span class="fc" id="L190">    return ModelUtil.resolveNoneOrValue(getAnnotation().formalName());</span>
+  }
+
+  @Override
+  public MarkupLine getDescription() {
+<span class="fc" id="L195">    return ModelUtil.resolveToMarkupLine(getAnnotation().description());</span>
+  }
+
+  @Override
+  public Integer getUseIndex() {
+<span class="nc" id="L200">    int value = getAnnotation().useIndex();</span>
+<span class="nc bnc" id="L201" title="All 2 branches missed.">    return value == Integer.MIN_VALUE ? null : value;</span>
+  }
+
+  @Override
+  public boolean isInXmlWrapped() {
+<span class="fc" id="L206">    return getAnnotation().inXmlWrapped();</span>
+  }
+
+  @Override
+  public int getMinOccurs() {
+<span class="fc" id="L211">    return getAnnotation().minOccurs();</span>
+  }
+
+  @Override
+  public int getMaxOccurs() {
+<span class="fc" id="L216">    return getAnnotation().maxOccurs();</span>
+  }
+
+  @Override
+  public MarkupMultiline getRemarks() {
+<span class="fc" id="L221">    return ModelUtil.resolveToMarkupMultiline(getAnnotation().remarks());</span>
+  }
+
+  @Override
+  public String getName() {
+    // the name is stored as a usename to remain consistent with non-scalar valued
+    // fields
+<span class="fc" id="L228">    return ObjectUtils.notNull(</span>
+<span class="fc" id="L229">        Optional.ofNullable(ModelUtil.resolveNoneOrValue(getAnnotation().useName())).orElse(getField().getName()));</span>
+  }
+
+  // ----------------------------------------
+  // - End annotation driven code - CPD-OFF -
+  // ----------------------------------------
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

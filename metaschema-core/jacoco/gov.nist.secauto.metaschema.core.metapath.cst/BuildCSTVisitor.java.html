@@ -1,0 +1,1110 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang=""><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BuildCSTVisitor.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Metaschema Core API</a> &gt; <a href="index.source.html" class="el_package">gov.nist.secauto.metaschema.core.metapath.cst</a> &gt; <span class="el_source">BuildCSTVisitor.java</span></div><h1>BuildCSTVisitor.java</h1><pre class="source lang-java linenums">/*
+ * SPDX-FileCopyrightText: none
+ * SPDX-License-Identifier: CC0-1.0
+ */
+
+package gov.nist.secauto.metaschema.core.metapath.cst;
+
+import gov.nist.secauto.metaschema.core.metapath.EQNameUtils;
+import gov.nist.secauto.metaschema.core.metapath.StaticContext;
+import gov.nist.secauto.metaschema.core.metapath.antlr.Metapath10.AbbrevforwardstepContext;
+import gov.nist.secauto.metaschema.core.metapath.antlr.Metapath10.AbbrevreversestepContext;
+import gov.nist.secauto.metaschema.core.metapath.antlr.Metapath10.AdditiveexprContext;
+import gov.nist.secauto.metaschema.core.metapath.antlr.Metapath10.AndexprContext;
+import gov.nist.secauto.metaschema.core.metapath.antlr.Metapath10.ArgumentlistContext;
+import gov.nist.secauto.metaschema.core.metapath.antlr.Metapath10.ArrowexprContext;
+import gov.nist.secauto.metaschema.core.metapath.antlr.Metapath10.ArrowfunctionspecifierContext;
+import gov.nist.secauto.metaschema.core.metapath.antlr.Metapath10.AxisstepContext;
+import gov.nist.secauto.metaschema.core.metapath.antlr.Metapath10.ComparisonexprContext;
+import gov.nist.secauto.metaschema.core.metapath.antlr.Metapath10.ContextitemexprContext;
+import gov.nist.secauto.metaschema.core.metapath.antlr.Metapath10.CurlyarrayconstructorContext;
+import gov.nist.secauto.metaschema.core.metapath.antlr.Metapath10.EqnameContext;
+import gov.nist.secauto.metaschema.core.metapath.antlr.Metapath10.ExprContext;
+import gov.nist.secauto.metaschema.core.metapath.antlr.Metapath10.ExprsingleContext;
+import gov.nist.secauto.metaschema.core.metapath.antlr.Metapath10.ForexprContext;
+import gov.nist.secauto.metaschema.core.metapath.antlr.Metapath10.ForwardstepContext;
+import gov.nist.secauto.metaschema.core.metapath.antlr.Metapath10.FunctioncallContext;
+import gov.nist.secauto.metaschema.core.metapath.antlr.Metapath10.GeneralcompContext;
+import gov.nist.secauto.metaschema.core.metapath.antlr.Metapath10.IfexprContext;
+import gov.nist.secauto.metaschema.core.metapath.antlr.Metapath10.IntersectexceptexprContext;
+import gov.nist.secauto.metaschema.core.metapath.antlr.Metapath10.KeyspecifierContext;
+import gov.nist.secauto.metaschema.core.metapath.antlr.Metapath10.LetexprContext;
+import gov.nist.secauto.metaschema.core.metapath.antlr.Metapath10.LiteralContext;
+import gov.nist.secauto.metaschema.core.metapath.antlr.Metapath10.LookupContext;
+import gov.nist.secauto.metaschema.core.metapath.antlr.Metapath10.MapconstructorContext;
+import gov.nist.secauto.metaschema.core.metapath.antlr.Metapath10.MapconstructorentryContext;
+import gov.nist.secauto.metaschema.core.metapath.antlr.Metapath10.MultiplicativeexprContext;
+import gov.nist.secauto.metaschema.core.metapath.antlr.Metapath10.NametestContext;
+import gov.nist.secauto.metaschema.core.metapath.antlr.Metapath10.NodetestContext;
+import gov.nist.secauto.metaschema.core.metapath.antlr.Metapath10.NumericliteralContext;
+import gov.nist.secauto.metaschema.core.metapath.antlr.Metapath10.OrexprContext;
+import gov.nist.secauto.metaschema.core.metapath.antlr.Metapath10.ParenthesizedexprContext;
+import gov.nist.secauto.metaschema.core.metapath.antlr.Metapath10.PathexprContext;
+import gov.nist.secauto.metaschema.core.metapath.antlr.Metapath10.PostfixexprContext;
+import gov.nist.secauto.metaschema.core.metapath.antlr.Metapath10.PredicateContext;
+import gov.nist.secauto.metaschema.core.metapath.antlr.Metapath10.QuantifiedexprContext;
+import gov.nist.secauto.metaschema.core.metapath.antlr.Metapath10.RangeexprContext;
+import gov.nist.secauto.metaschema.core.metapath.antlr.Metapath10.RelativepathexprContext;
+import gov.nist.secauto.metaschema.core.metapath.antlr.Metapath10.ReversestepContext;
+import gov.nist.secauto.metaschema.core.metapath.antlr.Metapath10.SimpleforbindingContext;
+import gov.nist.secauto.metaschema.core.metapath.antlr.Metapath10.SimpleforclauseContext;
+import gov.nist.secauto.metaschema.core.metapath.antlr.Metapath10.SimpleletbindingContext;
+import gov.nist.secauto.metaschema.core.metapath.antlr.Metapath10.SimpleletclauseContext;
+import gov.nist.secauto.metaschema.core.metapath.antlr.Metapath10.SimplemapexprContext;
+import gov.nist.secauto.metaschema.core.metapath.antlr.Metapath10.SquarearrayconstructorContext;
+import gov.nist.secauto.metaschema.core.metapath.antlr.Metapath10.StringconcatexprContext;
+import gov.nist.secauto.metaschema.core.metapath.antlr.Metapath10.UnaryexprContext;
+import gov.nist.secauto.metaschema.core.metapath.antlr.Metapath10.UnarylookupContext;
+import gov.nist.secauto.metaschema.core.metapath.antlr.Metapath10.UnionexprContext;
+import gov.nist.secauto.metaschema.core.metapath.antlr.Metapath10.ValuecompContext;
+import gov.nist.secauto.metaschema.core.metapath.antlr.Metapath10.VarnameContext;
+import gov.nist.secauto.metaschema.core.metapath.antlr.Metapath10.VarrefContext;
+import gov.nist.secauto.metaschema.core.metapath.antlr.Metapath10.WildcardContext;
+import gov.nist.secauto.metaschema.core.metapath.antlr.Metapath10Lexer;
+import gov.nist.secauto.metaschema.core.metapath.cst.comparison.GeneralComparison;
+import gov.nist.secauto.metaschema.core.metapath.cst.comparison.ValueComparison;
+import gov.nist.secauto.metaschema.core.metapath.cst.math.Addition;
+import gov.nist.secauto.metaschema.core.metapath.cst.math.Division;
+import gov.nist.secauto.metaschema.core.metapath.cst.math.IntegerDivision;
+import gov.nist.secauto.metaschema.core.metapath.cst.math.Modulo;
+import gov.nist.secauto.metaschema.core.metapath.cst.math.Multiplication;
+import gov.nist.secauto.metaschema.core.metapath.cst.math.Subtraction;
+import gov.nist.secauto.metaschema.core.metapath.cst.path.Axis;
+import gov.nist.secauto.metaschema.core.metapath.cst.path.ContextItem;
+import gov.nist.secauto.metaschema.core.metapath.cst.path.Flag;
+import gov.nist.secauto.metaschema.core.metapath.cst.path.INameTestExpression;
+import gov.nist.secauto.metaschema.core.metapath.cst.path.INodeTestExpression;
+import gov.nist.secauto.metaschema.core.metapath.cst.path.ModelInstance;
+import gov.nist.secauto.metaschema.core.metapath.cst.path.NameTest;
+import gov.nist.secauto.metaschema.core.metapath.cst.path.RelativeDoubleSlashPath;
+import gov.nist.secauto.metaschema.core.metapath.cst.path.RelativeSlashPath;
+import gov.nist.secauto.metaschema.core.metapath.cst.path.RootDoubleSlashPath;
+import gov.nist.secauto.metaschema.core.metapath.cst.path.RootSlashOnlyPath;
+import gov.nist.secauto.metaschema.core.metapath.cst.path.RootSlashPath;
+import gov.nist.secauto.metaschema.core.metapath.cst.path.Step;
+import gov.nist.secauto.metaschema.core.metapath.cst.path.Wildcard;
+import gov.nist.secauto.metaschema.core.metapath.function.ComparisonFunctions;
+import gov.nist.secauto.metaschema.core.metapath.impl.AbstractKeySpecifier;
+import gov.nist.secauto.metaschema.core.metapath.item.atomic.IIntegerItem;
+import gov.nist.secauto.metaschema.core.metapath.item.function.IKeySpecifier;
+import gov.nist.secauto.metaschema.core.metapath.item.node.IDefinitionNodeItem;
+import gov.nist.secauto.metaschema.core.util.CollectionUtil;
+import gov.nist.secauto.metaschema.core.util.ObjectUtils;
+
+import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runtime.tree.ParseTree;
+import org.antlr.v4.runtime.tree.TerminalNode;
+
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Map;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import javax.xml.namespace.QName;
+
+import edu.umd.cs.findbugs.annotations.NonNull;
+
+/**
+ * Supports converting a Metapath abstract syntax tree (AST) generated by
+ * &lt;a href=&quot;https://www.antlr.org/&quot;&gt;ANTLRv4&lt;/a&gt; into a compact syntax tree
+ * (CST).
+ */
+<span class="fc" id="L118">@SuppressWarnings({</span>
+    &quot;PMD.GodClass&quot;, &quot;PMD.CyclomaticComplexity&quot;, // acceptable complexity
+    &quot;PMD.CouplingBetweenObjects&quot; // needed
+})
+public class BuildCSTVisitor
+    extends AbstractCSTVisitorBase {
+  @NonNull
+  private final StaticContext context;
+
+  /**
+   * Construct a new compact syntax tree generating visitor.
+   *
+   * @param context
+   *          the static Metapath evaluation context
+   */
+<span class="fc" id="L133">  public BuildCSTVisitor(@NonNull StaticContext context) {</span>
+<span class="fc" id="L134">    this.context = context;</span>
+<span class="fc" id="L135">  }</span>
+
+  // ============================================================
+  // Expressions - https://www.w3.org/TR/xpath-31/#id-expressions
+  // ============================================================
+
+  /**
+   * Get the static Metapath evaluation context.
+   *
+   * @return the context
+   */
+  @NonNull
+  protected StaticContext getContext() {
+<span class="fc" id="L148">    return context;</span>
+  }
+
+  @Override
+  protected IExpression handleExpr(ExprContext ctx) {
+<span class="fc" id="L153">    return handleNAiryCollection(ctx, children -&gt; {</span>
+<span class="pc bpc" id="L154" title="1 of 2 branches missed.">      assert children != null;</span>
+<span class="fc" id="L155">      return new Metapath(children);</span>
+    });
+  }
+
+  // =================================================================
+  // Literal Expressions - https://www.w3.org/TR/xpath-31/#id-literals
+  // =================================================================
+
+  @Override
+  protected IExpression handleStringLiteral(LiteralContext ctx) {
+<span class="fc" id="L165">    ParseTree tree = ctx.getChild(0);</span>
+<span class="fc" id="L166">    return new StringLiteral(ObjectUtils.notNull(tree.getText()));</span>
+  }
+
+  @Override
+  protected IExpression handleNumericLiteral(NumericliteralContext ctx) {
+<span class="fc" id="L171">    ParseTree tree = ctx.getChild(0);</span>
+<span class="fc" id="L172">    Token token = (Token) tree.getPayload();</span>
+    IExpression retval;
+<span class="pc bpc" id="L174" title="1 of 3 branches missed.">    switch (token.getType()) {</span>
+    case Metapath10Lexer.IntegerLiteral:
+<span class="fc" id="L176">      retval = new IntegerLiteral(new BigInteger(token.getText()));</span>
+<span class="fc" id="L177">      break;</span>
+    case Metapath10Lexer.DecimalLiteral:
+    case Metapath10Lexer.DoubleLiteral:
+<span class="fc" id="L180">      retval = new DecimalLiteral(new BigDecimal(token.getText()));</span>
+<span class="fc" id="L181">      break;</span>
+    default:
+<span class="nc" id="L183">      throw new UnsupportedOperationException(token.getText());</span>
+    }
+<span class="fc" id="L185">    return retval;</span>
+  }
+
+  // ==================================================================
+  // Variable References - https://www.w3.org/TR/xpath-31/#id-variables
+  // ==================================================================
+
+  @Override
+  protected IExpression handleVarref(VarrefContext ctx) {
+<span class="fc" id="L194">    return new VariableReference(</span>
+<span class="fc" id="L195">        EQNameUtils.parseName(</span>
+<span class="fc" id="L196">            ObjectUtils.notNull(ctx.varname().eqname().getText()),</span>
+<span class="fc" id="L197">            getContext().getVariablePrefixResolver()));</span>
+  }
+
+  // ====================================================================
+  // For Expressions - https://www.w3.org/TR/xpath-31/#id-for-expressions
+  // ====================================================================
+
+  @SuppressWarnings(&quot;PMD.AvoidInstantiatingObjectsInLoops&quot;)
+  @Override
+  protected IExpression handleForexpr(ForexprContext ctx) {
+<span class="fc" id="L207">    SimpleforclauseContext simpleForClause = ctx.simpleforclause();</span>
+
+    // for SimpleForBinding (&quot;,&quot; SimpleForBinding)*
+<span class="fc" id="L210">    int bindingCount = simpleForClause.getChildCount() / 2;</span>
+
+<span class="fc" id="L212">    @NonNull IExpression retval = ObjectUtils.notNull(ctx.exprsingle().accept(this));</span>
+
+    // step through in reverse
+<span class="fc bfc" id="L215" title="All 2 branches covered.">    for (int idx = bindingCount - 1; idx &gt;= 0; idx--) {</span>
+<span class="fc" id="L216">      SimpleforbindingContext simpleForBinding = simpleForClause.simpleforbinding(idx);</span>
+
+<span class="fc" id="L218">      VarnameContext varName = simpleForBinding.varname();</span>
+<span class="fc" id="L219">      ExprsingleContext exprSingle = simpleForBinding.exprsingle();</span>
+
+<span class="fc" id="L221">      IExpression boundExpression = exprSingle.accept(this);</span>
+<span class="pc bpc" id="L222" title="1 of 2 branches missed.">      assert boundExpression != null;</span>
+
+<span class="fc" id="L224">      QName qname = EQNameUtils.parseName(</span>
+<span class="fc" id="L225">          ObjectUtils.notNull(varName.eqname().getText()),</span>
+<span class="fc" id="L226">          getContext().getVariablePrefixResolver());</span>
+
+<span class="fc" id="L228">      Let.VariableDeclaration variable = new Let.VariableDeclaration(qname, boundExpression);</span>
+
+<span class="fc" id="L230">      retval = new For(variable, retval);</span>
+    }
+<span class="fc" id="L232">    return retval;</span>
+  }
+
+  // ====================================================================
+  // Let Expressions - https://www.w3.org/TR/xpath-31/#id-let-expressions
+  // ====================================================================
+
+  @Override
+  protected IExpression handleLet(LetexprContext context) {
+<span class="fc" id="L241">    @NonNull IExpression retval = ObjectUtils.notNull(context.exprsingle().accept(this));</span>
+
+<span class="fc" id="L243">    SimpleletclauseContext letClause = context.simpleletclause();</span>
+<span class="fc" id="L244">    List&lt;SimpleletbindingContext&gt; clauses = letClause.simpleletbinding();</span>
+
+<span class="fc" id="L246">    ListIterator&lt;SimpleletbindingContext&gt; reverseListIterator = clauses.listIterator(clauses.size());</span>
+<span class="fc bfc" id="L247" title="All 2 branches covered.">    while (reverseListIterator.hasPrevious()) {</span>
+<span class="fc" id="L248">      SimpleletbindingContext simpleCtx = reverseListIterator.previous();</span>
+
+<span class="fc" id="L250">      IExpression boundExpression = simpleCtx.exprsingle().accept(this);</span>
+<span class="pc bpc" id="L251" title="1 of 2 branches missed.">      assert boundExpression != null;</span>
+
+<span class="fc" id="L253">      QName varName = EQNameUtils.parseName(</span>
+<span class="fc" id="L254">          ObjectUtils.notNull(simpleCtx.varname().eqname().getText()),</span>
+<span class="fc" id="L255">          getContext().getVariablePrefixResolver());</span>
+
+<span class="fc" id="L257">      retval = new Let(varName, boundExpression, retval); // NOPMD intended</span>
+<span class="fc" id="L258">    }</span>
+<span class="fc" id="L259">    return retval;</span>
+  }
+
+  // ======================================================================
+  // Map Constructors - https://www.w3.org/TR/xpath-31/#id-map-constructors
+  // ======================================================================
+
+  @Override
+  protected MapConstructor handleMapConstructor(MapconstructorContext context) {
+<span class="fc bfc" id="L268" title="All 2 branches covered.">    return context.getChildCount() == 3</span>
+        // empty
+<span class="fc" id="L270">        ? new MapConstructor(CollectionUtil.emptyList())</span>
+        // with members
+<span class="fc" id="L272">        : nairyToCollection(context, 3, 2,</span>
+            (ctx, idx) -&gt; {
+<span class="fc" id="L274">              int pos = (idx - 3) / 2;</span>
+<span class="fc" id="L275">              MapconstructorentryContext entry = ctx.mapconstructorentry(pos);</span>
+<span class="pc bpc" id="L276" title="1 of 2 branches missed.">              assert entry != null;</span>
+<span class="fc" id="L277">              return new MapConstructor.Entry(</span>
+<span class="fc" id="L278">                  ObjectUtils.notNull(entry.mapkeyexpr().accept(this)),</span>
+<span class="fc" id="L279">                  ObjectUtils.notNull(entry.mapvalueexpr().accept(this)));</span>
+            },
+            children -&gt; {
+<span class="pc bpc" id="L282" title="1 of 2 branches missed.">              assert children != null;</span>
+<span class="fc" id="L283">              return new MapConstructor(children);</span>
+            });
+  }
+
+  // ==============================================================
+  // Array Constructors - https://www.w3.org/TR/xpath-31/#id-arrays
+  // ==============================================================
+
+  @Override
+  protected IExpression handleArrayConstructor(SquarearrayconstructorContext context) {
+<span class="fc bfc" id="L293" title="All 2 branches covered.">    return context.getChildCount() == 2</span>
+        // empty
+<span class="fc" id="L295">        ? new ArraySquareConstructor(CollectionUtil.emptyList())</span>
+        // with members
+<span class="fc" id="L297">        : nairyToCollection(context, 1, 2,</span>
+            (ctx, idx) -&gt; {
+<span class="fc" id="L299">              int pos = (idx - 1) / 2;</span>
+<span class="fc" id="L300">              ParseTree tree = ctx.exprsingle(pos);</span>
+<span class="fc" id="L301">              return visit(tree);</span>
+            },
+            children -&gt; {
+<span class="pc bpc" id="L304" title="1 of 2 branches missed.">              assert children != null;</span>
+<span class="fc" id="L305">              return new ArraySquareConstructor(children);</span>
+            });
+  }
+
+  @Override
+  protected IExpression handleArrayConstructor(CurlyarrayconstructorContext ctx) {
+<span class="fc" id="L311">    return new ArraySequenceConstructor(visit(ctx.enclosedexpr()));</span>
+  }
+
+  // ===============================================
+  // Unary Lookup -
+  // https://www.w3.org/TR/xpath-31/#id-unary-lookup
+  // ===============================================
+
+  @Override
+  protected IExpression handleUnarylookup(UnarylookupContext ctx) {
+<span class="fc" id="L321">    KeyspecifierContext specifier = ctx.keyspecifier();</span>
+
+    IKeySpecifier keySpecifier;
+<span class="pc bpc" id="L324" title="1 of 2 branches missed.">    if (specifier.parenthesizedexpr() != null) {</span>
+<span class="nc" id="L325">      keySpecifier = AbstractKeySpecifier.newParenthesizedExprKeySpecifier(</span>
+<span class="nc" id="L326">          ObjectUtils.requireNonNull(specifier.parenthesizedexpr().accept(this)));</span>
+<span class="pc bpc" id="L327" title="1 of 2 branches missed.">    } else if (specifier.NCName() != null) {</span>
+<span class="nc" id="L328">      keySpecifier = AbstractKeySpecifier.newNameKeySpecifier(</span>
+<span class="nc" id="L329">          ObjectUtils.requireNonNull(specifier.NCName().getText()));</span>
+<span class="pc bpc" id="L330" title="1 of 2 branches missed.">    } else if (specifier.IntegerLiteral() != null) {</span>
+<span class="fc" id="L331">      keySpecifier = AbstractKeySpecifier.newIntegerLiteralKeySpecifier(</span>
+<span class="fc" id="L332">          IIntegerItem.valueOf(ObjectUtils.requireNonNull(specifier.IntegerLiteral().getText())));</span>
+<span class="nc bnc" id="L333" title="All 2 branches missed.">    } else if (specifier.STAR() != null) {</span>
+<span class="nc" id="L334">      keySpecifier = AbstractKeySpecifier.newWildcardKeySpecifier();</span>
+    } else {
+<span class="nc" id="L336">      throw new UnsupportedOperationException(&quot;unknown key specifier&quot;);</span>
+    }
+<span class="fc" id="L338">    return new UnaryLookup(keySpecifier);</span>
+  }
+
+  // =========================================================
+  // Quantified Expressions -
+  // https://www.w3.org/TR/xpath-31/#id-quantified-expressions
+  // =========================================================
+
+  @Override
+  protected IExpression handleQuantifiedexpr(QuantifiedexprContext ctx) {
+    Quantified.Quantifier quantifier;
+<span class="fc" id="L349">    int type = ((TerminalNode) ctx.getChild(0)).getSymbol().getType();</span>
+<span class="pc bpc" id="L350" title="1 of 3 branches missed.">    switch (type) {</span>
+    case Metapath10Lexer.KW_SOME:
+<span class="fc" id="L352">      quantifier = Quantified.Quantifier.SOME;</span>
+<span class="fc" id="L353">      break;</span>
+    case Metapath10Lexer.KW_EVERY:
+<span class="fc" id="L355">      quantifier = Quantified.Quantifier.EVERY;</span>
+<span class="fc" id="L356">      break;</span>
+    default:
+<span class="nc" id="L358">      throw new UnsupportedOperationException(((TerminalNode) ctx.getChild(0)).getSymbol().getText());</span>
+    }
+
+<span class="fc" id="L361">    int numVars = (ctx.getChildCount() - 2) / 5; // children - &quot;satisfies expr&quot; / &quot;, $ varName in expr&quot;</span>
+<span class="fc" id="L362">    Map&lt;QName, IExpression&gt; vars = new LinkedHashMap&lt;&gt;(); // NOPMD ordering needed</span>
+<span class="fc" id="L363">    int offset = 0;</span>
+<span class="fc bfc" id="L364" title="All 2 branches covered.">    for (; offset &lt; numVars; offset++) {</span>
+      // $
+<span class="fc" id="L366">      QName varName = EQNameUtils.parseName(</span>
+<span class="fc" id="L367">          ObjectUtils.notNull(ctx.varname(offset).eqname().getText()),</span>
+<span class="fc" id="L368">          getContext().getVariablePrefixResolver());</span>
+
+      // in
+<span class="fc" id="L371">      IExpression varExpr = visit(ctx.exprsingle(offset));</span>
+
+<span class="fc" id="L373">      vars.put(varName, varExpr);</span>
+    }
+
+<span class="fc" id="L376">    IExpression satisfies = visit(ctx.exprsingle(offset));</span>
+
+<span class="fc" id="L378">    return new Quantified(quantifier, vars, satisfies);</span>
+  }
+
+  // =======================================================================
+  // Arrow operator (=&gt;) - https://www.w3.org/TR/xpath-31/#id-arrow-operator
+  // =======================================================================
+
+  @Override
+  protected IExpression handleArrowexpr(ArrowexprContext context) {
+    // TODO: handle additional syntax for varef and parenthesized
+<span class="fc" id="L388">    return handleGroupedNAiry(context, 0, 3, (ctx, idx, left) -&gt; {</span>
+      // the next child is &quot;=&gt;&quot;
+<span class="pc bpc" id="L390" title="1 of 2 branches missed.">      assert &quot;=&gt;&quot;.equals(ctx.getChild(idx).getText());</span>
+
+<span class="fc" id="L392">      int offset = (idx - 1) / 3;</span>
+
+<span class="fc" id="L394">      ArrowfunctionspecifierContext fcCtx = ctx.getChild(ArrowfunctionspecifierContext.class, offset);</span>
+<span class="fc" id="L395">      ArgumentlistContext argumentCtx = ctx.getChild(ArgumentlistContext.class, offset);</span>
+
+<span class="fc" id="L397">      QName name = EQNameUtils.parseName(</span>
+<span class="fc" id="L398">          ObjectUtils.notNull(fcCtx.eqname().getText()),</span>
+<span class="fc" id="L399">          getContext().getFunctionPrefixResolver());</span>
+
+<span class="fc" id="L401">      try (Stream&lt;IExpression&gt; args = Stream.concat(</span>
+<span class="fc" id="L402">          Stream.of(left),</span>
+<span class="fc" id="L403">          parseArgumentList(ObjectUtils.notNull(argumentCtx)))) {</span>
+<span class="pc bpc" id="L404" title="1 of 2 branches missed.">        assert args != null;</span>
+
+<span class="fc" id="L406">        return new StaticFunctionCall(name, ObjectUtils.notNull(args.collect(Collectors.toUnmodifiableList())));</span>
+      }
+    });
+  }
+
+  // ====================================================
+  // Parenthesized Expressions -
+  // https://www.w3.org/TR/xpath-31/#id-paren-expressions
+  // ====================================================
+
+  @Override
+  protected IExpression handleEmptyParenthesizedexpr(ParenthesizedexprContext ctx) {
+<span class="fc" id="L418">    return EmptySequence.instance();</span>
+  }
+
+  // ==========================================================
+  // Context Item Expression -
+  // https://www.w3.org/TR/xpath-31/#id-context-item-expression
+  // ==========================================================
+
+  @Override
+  protected IExpression handleContextitemexpr(ContextitemexprContext ctx) {
+<span class="fc" id="L428">    return ContextItem.instance();</span>
+  }
+
+  // =========================================================================
+  // Static Function Calls - https://www.w3.org/TR/xpath-31/#id-function-calls
+  // =========================================================================
+
+  /**
+   * Parse a list of arguments.
+   *
+   * @param context
+   *          the argument list AST
+   * @return a stream of CST expressions for each argument, in the original
+   *         argument order
+   */
+  @NonNull
+  protected Stream&lt;IExpression&gt; parseArgumentList(@NonNull ArgumentlistContext context) {
+<span class="fc" id="L445">    int numChildren = context.getChildCount();</span>
+
+    Stream&lt;IExpression&gt; retval;
+<span class="fc bfc" id="L448" title="All 2 branches covered.">    if (numChildren == 2) {</span>
+      // just the OP CP tokens, which is an empty list
+<span class="fc" id="L450">      retval = Stream.empty();</span>
+    } else {
+<span class="fc" id="L452">      retval = context.argument().stream()</span>
+<span class="fc" id="L453">          .map(argument -&gt; {</span>
+<span class="fc" id="L454">            return argument.exprsingle().accept(this);</span>
+          });
+    }
+<span class="pc bpc" id="L457" title="1 of 2 branches missed.">    assert retval != null;</span>
+
+<span class="fc" id="L459">    return retval;</span>
+  }
+
+  @Override
+  protected IExpression handleFunctioncall(FunctioncallContext ctx) {
+<span class="fc" id="L464">    QName qname = EQNameUtils.parseName(</span>
+<span class="fc" id="L465">        ObjectUtils.notNull(ctx.eqname().getText()),</span>
+<span class="fc" id="L466">        getContext().getFunctionPrefixResolver());</span>
+<span class="fc" id="L467">    return new StaticFunctionCall(</span>
+        qname,
+<span class="fc" id="L469">        ObjectUtils.notNull(parseArgumentList(ObjectUtils.notNull(ctx.argumentlist()))</span>
+<span class="fc" id="L470">            .collect(Collectors.toUnmodifiableList())));</span>
+  }
+
+  // =========================================================================
+  // Filter Expressions - https://www.w3.org/TR/xpath-31/#id-filter-expression
+  // =========================================================================
+
+  /**
+   * Parse a predicate AST.
+   *
+   * @param predicate
+   *          the predicate expression
+   * @return the CST expression generated for the predicate
+   */
+  @NonNull
+  protected IExpression parsePredicate(@NonNull PredicateContext predicate) {
+    // the expression is always the second child
+<span class="fc" id="L487">    return visit(predicate.getChild(1));</span>
+  }
+
+  /**
+   * Parse a series of predicate ASTs.
+   *
+   * @param context
+   *          the parse tree node containing the predicates
+   * @param staringChild
+   *          the first child node corresponding to a predicate
+   * @return the list of CST predicate expressions in the same order as the
+   *         original predicate list
+   */
+  @NonNull
+  protected List&lt;IExpression&gt; parsePredicates(@NonNull ParseTree context, int staringChild) {
+<span class="fc" id="L502">    int numChildren = context.getChildCount();</span>
+<span class="fc" id="L503">    int numPredicates = numChildren - staringChild;</span>
+
+    List&lt;IExpression&gt; predicates;
+<span class="pc bpc" id="L506" title="1 of 2 branches missed.">    if (numPredicates == 0) {</span>
+      // no predicates
+<span class="fc" id="L508">      predicates = CollectionUtil.emptyList();</span>
+<span class="nc bnc" id="L509" title="All 2 branches missed.">    } else if (numPredicates == 1) {</span>
+      // single predicate
+<span class="nc" id="L511">      PredicateContext predicate = ObjectUtils.notNull((PredicateContext) context.getChild(staringChild));</span>
+<span class="nc" id="L512">      predicates = CollectionUtil.singletonList(parsePredicate(predicate));</span>
+<span class="nc" id="L513">    } else {</span>
+      // multiple predicates
+<span class="nc" id="L515">      predicates = new ArrayList&lt;&gt;(numPredicates);</span>
+<span class="nc bnc" id="L516" title="All 2 branches missed.">      for (int i = staringChild; i &lt; numChildren; i++) {</span>
+<span class="nc" id="L517">        PredicateContext predicate = ObjectUtils.notNull((PredicateContext) context.getChild(i));</span>
+<span class="nc" id="L518">        predicates.add(parsePredicate(predicate));</span>
+      }
+    }
+<span class="fc" id="L521">    return predicates;</span>
+  }
+
+  @Override
+  protected IExpression handlePostfixexpr(PostfixexprContext context) {
+<span class="fc" id="L526">    return handleGroupedNAiry(</span>
+        context,
+        0,
+        1,
+        (ctx, idx, left) -&gt; {
+<span class="pc bpc" id="L531" title="1 of 2 branches missed.">          assert left != null;</span>
+
+<span class="fc" id="L533">          ParseTree tree = ctx.getChild(idx);</span>
+          IExpression result;
+<span class="fc bfc" id="L535" title="All 2 branches covered.">          if (tree instanceof ArgumentlistContext) {</span>
+            // map or array access using function call syntax
+<span class="fc" id="L537">            result = new FunctionCallAccessor(</span>
+                left,
+<span class="fc" id="L539">                ObjectUtils.notNull(parseArgumentList((ArgumentlistContext) tree).findFirst().get()));</span>
+<span class="fc bfc" id="L540" title="All 2 branches covered.">          } else if (tree instanceof PredicateContext) {</span>
+<span class="fc" id="L541">            result = new PredicateExpression(</span>
+                left,
+<span class="fc" id="L543">                CollectionUtil.singletonList(parsePredicate((PredicateContext) tree)));</span>
+<span class="pc bpc" id="L544" title="1 of 2 branches missed.">          } else if (tree instanceof LookupContext) {</span>
+<span class="fc" id="L545">            KeyspecifierContext specifier = ((LookupContext) tree).keyspecifier();</span>
+
+            IKeySpecifier keySpecifier;
+<span class="pc bpc" id="L548" title="1 of 2 branches missed.">            if (specifier.parenthesizedexpr() != null) {</span>
+<span class="nc" id="L549">              keySpecifier = AbstractKeySpecifier.newParenthesizedExprKeySpecifier(</span>
+<span class="nc" id="L550">                  ObjectUtils.requireNonNull(specifier.parenthesizedexpr().accept(this)));</span>
+<span class="fc bfc" id="L551" title="All 2 branches covered.">            } else if (specifier.NCName() != null) {</span>
+<span class="fc" id="L552">              keySpecifier = AbstractKeySpecifier.newNameKeySpecifier(</span>
+<span class="fc" id="L553">                  ObjectUtils.requireNonNull(specifier.NCName().getText()));</span>
+<span class="fc bfc" id="L554" title="All 2 branches covered.">            } else if (specifier.IntegerLiteral() != null) {</span>
+<span class="fc" id="L555">              keySpecifier = AbstractKeySpecifier.newIntegerLiteralKeySpecifier(</span>
+<span class="fc" id="L556">                  IIntegerItem.valueOf(ObjectUtils.requireNonNull(specifier.IntegerLiteral().getText())));</span>
+<span class="pc bpc" id="L557" title="1 of 2 branches missed.">            } else if (specifier.STAR() != null) {</span>
+<span class="fc" id="L558">              keySpecifier = AbstractKeySpecifier.newWildcardKeySpecifier();</span>
+            } else {
+<span class="nc" id="L560">              throw new UnsupportedOperationException(&quot;unknown key specifier&quot;);</span>
+            }
+<span class="fc" id="L562">            result = new PostfixLookup(left, keySpecifier);</span>
+<span class="fc" id="L563">          } else {</span>
+<span class="nc" id="L564">            result = visit(tree);</span>
+          }
+<span class="fc" id="L566">          return result;</span>
+        });
+  }
+
+  // ======================================================================
+  // Path Expressions - https://www.w3.org/TR/xpath-31/#id-path-expressions
+  // ======================================================================
+
+  @Override
+  protected IExpression handlePredicate(PredicateContext ctx) {
+<span class="nc" id="L576">    parsePredicate(ctx);</span>
+<span class="nc" id="L577">    return null;</span>
+  }
+
+  @Override
+  protected IExpression handleLookup(LookupContext ctx) {
+    // TODO Auto-generated method stub
+<span class="nc" id="L583">    return null;</span>
+  }
+
+  @Override
+  protected IExpression handlePathexpr(PathexprContext ctx) {
+<span class="fc" id="L588">    int numChildren = ctx.getChildCount();</span>
+
+    IExpression retval;
+<span class="fc" id="L591">    ParseTree tree = ctx.getChild(0);</span>
+<span class="pc bpc" id="L592" title="1 of 2 branches missed.">    if (tree instanceof TerminalNode) {</span>
+<span class="fc" id="L593">      int type = ((TerminalNode) tree).getSymbol().getType();</span>
+<span class="pc bpc" id="L594" title="1 of 3 branches missed.">      switch (type) {</span>
+      case Metapath10Lexer.SLASH:
+        // a slash expression with optional path
+<span class="pc bpc" id="L597" title="1 of 2 branches missed.">        if (numChildren == 2) {</span>
+          // the optional path
+<span class="fc" id="L599">          retval = new RootSlashPath(visit(ctx.getChild(1)));</span>
+        } else {
+<span class="nc" id="L601">          retval = new RootSlashOnlyPath();</span>
+        }
+<span class="nc" id="L603">        break;</span>
+      case Metapath10Lexer.SS:
+        // a double slash expression with path
+<span class="fc" id="L606">        retval = new RootDoubleSlashPath(visit(ctx.getChild(1)));</span>
+<span class="fc" id="L607">        break;</span>
+      default:
+<span class="nc" id="L609">        throw new UnsupportedOperationException(((TerminalNode) tree).getSymbol().getText());</span>
+      }
+<span class="fc" id="L611">    } else {</span>
+      // a relative expression or something else
+<span class="nc" id="L613">      retval = visit(tree);</span>
+    }
+<span class="fc" id="L615">    return retval;</span>
+  }
+
+  // ============================================================
+  // RelativePath Expressions -
+  // https://www.w3.org/TR/xpath-31/#id-relative-path-expressions
+  // ============================================================
+
+  @Override
+  protected IExpression handleRelativepathexpr(RelativepathexprContext context) {
+<span class="fc" id="L625">    return handleGroupedNAiry(context, 0, 2, (ctx, idx, left) -&gt; {</span>
+<span class="pc bpc" id="L626" title="1 of 2 branches missed.">      assert left != null;</span>
+
+<span class="fc" id="L628">      ParseTree operatorTree = ctx.getChild(idx);</span>
+<span class="fc" id="L629">      IExpression right = visit(ctx.getChild(idx + 1));</span>
+
+<span class="fc" id="L631">      int type = ((TerminalNode) operatorTree).getSymbol().getType();</span>
+
+      IExpression retval;
+<span class="pc bpc" id="L634" title="2 of 3 branches missed.">      switch (type) {</span>
+      case Metapath10Lexer.SLASH:
+<span class="fc" id="L636">        retval = new RelativeSlashPath(left, right);</span>
+<span class="fc" id="L637">        break;</span>
+      case Metapath10Lexer.SS:
+<span class="nc" id="L639">        retval = new RelativeDoubleSlashPath(left, right);</span>
+<span class="nc" id="L640">        break;</span>
+      default:
+<span class="nc" id="L642">        throw new UnsupportedOperationException(((TerminalNode) operatorTree).getSymbol().getText());</span>
+      }
+<span class="fc" id="L644">      return retval;</span>
+    });
+  }
+
+  // ================================================
+  // Steps - https://www.w3.org/TR/xpath-31/#id-steps
+  // ================================================
+
+  @Override
+  protected IExpression handleForwardstep(ForwardstepContext ctx) {
+<span class="fc" id="L654">    AbbrevforwardstepContext abbrev = ctx.abbrevforwardstep();</span>
+
+    Step retval;
+<span class="pc bpc" id="L657" title="1 of 2 branches missed.">    if (abbrev == null) {</span>
+<span class="pc bpc" id="L658" title="1 of 2 branches missed.">      assert ctx.getChildCount() == 2;</span>
+
+<span class="fc" id="L660">      Token token = (Token) ctx.forwardaxis().getChild(0).getPayload();</span>
+
+      Axis axis;
+<span class="pc bpc" id="L663" title="4 of 5 branches missed.">      switch (token.getType()) {</span>
+      case Metapath10Lexer.KW_SELF:
+<span class="nc" id="L665">        axis = Axis.SELF;</span>
+<span class="nc" id="L666">        break;</span>
+      case Metapath10Lexer.KW_CHILD:
+<span class="fc" id="L668">        axis = Axis.CHILDREN;</span>
+<span class="fc" id="L669">        break;</span>
+      case Metapath10Lexer.KW_DESCENDANT:
+<span class="nc" id="L671">        axis = Axis.DESCENDANT;</span>
+<span class="nc" id="L672">        break;</span>
+      case Metapath10Lexer.KW_DESCENDANT_OR_SELF:
+<span class="nc" id="L674">        axis = Axis.DESCENDANT_OR_SELF;</span>
+<span class="nc" id="L675">        break;</span>
+      default:
+<span class="nc" id="L677">        throw new UnsupportedOperationException(token.getText());</span>
+      }
+<span class="fc" id="L679">      retval = new Step(axis,</span>
+<span class="fc" id="L680">          parseNodeTest(ctx.nodetest(), false));</span>
+<span class="fc" id="L681">    } else {</span>
+<span class="nc" id="L682">      retval = new Step(</span>
+          Axis.CHILDREN,
+<span class="nc bnc" id="L684" title="All 2 branches missed.">          parseNodeTest(ctx.nodetest(), abbrev.AT() != null));</span>
+    }
+<span class="fc" id="L686">    return retval;</span>
+  }
+
+  @Override
+  protected IExpression handleReversestep(ReversestepContext ctx) {
+<span class="pc bpc" id="L691" title="1 of 2 branches missed.">    assert ctx.getChildCount() == 2;</span>
+
+<span class="fc" id="L693">    Token token = (Token) ctx.reverseaxis().getChild(0).getPayload();</span>
+
+    Axis axis;
+<span class="pc bpc" id="L696" title="3 of 4 branches missed.">    switch (token.getType()) {</span>
+    case Metapath10Lexer.KW_PARENT:
+<span class="fc" id="L698">      axis = Axis.PARENT;</span>
+<span class="fc" id="L699">      break;</span>
+    case Metapath10Lexer.KW_ANCESTOR:
+<span class="nc" id="L701">      axis = Axis.ANCESTOR;</span>
+<span class="nc" id="L702">      break;</span>
+    case Metapath10Lexer.KW_ANCESTOR_OR_SELF:
+<span class="nc" id="L704">      axis = Axis.ANCESTOR_OR_SELF;</span>
+<span class="nc" id="L705">      break;</span>
+    default:
+<span class="nc" id="L707">      throw new UnsupportedOperationException(token.getText());</span>
+    }
+<span class="fc" id="L709">    return new Step(axis, parseNodeTest(ctx.nodetest(), false));</span>
+  }
+
+  // =======================================================
+  // Node Tests - https://www.w3.org/TR/xpath-31/#node-tests
+  // =======================================================
+
+  /**
+   * Parse an antlr node test expression.
+   *
+   * @param ctx
+   *          the antrl context
+   * @param flag
+   *          if the context is within a flag's scope
+   * @return the resulting expression
+   */
+  @NonNull
+  protected INodeTestExpression parseNodeTest(NodetestContext ctx, boolean flag) {
+    // TODO: implement kind test
+<span class="fc" id="L728">    NametestContext nameTestCtx = ctx.nametest();</span>
+<span class="fc" id="L729">    return parseNameTest(nameTestCtx, flag);</span>
+  }
+
+  /**
+   * Parse an antlr name test expression.
+   *
+   * @param ctx
+   *          the antrl context
+   * @param flag
+   *          if the context is within a flag's scope
+   * @return the resulting expression
+   */
+  @NonNull
+  protected INameTestExpression parseNameTest(NametestContext ctx, boolean flag) {
+<span class="fc" id="L743">    ParseTree testType = ObjectUtils.requireNonNull(ctx.getChild(0));</span>
+
+<span class="fc" id="L745">    StaticContext staticContext = getContext();</span>
+
+    INameTestExpression retval;
+<span class="fc bfc" id="L748" title="All 2 branches covered.">    if (testType instanceof EqnameContext) {</span>
+<span class="fc" id="L749">      QName qname = EQNameUtils.parseName(</span>
+<span class="fc" id="L750">          ObjectUtils.notNull(ctx.eqname().getText()),</span>
+<span class="fc bfc" id="L751" title="All 2 branches covered.">          flag ? staticContext.getFlagPrefixResolver() : staticContext.getModelPrefixResolver());</span>
+
+<span class="fc bfc" id="L753" title="All 2 branches covered.">      if (!flag</span>
+<span class="fc bfc" id="L754" title="All 2 branches covered.">          &amp;&amp; qname.getNamespaceURI().isEmpty()</span>
+<span class="pc bpc" id="L755" title="1 of 2 branches missed.">          &amp;&amp; staticContext.isUseWildcardWhenNamespaceNotDefaulted()) {</span>
+        // Use a wildcard namespace
+<span class="nc" id="L757">        retval = new Wildcard(new Wildcard.MatchAnyNamespace(ObjectUtils.notNull(qname.getLocalPart())));</span>
+      } else {
+<span class="fc" id="L759">        retval = new NameTest(qname);</span>
+      }
+<span class="fc" id="L761">    } else { // wildcard</span>
+<span class="fc" id="L762">      retval = handleWildcard((WildcardContext) testType);</span>
+    }
+<span class="fc" id="L764">    return retval;</span>
+  }
+
+  @Override
+  protected Wildcard handleWildcard(WildcardContext ctx) {
+<span class="fc" id="L769">    Predicate&lt;IDefinitionNodeItem&lt;?, ?&gt;&gt; matcher = null;</span>
+<span class="pc bpc" id="L770" title="1 of 2 branches missed.">    if (ctx.STAR() == null) {</span>
+<span class="nc bnc" id="L771" title="All 2 branches missed.">      if (ctx.CS() != null) {</span>
+        // specified prefix, any local-name
+<span class="nc" id="L773">        String prefix = ObjectUtils.notNull(ctx.NCName().getText());</span>
+<span class="nc" id="L774">        String namespace = getContext().lookupNamespaceForPrefix(prefix);</span>
+<span class="nc bnc" id="L775" title="All 2 branches missed.">        if (namespace == null) {</span>
+<span class="nc" id="L776">          throw new IllegalStateException(String.format(&quot;Prefix '%s' did not map to a namespace.&quot;, prefix));</span>
+        }
+<span class="nc" id="L778">        matcher = new Wildcard.MatchAnyLocalName(namespace);</span>
+<span class="nc bnc" id="L779" title="All 2 branches missed.">      } else if (ctx.SC() != null) {</span>
+        // any prefix, specified local-name
+<span class="nc" id="L781">        matcher = new Wildcard.MatchAnyNamespace(ObjectUtils.notNull(ctx.NCName().getText()));</span>
+      } else {
+        // specified braced namespace, any local-name
+<span class="nc" id="L784">        String bracedUriLiteral = ctx.BracedURILiteral().getText();</span>
+<span class="nc" id="L785">        String namespace = ObjectUtils.notNull(bracedUriLiteral.substring(2, bracedUriLiteral.length() - 1));</span>
+<span class="nc" id="L786">        matcher = new Wildcard.MatchAnyLocalName(namespace);</span>
+      }
+    } // star needs no matcher: any prefix, any local-name
+
+<span class="fc" id="L790">    return new Wildcard(matcher);</span>
+  }
+
+  // ======================================================================
+  // Predicates within Steps - https://www.w3.org/TR/xpath-31/#id-predicate
+  // ======================================================================
+
+  @Override
+  protected IExpression handleAxisstep(AxisstepContext ctx) {
+<span class="fc" id="L799">    IExpression step = visit(ctx.getChild(0));</span>
+<span class="fc" id="L800">    ParseTree predicateTree = ctx.getChild(1);</span>
+<span class="pc bpc" id="L801" title="1 of 2 branches missed.">    assert predicateTree != null;</span>
+
+<span class="fc" id="L803">    List&lt;IExpression&gt; predicates = parsePredicates(predicateTree, 0);</span>
+
+<span class="pc bpc" id="L805" title="1 of 2 branches missed.">    return predicates.isEmpty() ? step : new PredicateExpression(step, predicates);</span>
+  }
+
+  // ===========================================================
+  // Abbreviated Syntax - https://www.w3.org/TR/xpath-31/#abbrev
+  // ===========================================================
+
+  @Override
+  protected IExpression handleAbbrevforwardstep(AbbrevforwardstepContext ctx) {
+<span class="fc" id="L814">    int numChildren = ctx.getChildCount();</span>
+
+    IExpression retval;
+<span class="fc bfc" id="L817" title="All 2 branches covered.">    if (numChildren == 1) {</span>
+<span class="fc" id="L818">      retval = new ModelInstance(parseNodeTest(ctx.nodetest(), false));</span>
+    } else {
+      // this is an AT test
+<span class="fc" id="L821">      retval = new Flag(parseNodeTest(ctx.nodetest(), true));</span>
+    }
+<span class="fc" id="L823">    return retval;</span>
+  }
+
+  @Override
+  protected IExpression handleAbbrevreversestep(AbbrevreversestepContext ctx) {
+<span class="fc" id="L828">    return Axis.PARENT;</span>
+  }
+
+  // ======================================================================
+  // Constructing Sequences - https://www.w3.org/TR/xpath-31/#construct_seq
+  // ======================================================================
+
+  @Override
+  protected IExpression handleRangeexpr(RangeexprContext ctx) {
+<span class="pc bpc" id="L837" title="1 of 2 branches missed.">    assert ctx.getChildCount() == 3;</span>
+
+<span class="fc" id="L839">    IExpression left = visit(ctx.getChild(0));</span>
+<span class="fc" id="L840">    IExpression right = visit(ctx.getChild(2));</span>
+
+<span class="fc" id="L842">    return new Range(left, right);</span>
+  }
+
+  // ========================================================================
+  // Combining Node Sequences - https://www.w3.org/TR/xpath-31/#combining_seq
+  // ========================================================================
+
+  @Override
+  protected IExpression handleUnionexpr(UnionexprContext ctx) {
+<span class="fc" id="L851">    return handleNAiryCollection(ctx, children -&gt; {</span>
+<span class="pc bpc" id="L852" title="1 of 2 branches missed.">      assert children != null;</span>
+<span class="fc" id="L853">      return new Union(children);</span>
+    });
+  }
+
+  @Override
+  protected IExpression handleIntersectexceptexpr(IntersectexceptexprContext context) {
+<span class="nc" id="L859">    return handleGroupedNAiry(context, 0, 2, (ctx, idx, left) -&gt; {</span>
+<span class="nc bnc" id="L860" title="All 2 branches missed.">      assert left != null;</span>
+
+<span class="nc" id="L862">      ParseTree operatorTree = ctx.getChild(idx);</span>
+<span class="nc" id="L863">      IExpression right = visit(ctx.getChild(idx + 1));</span>
+
+<span class="nc" id="L865">      int type = ((TerminalNode) operatorTree).getSymbol().getType();</span>
+
+      IExpression retval;
+<span class="nc bnc" id="L868" title="All 3 branches missed.">      switch (type) {</span>
+      case Metapath10Lexer.KW_INTERSECT:
+<span class="nc" id="L870">        retval = new Intersect(left, right);</span>
+<span class="nc" id="L871">        break;</span>
+      case Metapath10Lexer.KW_EXCEPT:
+<span class="nc" id="L873">        retval = new Except(left, right);</span>
+<span class="nc" id="L874">        break;</span>
+      default:
+<span class="nc" id="L876">        throw new UnsupportedOperationException(((TerminalNode) operatorTree).getSymbol().getText());</span>
+      }
+<span class="nc" id="L878">      return retval;</span>
+    });
+  }
+
+  // ======================================================================
+  // Arithmetic Expressions - https://www.w3.org/TR/xpath-31/#id-arithmetic
+  // ======================================================================
+
+  @Override
+  protected IExpression handleAdditiveexpr(AdditiveexprContext context) {
+<span class="fc" id="L888">    return handleGroupedNAiry(context, 0, 2, (ctx, idx, left) -&gt; {</span>
+<span class="fc" id="L889">      ParseTree operatorTree = ctx.getChild(idx);</span>
+<span class="fc" id="L890">      ParseTree rightTree = ctx.getChild(idx + 1);</span>
+<span class="fc" id="L891">      IExpression right = rightTree.accept(this);</span>
+
+<span class="pc bpc" id="L893" title="1 of 2 branches missed.">      assert left != null;</span>
+<span class="pc bpc" id="L894" title="1 of 2 branches missed.">      assert right != null;</span>
+
+<span class="fc" id="L896">      int type = ((TerminalNode) operatorTree).getSymbol().getType();</span>
+
+      IExpression retval;
+<span class="pc bpc" id="L899" title="2 of 3 branches missed.">      switch (type) {</span>
+      case Metapath10Lexer.PLUS:
+<span class="fc" id="L901">        retval = new Addition(left, right);</span>
+<span class="fc" id="L902">        break;</span>
+      case Metapath10Lexer.MINUS:
+<span class="nc" id="L904">        retval = new Subtraction(left, right);</span>
+<span class="nc" id="L905">        break;</span>
+      default:
+<span class="nc" id="L907">        throw new UnsupportedOperationException(((TerminalNode) operatorTree).getSymbol().getText());</span>
+      }
+<span class="fc" id="L909">      return retval;</span>
+    });
+  }
+
+  @Override
+  protected IExpression handleMultiplicativeexpr(MultiplicativeexprContext context) {
+<span class="nc" id="L915">    return handleGroupedNAiry(context, 0, 2, (ctx, idx, left) -&gt; {</span>
+<span class="nc bnc" id="L916" title="All 2 branches missed.">      assert left != null;</span>
+
+<span class="nc" id="L918">      ParseTree operatorTree = ctx.getChild(idx);</span>
+<span class="nc" id="L919">      IExpression right = visit(ctx.getChild(idx + 1));</span>
+
+<span class="nc bnc" id="L921" title="All 2 branches missed.">      assert right != null;</span>
+
+<span class="nc" id="L923">      int type = ((TerminalNode) operatorTree).getSymbol().getType();</span>
+      IExpression retval;
+<span class="nc bnc" id="L925" title="All 5 branches missed.">      switch (type) {</span>
+      case Metapath10Lexer.STAR:
+<span class="nc" id="L927">        retval = new Multiplication(left, right);</span>
+<span class="nc" id="L928">        break;</span>
+      case Metapath10Lexer.KW_DIV:
+<span class="nc" id="L930">        retval = new Division(left, right);</span>
+<span class="nc" id="L931">        break;</span>
+      case Metapath10Lexer.KW_IDIV:
+<span class="nc" id="L933">        retval = new IntegerDivision(left, right);</span>
+<span class="nc" id="L934">        break;</span>
+      case Metapath10Lexer.KW_MOD:
+<span class="nc" id="L936">        retval = new Modulo(left, right);</span>
+<span class="nc" id="L937">        break;</span>
+      default:
+<span class="nc" id="L939">        throw new UnsupportedOperationException(((TerminalNode) operatorTree).getSymbol().getText());</span>
+      }
+<span class="nc" id="L941">      return retval;</span>
+    });
+  }
+
+  @Override
+  protected IExpression handleUnaryexpr(UnaryexprContext ctx) {
+<span class="fc" id="L947">    int numChildren = ctx.getChildCount();</span>
+<span class="fc" id="L948">    int negateCount = 0;</span>
+
+<span class="fc" id="L950">    int idx = 0;</span>
+<span class="fc bfc" id="L951" title="All 2 branches covered.">    for (; idx &lt; numChildren - 1; idx++) {</span>
+<span class="fc" id="L952">      ParseTree tree = ctx.getChild(idx);</span>
+<span class="fc" id="L953">      int type = ((TerminalNode) tree).getSymbol().getType();</span>
+<span class="pc bpc" id="L954" title="2 of 3 branches missed.">      switch (type) {</span>
+      case Metapath10Lexer.PLUS:
+<span class="nc" id="L956">        break;</span>
+      case Metapath10Lexer.MINUS:
+<span class="fc" id="L958">        negateCount++;</span>
+<span class="fc" id="L959">        break;</span>
+      default:
+<span class="nc" id="L961">        throw new UnsupportedOperationException(((TerminalNode) tree).getSymbol().getText());</span>
+      }
+    }
+
+<span class="fc" id="L965">    IExpression retval = visit(ctx.getChild(idx));</span>
+<span class="pc bpc" id="L966" title="1 of 2 branches missed.">    if (negateCount % 2 != 0) {</span>
+<span class="fc" id="L967">      retval = new Negate(retval);</span>
+    }
+<span class="fc" id="L969">    return retval;</span>
+  }
+
+  // =====================================================
+  // String Concatenation Expressions -
+  // https://www.w3.org/TR/xpath-31/#id-string-concat-expr
+  // =====================================================
+
+  @Override
+  protected IExpression handleStringconcatexpr(StringconcatexprContext ctx) {
+<span class="fc" id="L979">    return handleNAiryCollection(ctx, children -&gt; {</span>
+<span class="pc bpc" id="L980" title="1 of 2 branches missed.">      assert children != null;</span>
+<span class="fc" id="L981">      return new StringConcat(children);</span>
+    });
+  }
+
+  // =======================================================================
+  // Comparison Expressions - https://www.w3.org/TR/xpath-31/#id-comparisons
+  // =======================================================================
+
+  @Override
+  protected IExpression handleComparisonexpr(ComparisonexprContext ctx) { // NOPMD - ok
+<span class="pc bpc" id="L991" title="1 of 2 branches missed.">    assert ctx.getChildCount() == 3;</span>
+
+<span class="fc" id="L993">    IExpression left = visit(ctx.getChild(0));</span>
+<span class="fc" id="L994">    IExpression right = visit(ctx.getChild(2));</span>
+
+    // the operator
+<span class="fc" id="L997">    ParseTree operatorTree = ctx.getChild(1);</span>
+<span class="fc" id="L998">    Object payload = operatorTree.getPayload();</span>
+
+    ComparisonFunctions.Operator operator;
+    IBooleanLogicExpression retval;
+<span class="fc bfc" id="L1002" title="All 2 branches covered.">    if (payload instanceof GeneralcompContext) {</span>
+<span class="fc" id="L1003">      GeneralcompContext compContext = (GeneralcompContext) payload;</span>
+<span class="fc" id="L1004">      int type = ((TerminalNode) compContext.getChild(0)).getSymbol().getType();</span>
+<span class="pc bpc" id="L1005" title="1 of 7 branches missed.">      switch (type) {</span>
+      case Metapath10Lexer.EQ:
+<span class="fc" id="L1007">        operator = ComparisonFunctions.Operator.EQ;</span>
+<span class="fc" id="L1008">        break;</span>
+      case Metapath10Lexer.NE:
+<span class="fc" id="L1010">        operator = ComparisonFunctions.Operator.NE;</span>
+<span class="fc" id="L1011">        break;</span>
+      case Metapath10Lexer.LT:
+<span class="fc" id="L1013">        operator = ComparisonFunctions.Operator.LT;</span>
+<span class="fc" id="L1014">        break;</span>
+      case Metapath10Lexer.LE:
+<span class="fc" id="L1016">        operator = ComparisonFunctions.Operator.LE;</span>
+<span class="fc" id="L1017">        break;</span>
+      case Metapath10Lexer.GT:
+<span class="fc" id="L1019">        operator = ComparisonFunctions.Operator.GT;</span>
+<span class="fc" id="L1020">        break;</span>
+      case Metapath10Lexer.GE:
+<span class="fc" id="L1022">        operator = ComparisonFunctions.Operator.GE;</span>
+<span class="fc" id="L1023">        break;</span>
+      default:
+<span class="nc" id="L1025">        throw new UnsupportedOperationException(((TerminalNode) compContext.getChild(0)).getSymbol().getText());</span>
+      }
+<span class="fc" id="L1027">      retval = new GeneralComparison(left, operator, right);</span>
+<span class="pc bpc" id="L1028" title="1 of 2 branches missed.">    } else if (payload instanceof ValuecompContext) {</span>
+<span class="fc" id="L1029">      ValuecompContext compContext = (ValuecompContext) payload;</span>
+<span class="fc" id="L1030">      int type = ((TerminalNode) compContext.getChild(0)).getSymbol().getType();</span>
+<span class="pc bpc" id="L1031" title="1 of 7 branches missed.">      switch (type) {</span>
+      case Metapath10Lexer.KW_EQ:
+<span class="fc" id="L1033">        operator = ComparisonFunctions.Operator.EQ;</span>
+<span class="fc" id="L1034">        break;</span>
+      case Metapath10Lexer.KW_NE:
+<span class="fc" id="L1036">        operator = ComparisonFunctions.Operator.NE;</span>
+<span class="fc" id="L1037">        break;</span>
+      case Metapath10Lexer.KW_LT:
+<span class="fc" id="L1039">        operator = ComparisonFunctions.Operator.LT;</span>
+<span class="fc" id="L1040">        break;</span>
+      case Metapath10Lexer.KW_LE:
+<span class="fc" id="L1042">        operator = ComparisonFunctions.Operator.LE;</span>
+<span class="fc" id="L1043">        break;</span>
+      case Metapath10Lexer.KW_GT:
+<span class="fc" id="L1045">        operator = ComparisonFunctions.Operator.GT;</span>
+<span class="fc" id="L1046">        break;</span>
+      case Metapath10Lexer.KW_GE:
+<span class="fc" id="L1048">        operator = ComparisonFunctions.Operator.GE;</span>
+<span class="fc" id="L1049">        break;</span>
+      default:
+<span class="nc" id="L1051">        throw new UnsupportedOperationException(((TerminalNode) compContext.getChild(0)).getSymbol().getText());</span>
+      }
+<span class="fc" id="L1053">      retval = new ValueComparison(left, operator, right);</span>
+<span class="fc" id="L1054">    } else {</span>
+<span class="nc" id="L1055">      throw new UnsupportedOperationException();</span>
+    }
+<span class="fc" id="L1057">    return retval;</span>
+  }
+
+  // ============================================================================
+  // Logical Expressions - https://www.w3.org/TR/xpath-31/#id-logical-expressions
+  // ============================================================================
+
+  @Override
+  protected IExpression handleOrexpr(OrexprContext ctx) {
+<span class="fc" id="L1066">    return handleNAiryCollection(ctx, children -&gt; {</span>
+<span class="pc bpc" id="L1067" title="1 of 2 branches missed.">      assert children != null;</span>
+<span class="fc" id="L1068">      return new Or(children);</span>
+    });
+  }
+
+  @Override
+  protected IExpression handleAndexpr(AndexprContext ctx) {
+<span class="fc" id="L1074">    return handleNAiryCollection(ctx, children -&gt; {</span>
+<span class="pc bpc" id="L1075" title="1 of 2 branches missed.">      assert children != null;</span>
+<span class="fc" id="L1076">      return new And(children);</span>
+    });
+  }
+
+  // =========================================================================
+  // Conditional Expressions - https://www.w3.org/TR/xpath-31/#id-conditionals
+  // =========================================================================
+
+  @Override
+  protected IExpression handleIfexpr(IfexprContext ctx) {
+<span class="fc" id="L1086">    IExpression testExpr = visit(ctx.expr());</span>
+<span class="fc" id="L1087">    IExpression thenExpr = visit(ctx.exprsingle(0));</span>
+<span class="fc" id="L1088">    IExpression elseExpr = visit(ctx.exprsingle(1));</span>
+
+<span class="fc" id="L1090">    return new If(testExpr, thenExpr, elseExpr);</span>
+  }
+
+  // =========================================================================
+  // Simple map operator (!) - https://www.w3.org/TR/xpath-31/#id-map-operator
+  // =========================================================================
+
+  @Override
+  protected IExpression handleSimplemapexpr(SimplemapexprContext context) {
+<span class="fc" id="L1099">    return handleGroupedNAiry(context, 0, 2, (ctx, idx, left) -&gt; {</span>
+<span class="pc bpc" id="L1100" title="1 of 2 branches missed.">      assert left != null;</span>
+
+      // the next child is &quot;!&quot;
+<span class="pc bpc" id="L1103" title="1 of 2 branches missed.">      assert &quot;!&quot;.equals(ctx.getChild(idx).getText());</span>
+<span class="fc" id="L1104">      IExpression right = ObjectUtils.notNull(ctx.getChild(idx + 1).accept(this));</span>
+
+<span class="fc" id="L1106">      return new SimpleMap(left, right);</span>
+    });
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

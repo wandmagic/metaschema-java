@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<licensePluginReport goal="FORMAT" timestamp="1722612646197">
+    <module artifactId="metaschema-databind" groupId="dev.metaschema.java" version="1.0.0"/>
+    <files>
+        <file path="src/test/java/gov/nist/secauto/metaschema/databind/DefaultBindingContextTest.java" result="NOOP"/>
+        <file path="src/test/java/gov/nist/secauto/metaschema/databind/Examples.java" result="NOOP"/>
+        <file path="src/test/java/gov/nist/secauto/metaschema/databind/codegen/AbstractMetaschemaTest.java" result="NOOP"/>
+        <file path="src/test/java/gov/nist/secauto/metaschema/databind/codegen/BasicMetaschemaTest.java" result="NOOP"/>
+        <file path="src/test/java/gov/nist/secauto/metaschema/databind/codegen/GenerationTest.java" result="NOOP"/>
+        <file path="src/test/java/gov/nist/secauto/metaschema/databind/codegen/MetaschemaModuleMetaschemaTest.java" result="NOOP"/>
+        <file path="src/test/java/gov/nist/secauto/metaschema/databind/codegen/config/BindingConfigurationLoaderTest.java" result="NOOP"/>
+        <file path="src/test/java/gov/nist/secauto/metaschema/databind/codegen/config/DefaultBindingConfigurationTest.java" result="NOOP"/>
+        <file path="src/test/java/gov/nist/secauto/metaschema/databind/io/FormatDetectorTest.java" result="NOOP"/>
+        <file path="src/test/java/gov/nist/secauto/metaschema/databind/io/json/JsonParserTest.java" result="NOOP"/>
+        <file path="src/test/java/gov/nist/secauto/metaschema/databind/io/xml/XmlParserTest.java" result="NOOP"/>
+        <file path="src/test/java/gov/nist/secauto/metaschema/databind/model/AbstractBoundModelTestSupport.java" result="NOOP"/>
+        <file path="src/test/java/gov/nist/secauto/metaschema/databind/model/DefaultAssemblyClassBindingTest.java" result="NOOP"/>
+        <file path="src/test/java/gov/nist/secauto/metaschema/databind/model/DefaultFieldPropertyTest.java" result="NOOP"/>
+        <file path="src/test/java/gov/nist/secauto/metaschema/databind/model/JsonKeyTest.java" result="NOOP"/>
+        <file path="src/test/java/gov/nist/secauto/metaschema/databind/model/metaschema/BindingModuleLoaderTest.java" result="NOOP"/>
+        <file path="src/test/java/gov/nist/secauto/metaschema/databind/model/test/DefaultValueKeyField.java" result="NOOP"/>
+        <file path="src/test/java/gov/nist/secauto/metaschema/databind/model/test/EmptyBoundAssembly.java" result="NOOP"/>
+        <file path="src/test/java/gov/nist/secauto/metaschema/databind/model/test/FlaggedAssembly.java" result="NOOP"/>
+        <file path="src/test/java/gov/nist/secauto/metaschema/databind/model/test/FlaggedBoundAssembly.java" result="NOOP"/>
+        <file path="src/test/java/gov/nist/secauto/metaschema/databind/model/test/FlaggedBoundField.java" result="NOOP"/>
+        <file path="src/test/java/gov/nist/secauto/metaschema/databind/model/test/MultiFieldAssembly.java" result="NOOP"/>
+        <file path="src/test/java/gov/nist/secauto/metaschema/databind/model/test/OnlyModelBoundAssembly.java" result="NOOP"/>
+        <file path="src/test/java/gov/nist/secauto/metaschema/databind/model/test/RootBoundAssembly.java" result="NOOP"/>
+        <file path="src/test/java/gov/nist/secauto/metaschema/databind/model/test/SimpleAssembly.java" result="NOOP"/>
+        <file path="src/test/java/gov/nist/secauto/metaschema/databind/model/test/TestMetaschema.java" result="NOOP"/>
+        <file path="src/test/java/gov/nist/secauto/metaschema/databind/model/test/ValueKeyField.java" result="NOOP"/>
+        <file path="src/test/java/gov/nist/secauto/metaschema/databind/model/test/package-info.java" result="NOOP"/>
+        <file path="src/test/java/gov/nist/secauto/metaschema/databind/test/util/CloseDetectingInputStream.java" result="NOOP"/>
+        <file path="src/test/java/gov/nist/secauto/metaschema/databind/test/util/package-info.java" result="NOOP"/>
+        <file path="src/test/java/gov/nist/secauto/metaschema/databind/testing/model/ModelTest.java" result="NOOP"/>
+        <file path="src/test/java/gov/nist/secauto/metaschema/databind/testing/model/ModelTestBase.java" result="NOOP"/>
+        <file path="src/test/java/gov/nist/secauto/metaschema/databind/testing/model/RootAssemblyWithFields.java" result="NOOP"/>
+        <file path="src/test/java/gov/nist/secauto/metaschema/databind/testing/model/RootAssemblyWithFlags.java" result="NOOP"/>
+        <file path="src/test/java/gov/nist/secauto/metaschema/databind/testing/model/TestModule.java" result="NOOP"/>
+    </files>
+</licensePluginReport>

@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang=""><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AbstractBindingModelContainerSupport.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Metaschema Java Data Binding and Code Generation</a> &gt; <a href="index.source.html" class="el_package">gov.nist.secauto.metaschema.databind.model.metaschema.impl</a> &gt; <span class="el_source">AbstractBindingModelContainerSupport.java</span></div><h1>AbstractBindingModelContainerSupport.java</h1><pre class="source lang-java linenums">/*
+ * SPDX-FileCopyrightText: none
+ * SPDX-License-Identifier: CC0-1.0
+ */
+
+package gov.nist.secauto.metaschema.databind.model.metaschema.impl;
+
+import gov.nist.secauto.metaschema.core.model.IAssemblyDefinition;
+import gov.nist.secauto.metaschema.core.model.IAssemblyInstanceAbsolute;
+import gov.nist.secauto.metaschema.core.model.IContainerModelAbsolute;
+import gov.nist.secauto.metaschema.core.model.IContainerModelSupport;
+import gov.nist.secauto.metaschema.core.model.IFieldDefinition;
+import gov.nist.secauto.metaschema.core.model.IFieldInstanceAbsolute;
+import gov.nist.secauto.metaschema.core.model.IModelInstanceAbsolute;
+import gov.nist.secauto.metaschema.core.model.IModule;
+import gov.nist.secauto.metaschema.core.model.INamedModelInstanceAbsolute;
+import gov.nist.secauto.metaschema.core.util.ObjectUtils;
+import gov.nist.secauto.metaschema.databind.model.IBoundInstanceModelGroupedAssembly;
+import gov.nist.secauto.metaschema.databind.model.binding.metaschema.AssemblyReference;
+import gov.nist.secauto.metaschema.databind.model.binding.metaschema.FieldReference;
+
+import java.util.List;
+import java.util.Map;
+
+import javax.xml.namespace.QName;
+
+import edu.umd.cs.findbugs.annotations.NonNull;
+
+<span class="fc" id="L29">public abstract class AbstractBindingModelContainerSupport</span>
+    implements IContainerModelSupport&lt;
+        IModelInstanceAbsolute,
+        INamedModelInstanceAbsolute,
+        IFieldInstanceAbsolute,
+        IAssemblyInstanceAbsolute&gt; {
+
+  protected static void addInstance(
+      @NonNull IAssemblyInstanceAbsolute assembly,
+      @NonNull List&lt;IModelInstanceAbsolute&gt; modelInstances,
+      @NonNull Map&lt;QName, INamedModelInstanceAbsolute&gt; namedModelInstances,
+      @NonNull Map&lt;QName, IAssemblyInstanceAbsolute&gt; assemblyInstances) {
+<span class="fc" id="L41">    QName effectiveName = assembly.getXmlQName();</span>
+<span class="fc" id="L42">    modelInstances.add(assembly);</span>
+<span class="fc" id="L43">    namedModelInstances.put(effectiveName, assembly);</span>
+<span class="fc" id="L44">    assemblyInstances.put(effectiveName, assembly);</span>
+<span class="fc" id="L45">  }</span>
+
+  protected static void addInstance(
+      @NonNull IFieldInstanceAbsolute field,
+      @NonNull List&lt;IModelInstanceAbsolute&gt; modelInstances,
+      @NonNull Map&lt;QName, INamedModelInstanceAbsolute&gt; namedModelInstances,
+      @NonNull Map&lt;QName, IFieldInstanceAbsolute&gt; fieldInstances) {
+<span class="fc" id="L52">    QName effectiveName = field.getXmlQName();</span>
+<span class="fc" id="L53">    modelInstances.add(field);</span>
+<span class="fc" id="L54">    namedModelInstances.put(effectiveName, field);</span>
+<span class="fc" id="L55">    fieldInstances.put(effectiveName, field);</span>
+<span class="fc" id="L56">  }</span>
+
+  @NonNull
+  protected static IAssemblyInstanceAbsolute newInstance(
+      @NonNull AssemblyReference obj,
+      @NonNull IBoundInstanceModelGroupedAssembly objInstance,
+      int position,
+      @NonNull IContainerModelAbsolute parent) {
+<span class="fc" id="L64">    IAssemblyDefinition owningDefinition = parent.getOwningDefinition();</span>
+<span class="fc" id="L65">    IModule module = owningDefinition.getContainingModule();</span>
+
+<span class="fc" id="L67">    String name = ObjectUtils.requireNonNull(obj.getRef());</span>
+<span class="fc" id="L68">    IAssemblyDefinition definition = module.getScopedAssemblyDefinitionByName(</span>
+<span class="fc" id="L69">        module.toModelQName(name));</span>
+
+<span class="pc bpc" id="L71" title="1 of 2 branches missed.">    if (definition == null) {</span>
+<span class="nc" id="L72">      throw new IllegalStateException(</span>
+<span class="nc" id="L73">          String.format(&quot;Unable to resolve assembly reference '%s' in definition '%s' in module '%s'&quot;,</span>
+              name,
+<span class="nc" id="L75">              owningDefinition.getName(),</span>
+<span class="nc" id="L76">              module.getShortName()));</span>
+    }
+<span class="fc" id="L78">    return new InstanceModelAssemblyReference(obj, objInstance, position, definition, parent);</span>
+  }
+
+  @NonNull
+  protected static IFieldInstanceAbsolute newInstance(
+      @NonNull FieldReference obj,
+      @NonNull IBoundInstanceModelGroupedAssembly objInstance,
+      int position,
+      @NonNull IContainerModelAbsolute parent) {
+<span class="fc" id="L87">    IAssemblyDefinition owningDefinition = parent.getOwningDefinition();</span>
+<span class="fc" id="L88">    IModule module = owningDefinition.getContainingModule();</span>
+
+<span class="fc" id="L90">    String name = ObjectUtils.requireNonNull(obj.getRef());</span>
+<span class="fc" id="L91">    IFieldDefinition definition = module.getScopedFieldDefinitionByName(</span>
+<span class="fc" id="L92">        module.toModelQName(name));</span>
+<span class="pc bpc" id="L93" title="1 of 2 branches missed.">    if (definition == null) {</span>
+<span class="nc" id="L94">      throw new IllegalStateException(</span>
+<span class="nc" id="L95">          String.format(&quot;Unable to resolve field reference '%s' in definition '%s' in module '%s'&quot;,</span>
+              name,
+<span class="nc" id="L97">              owningDefinition.getName(),</span>
+<span class="nc" id="L98">              module.getShortName()));</span>
+    }
+<span class="fc" id="L100">    return new InstanceModelFieldReference(obj, objInstance, position, definition, parent);</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

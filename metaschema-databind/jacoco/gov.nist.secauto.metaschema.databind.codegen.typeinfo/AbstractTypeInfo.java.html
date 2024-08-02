@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang=""><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AbstractTypeInfo.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Metaschema Java Data Binding and Code Generation</a> &gt; <a href="index.source.html" class="el_package">gov.nist.secauto.metaschema.databind.codegen.typeinfo</a> &gt; <span class="el_source">AbstractTypeInfo.java</span></div><h1>AbstractTypeInfo.java</h1><pre class="source lang-java linenums">/*
+ * SPDX-FileCopyrightText: none
+ * SPDX-License-Identifier: CC0-1.0
+ */
+
+package gov.nist.secauto.metaschema.databind.codegen.typeinfo;
+
+import gov.nist.secauto.metaschema.core.util.ObjectUtils;
+import gov.nist.secauto.metaschema.databind.codegen.ClassUtils;
+import gov.nist.secauto.metaschema.databind.codegen.typeinfo.def.IDefinitionTypeInfo;
+
+import edu.umd.cs.findbugs.annotations.NonNull;
+
+abstract class AbstractTypeInfo&lt;PARENT extends IDefinitionTypeInfo&gt; implements ITypeInfo {
+  @NonNull
+  private final PARENT parentDefinition;
+  private String propertyName;
+  private String fieldName;
+
+<span class="fc" id="L20">  protected AbstractTypeInfo(@NonNull PARENT parentDefinition) {</span>
+<span class="fc" id="L21">    this.parentDefinition = parentDefinition;</span>
+<span class="fc" id="L22">  }</span>
+
+  @Override
+  @NonNull
+  public PARENT getParentTypeInfo() {
+<span class="fc" id="L27">    return parentDefinition;</span>
+  }
+
+  /**
+   * The property name of the instance, which must be unique within the class.
+   *
+   * @return the name
+   */
+  @Override
+  @NonNull
+  public String getPropertyName() {
+<span class="fc" id="L38">    synchronized (this) {</span>
+<span class="fc bfc" id="L39" title="All 2 branches covered.">      if (this.propertyName == null) {</span>
+<span class="fc" id="L40">        String name = ClassUtils.toPropertyName(getBaseName());</span>
+<span class="fc" id="L41">        IDefinitionTypeInfo parent = getParentTypeInfo();</span>
+
+        // first check if a property already exists with the same name
+<span class="fc" id="L44">        this.propertyName = parent.getTypeResolver().getPropertyName(parent, name);</span>
+      }
+<span class="fc" id="L46">      return ObjectUtils.notNull(this.propertyName);</span>
+    }
+  }
+
+  /**
+   * Gets the name of the Java field for this property item.
+   *
+   * @return the Java field name
+   */
+  @Override
+  @NonNull
+  public final String getJavaFieldName() {
+<span class="fc" id="L58">    synchronized (this) {</span>
+<span class="pc bpc" id="L59" title="1 of 2 branches missed.">      if (this.fieldName == null) {</span>
+<span class="fc" id="L60">        this.fieldName = &quot;_&quot; + ClassUtils.toVariableName(getPropertyName());</span>
+      }
+<span class="fc" id="L62">      return ObjectUtils.notNull(this.fieldName);</span>
+    }
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

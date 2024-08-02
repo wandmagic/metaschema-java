@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang=""><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DefaultJsonSerializer.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Metaschema Java Data Binding and Code Generation</a> &gt; <a href="index.source.html" class="el_package">gov.nist.secauto.metaschema.databind.io.json</a> &gt; <span class="el_source">DefaultJsonSerializer.java</span></div><h1>DefaultJsonSerializer.java</h1><pre class="source lang-java linenums">/*
+ * SPDX-FileCopyrightText: none
+ * SPDX-License-Identifier: CC0-1.0
+ */
+
+package gov.nist.secauto.metaschema.databind.io.json;
+
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
+
+import gov.nist.secauto.metaschema.core.configuration.IMutableConfiguration;
+import gov.nist.secauto.metaschema.core.model.IBoundObject;
+import gov.nist.secauto.metaschema.core.util.ObjectUtils;
+import gov.nist.secauto.metaschema.databind.io.AbstractSerializer;
+import gov.nist.secauto.metaschema.databind.io.SerializationFeature;
+import gov.nist.secauto.metaschema.databind.model.IBoundDefinitionModelAssembly;
+
+import java.io.IOException;
+import java.io.Writer;
+
+import edu.umd.cs.findbugs.annotations.NonNull;
+
+<span class="nc" id="L24">public class DefaultJsonSerializer&lt;CLASS extends IBoundObject&gt;</span>
+    extends AbstractSerializer&lt;CLASS&gt; {
+  private JsonFactory jsonFactory;
+
+  /**
+   * Construct a new Module binding-based deserializer that reads JSON-based
+   * Module content.
+   *
+   * @param definition
+   *          the assembly class binding describing the Java objects this
+   *          deserializer parses data into
+   */
+  public DefaultJsonSerializer(@NonNull IBoundDefinitionModelAssembly definition) {
+<span class="nc" id="L37">    super(definition);</span>
+<span class="nc" id="L38">  }</span>
+
+  /**
+   * Constructs a new JSON factory.
+   * &lt;p&gt;
+   * Subclasses can override this method to create a JSON factory with a specific
+   * configuration.
+   *
+   * @return the factory
+   */
+  @NonNull
+  protected JsonFactory getJsonFactoryInstance() {
+<span class="nc" id="L50">    return JsonFactoryFactory.instance();</span>
+  }
+
+  @SuppressWarnings(&quot;PMD.NullAssignment&quot;)
+  @Override
+  protected void configurationChanged(IMutableConfiguration&lt;SerializationFeature&lt;?&gt;&gt; config) {
+<span class="nc" id="L56">    synchronized (this) {</span>
+<span class="nc" id="L57">      jsonFactory = null;</span>
+<span class="nc" id="L58">    }</span>
+<span class="nc" id="L59">  }</span>
+
+  @NonNull
+  private JsonFactory getJsonFactory() {
+<span class="nc" id="L63">    synchronized (this) {</span>
+<span class="nc bnc" id="L64" title="All 2 branches missed.">      if (jsonFactory == null) {</span>
+<span class="nc" id="L65">        jsonFactory = getJsonFactoryInstance();</span>
+      }
+<span class="nc bnc" id="L67" title="All 2 branches missed.">      assert jsonFactory != null;</span>
+<span class="nc" id="L68">      return jsonFactory;</span>
+    }
+  }
+
+  @SuppressWarnings(&quot;resource&quot;)
+  @NonNull
+  private JsonGenerator newJsonGenerator(@NonNull Writer writer) throws IOException {
+<span class="nc" id="L75">    JsonFactory factory = getJsonFactory();</span>
+<span class="nc" id="L76">    return ObjectUtils.notNull(factory.createGenerator(writer)</span>
+<span class="nc" id="L77">        .setPrettyPrinter(new DefaultPrettyPrinter()));</span>
+  }
+
+  @Override
+  public void serialize(IBoundObject data, Writer writer) throws IOException {
+<span class="nc" id="L82">    try (JsonGenerator generator = newJsonGenerator(writer)) {</span>
+<span class="nc" id="L83">      IBoundDefinitionModelAssembly definition = getDefinition();</span>
+
+<span class="nc" id="L85">      boolean serializeRoot = get(SerializationFeature.SERIALIZE_ROOT);</span>
+<span class="nc bnc" id="L86" title="All 2 branches missed.">      if (serializeRoot) {</span>
+        // first write the initial START_OBJECT
+<span class="nc" id="L88">        generator.writeStartObject();</span>
+
+<span class="nc" id="L90">        generator.writeFieldName(definition.getRootJsonName());</span>
+      }
+
+<span class="nc" id="L93">      MetaschemaJsonWriter jsonWriter = new MetaschemaJsonWriter(generator);</span>
+<span class="nc" id="L94">      jsonWriter.write(definition, data);</span>
+
+<span class="nc bnc" id="L96" title="All 2 branches missed.">      if (serializeRoot) {</span>
+<span class="nc" id="L97">        generator.writeEndObject();</span>
+      }
+    }
+<span class="nc" id="L100">  }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang=""><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ValidateModuleCommand.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Metaschema Command Line Tool</a> &gt; <a href="index.source.html" class="el_package">gov.nist.secauto.metaschema.cli.commands</a> &gt; <span class="el_source">ValidateModuleCommand.java</span></div><h1>ValidateModuleCommand.java</h1><pre class="source lang-java linenums">/*
+ * SPDX-FileCopyrightText: none
+ * SPDX-License-Identifier: CC0-1.0
+ */
+
+package gov.nist.secauto.metaschema.cli.commands;
+
+import gov.nist.secauto.metaschema.cli.processor.CLIProcessor.CallingContext;
+import gov.nist.secauto.metaschema.cli.processor.command.ICommandExecutor;
+import gov.nist.secauto.metaschema.core.configuration.DefaultConfiguration;
+import gov.nist.secauto.metaschema.core.configuration.IMutableConfiguration;
+import gov.nist.secauto.metaschema.core.model.IModule;
+import gov.nist.secauto.metaschema.core.model.MetaschemaException;
+import gov.nist.secauto.metaschema.core.model.constraint.IConstraintSet;
+import gov.nist.secauto.metaschema.core.model.util.JsonUtil;
+import gov.nist.secauto.metaschema.core.model.util.XmlUtil;
+import gov.nist.secauto.metaschema.core.model.xml.ExternalConstraintsModulePostProcessor;
+import gov.nist.secauto.metaschema.core.model.xml.ModuleLoader;
+import gov.nist.secauto.metaschema.core.util.CollectionUtil;
+import gov.nist.secauto.metaschema.core.util.ObjectUtils;
+import gov.nist.secauto.metaschema.databind.DefaultBindingContext;
+import gov.nist.secauto.metaschema.databind.IBindingContext;
+import gov.nist.secauto.metaschema.databind.model.binding.metaschema.METASCHEMA;
+import gov.nist.secauto.metaschema.databind.model.binding.metaschema.MetaschemaModelModule;
+import gov.nist.secauto.metaschema.schemagen.ISchemaGenerator;
+import gov.nist.secauto.metaschema.schemagen.ISchemaGenerator.SchemaFormat;
+import gov.nist.secauto.metaschema.schemagen.SchemaGenerationFeature;
+
+import org.apache.commons.cli.CommandLine;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
+
+import javax.xml.transform.Source;
+
+import edu.umd.cs.findbugs.annotations.NonNull;
+
+<span class="fc" id="L48">public class ValidateModuleCommand</span>
+    extends AbstractValidateContentCommand {
+<span class="fc" id="L50">  private static final Logger LOGGER = LogManager.getLogger(ValidateModuleCommand.class);</span>
+  @NonNull
+  private static final String COMMAND = &quot;validate&quot;;
+
+  @Override
+  public String getName() {
+<span class="fc" id="L56">    return COMMAND;</span>
+  }
+
+  @Override
+  public String getDescription() {
+<span class="fc" id="L61">    return &quot;Validate that the specified Module is well-formed and valid to the Module model&quot;;</span>
+  }
+
+  @Override
+  public ICommandExecutor newExecutor(CallingContext callingContext, CommandLine commandLine) {
+<span class="fc" id="L66">    return new ValidateModuleCommandExecutor(callingContext, commandLine);</span>
+  }
+
+<span class="fc" id="L69">  private final class ValidateModuleCommandExecutor</span>
+      extends AbstractValidationCommandExecutor {
+    private Path tempDir;
+
+    private ValidateModuleCommandExecutor(
+        @NonNull CallingContext callingContext,
+<span class="fc" id="L75">        @NonNull CommandLine commandLine) {</span>
+<span class="fc" id="L76">      super(callingContext, commandLine);</span>
+<span class="fc" id="L77">    }</span>
+
+    private Path getTempDir() throws IOException {
+<span class="nc bnc" id="L80" title="All 2 branches missed.">      if (tempDir == null) {</span>
+<span class="nc" id="L81">        tempDir = Files.createTempDirectory(&quot;validation-&quot;);</span>
+<span class="nc" id="L82">        tempDir.toFile().deleteOnExit();</span>
+      }
+<span class="nc" id="L84">      return tempDir;</span>
+    }
+
+    @Override
+    protected IBindingContext getBindingContext(Set&lt;IConstraintSet&gt; constraintSets)
+        throws MetaschemaException, IOException {
+      IBindingContext retval;
+<span class="pc bpc" id="L91" title="1 of 2 branches missed.">      if (constraintSets.isEmpty()) {</span>
+<span class="fc" id="L92">        retval = IBindingContext.instance();</span>
+      } else {
+<span class="nc" id="L94">        ExternalConstraintsModulePostProcessor postProcessor</span>
+            = new ExternalConstraintsModulePostProcessor(constraintSets);
+<span class="nc" id="L96">        retval = new DefaultBindingContext(CollectionUtil.singletonList(postProcessor));</span>
+      }
+<span class="fc" id="L98">      retval.getBoundDefinitionForClass(METASCHEMA.class);</span>
+<span class="fc" id="L99">      return retval;</span>
+    }
+
+    @Override
+    public List&lt;Source&gt; getXmlSchemas(@NonNull URL targetResource) throws IOException {
+<span class="fc" id="L104">      List&lt;Source&gt; retval = new LinkedList&lt;&gt;();</span>
+<span class="fc" id="L105">      retval.add(XmlUtil.getStreamSource(</span>
+<span class="fc" id="L106">          ObjectUtils.requireNonNull(</span>
+<span class="fc" id="L107">              ModuleLoader.class.getResource(&quot;/schema/xml/metaschema.xsd&quot;),</span>
+              &quot;Unable to load '/schema/xml/metaschema.xsd' on the classpath&quot;)));
+<span class="fc" id="L109">      return CollectionUtil.unmodifiableList(retval);</span>
+    }
+
+    @Override
+    public JSONObject getJsonSchema(@NonNull JSONObject json) throws IOException {
+<span class="nc" id="L114">      IModule module = IBindingContext.instance().registerModule(MetaschemaModelModule.class);</span>
+
+<span class="nc" id="L116">      Path schemaFile = Files.createTempFile(getTempDir(), &quot;schema-&quot;, &quot;.json&quot;);</span>
+<span class="nc bnc" id="L117" title="All 2 branches missed.">      assert schemaFile != null;</span>
+<span class="nc" id="L118">      IMutableConfiguration&lt;SchemaGenerationFeature&lt;?&gt;&gt; configuration = new DefaultConfiguration&lt;&gt;();</span>
+<span class="nc" id="L119">      ISchemaGenerator.generateSchema(module, schemaFile, SchemaFormat.JSON, configuration);</span>
+<span class="nc" id="L120">      try (BufferedReader reader = ObjectUtils.notNull(Files.newBufferedReader(schemaFile, StandardCharsets.UTF_8))) {</span>
+<span class="nc" id="L121">        return JsonUtil.toJsonObject(reader);</span>
+      }
+    }
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang=""><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AbstractConvertSubcommand.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Metaschema Command Line Tool</a> &gt; <a href="index.source.html" class="el_package">gov.nist.secauto.metaschema.cli.commands</a> &gt; <span class="el_source">AbstractConvertSubcommand.java</span></div><h1>AbstractConvertSubcommand.java</h1><pre class="source lang-java linenums">/*
+ * SPDX-FileCopyrightText: none
+ * SPDX-License-Identifier: CC0-1.0
+ */
+
+package gov.nist.secauto.metaschema.cli.commands;
+
+import gov.nist.secauto.metaschema.cli.processor.CLIProcessor.CallingContext;
+import gov.nist.secauto.metaschema.cli.processor.ExitCode;
+import gov.nist.secauto.metaschema.cli.processor.ExitStatus;
+import gov.nist.secauto.metaschema.cli.processor.InvalidArgumentException;
+import gov.nist.secauto.metaschema.cli.processor.OptionUtils;
+import gov.nist.secauto.metaschema.cli.processor.command.AbstractCommandExecutor;
+import gov.nist.secauto.metaschema.cli.processor.command.AbstractTerminalCommand;
+import gov.nist.secauto.metaschema.cli.processor.command.DefaultExtraArgument;
+import gov.nist.secauto.metaschema.cli.processor.command.ExtraArgument;
+import gov.nist.secauto.metaschema.core.util.CustomCollectors;
+import gov.nist.secauto.metaschema.core.util.ObjectUtils;
+import gov.nist.secauto.metaschema.core.util.UriUtils;
+import gov.nist.secauto.metaschema.databind.IBindingContext;
+import gov.nist.secauto.metaschema.databind.io.Format;
+import gov.nist.secauto.metaschema.databind.io.IBoundLoader;
+
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Option;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
+import java.util.Collection;
+import java.util.List;
+import java.util.Locale;
+
+import edu.umd.cs.findbugs.annotations.NonNull;
+
+<span class="nc" id="L46">public abstract class AbstractConvertSubcommand</span>
+    extends AbstractTerminalCommand {
+<span class="nc" id="L48">  private static final Logger LOGGER = LogManager.getLogger(AbstractConvertSubcommand.class);</span>
+
+  @NonNull
+  private static final String COMMAND = &quot;convert&quot;;
+  @NonNull
+<span class="nc" id="L53">  private static final List&lt;ExtraArgument&gt; EXTRA_ARGUMENTS = ObjectUtils.notNull(List.of(</span>
+      new DefaultExtraArgument(&quot;source-file-or-URL&quot;, true),
+      new DefaultExtraArgument(&quot;destination-file&quot;, false)));
+
+  @NonNull
+<span class="nc" id="L58">  private static final Option OVERWRITE_OPTION = ObjectUtils.notNull(</span>
+<span class="nc" id="L59">      Option.builder()</span>
+<span class="nc" id="L60">          .longOpt(&quot;overwrite&quot;)</span>
+<span class="nc" id="L61">          .desc(&quot;overwrite the destination if it exists&quot;)</span>
+<span class="nc" id="L62">          .build());</span>
+  @NonNull
+<span class="nc" id="L64">  private static final Option TO_OPTION = ObjectUtils.notNull(</span>
+<span class="nc" id="L65">      Option.builder()</span>
+<span class="nc" id="L66">          .longOpt(&quot;to&quot;)</span>
+<span class="nc" id="L67">          .required()</span>
+<span class="nc" id="L68">          .hasArg().argName(&quot;FORMAT&quot;)</span>
+<span class="nc" id="L69">          .desc(&quot;convert to format: xml, json, or yaml&quot;)</span>
+<span class="nc" id="L70">          .build());</span>
+
+  @Override
+  public String getName() {
+<span class="nc" id="L74">    return COMMAND;</span>
+  }
+
+  @Override
+  public Collection&lt;? extends Option&gt; gatherOptions() {
+<span class="nc" id="L79">    return ObjectUtils.notNull(List.of(</span>
+        OVERWRITE_OPTION,
+        TO_OPTION));
+  }
+
+  @Override
+  public List&lt;ExtraArgument&gt; getExtraArguments() {
+<span class="nc" id="L86">    return EXTRA_ARGUMENTS;</span>
+  }
+
+  @SuppressWarnings(&quot;PMD.PreserveStackTrace&quot;) // intended
+  @Override
+  public void validateOptions(CallingContext callingContext, CommandLine cmdLine) throws InvalidArgumentException {
+
+    try {
+<span class="nc" id="L94">      String toFormatText = cmdLine.getOptionValue(TO_OPTION);</span>
+<span class="nc" id="L95">      Format.valueOf(toFormatText.toUpperCase(Locale.ROOT));</span>
+<span class="nc" id="L96">    } catch (IllegalArgumentException ex) {</span>
+<span class="nc" id="L97">      InvalidArgumentException newEx = new InvalidArgumentException(</span>
+<span class="nc" id="L98">          String.format(&quot;Invalid '%s' argument. The format must be one of: %s.&quot;,</span>
+<span class="nc" id="L99">              OptionUtils.toArgument(TO_OPTION),</span>
+<span class="nc" id="L100">              Format.names().stream()</span>
+<span class="nc" id="L101">                  .collect(CustomCollectors.joiningWithOxfordComma(&quot;and&quot;))));</span>
+<span class="nc" id="L102">      newEx.setOption(TO_OPTION);</span>
+<span class="nc" id="L103">      newEx.addSuppressed(ex);</span>
+<span class="nc" id="L104">      throw newEx;</span>
+<span class="nc" id="L105">    }</span>
+
+<span class="nc" id="L107">    List&lt;String&gt; extraArgs = cmdLine.getArgList();</span>
+<span class="nc bnc" id="L108" title="All 4 branches missed.">    if (extraArgs.isEmpty() || extraArgs.size() &gt; 2) {</span>
+<span class="nc" id="L109">      throw new InvalidArgumentException(&quot;Illegal number of arguments.&quot;);</span>
+    }
+<span class="nc" id="L111">  }</span>
+
+<span class="nc" id="L113">  protected abstract static class AbstractConversionCommandExecutor</span>
+      extends AbstractCommandExecutor {
+
+    public AbstractConversionCommandExecutor(
+        @NonNull CallingContext callingContext,
+        @NonNull CommandLine commandLine) {
+<span class="nc" id="L119">      super(callingContext, commandLine);</span>
+<span class="nc" id="L120">    }</span>
+
+    @NonNull
+    protected abstract IBindingContext getBindingContext();
+
+    @SuppressWarnings({
+        &quot;PMD.OnlyOneReturn&quot;, // readability
+        &quot;PMD.CyclomaticComplexity&quot;, &quot;PMD.CognitiveComplexity&quot; // reasonable
+    })
+    @Override
+    public ExitStatus execute() {
+<span class="nc" id="L131">      CommandLine cmdLine = getCommandLine();</span>
+
+<span class="nc" id="L133">      List&lt;String&gt; extraArgs = cmdLine.getArgList();</span>
+
+<span class="nc" id="L135">      Path destination = null;</span>
+<span class="nc bnc" id="L136" title="All 2 branches missed.">      if (extraArgs.size() &gt; 1) {</span>
+<span class="nc" id="L137">        destination = Paths.get(extraArgs.get(1)).toAbsolutePath();</span>
+      }
+
+<span class="nc bnc" id="L140" title="All 2 branches missed.">      if (destination != null) {</span>
+<span class="nc bnc" id="L141" title="All 2 branches missed.">        if (Files.exists(destination)) {</span>
+<span class="nc bnc" id="L142" title="All 2 branches missed.">          if (!cmdLine.hasOption(OVERWRITE_OPTION)) {</span>
+<span class="nc" id="L143">            return ExitCode.INVALID_ARGUMENTS.exitMessage(</span>
+<span class="nc" id="L144">                String.format(&quot;The provided destination '%s' already exists and the '%s' option was not provided.&quot;,</span>
+                    destination,
+<span class="nc" id="L146">                    OptionUtils.toArgument(OVERWRITE_OPTION)));</span>
+          }
+<span class="nc bnc" id="L148" title="All 2 branches missed.">          if (!Files.isWritable(destination)) {</span>
+<span class="nc" id="L149">            return ExitCode.IO_ERROR.exitMessage(</span>
+                &quot;The provided destination '&quot; + destination + &quot;' is not writable.&quot;);
+          }
+        } else {
+<span class="nc" id="L153">          Path parent = destination.getParent();</span>
+<span class="nc bnc" id="L154" title="All 2 branches missed.">          if (parent != null) {</span>
+            try {
+<span class="nc" id="L156">              Files.createDirectories(parent);</span>
+<span class="nc" id="L157">            } catch (IOException ex) {</span>
+<span class="nc" id="L158">              return ExitCode.INVALID_TARGET.exit().withThrowable(ex); // NOPMD readability</span>
+<span class="nc" id="L159">            }</span>
+          }
+        }
+      }
+
+<span class="nc" id="L164">      String sourceName = extraArgs.get(0);</span>
+      URI source;
+<span class="nc" id="L166">      URI cwd = Paths.get(&quot;&quot;).toAbsolutePath().toUri();</span>
+      try {
+<span class="nc" id="L168">        source = UriUtils.toUri(sourceName, cwd);</span>
+<span class="nc" id="L169">      } catch (URISyntaxException ex) {</span>
+<span class="nc" id="L170">        return ExitCode.IO_ERROR.exitMessage(&quot;Cannot load source '%s' as it is not a valid file or URI.&quot;)</span>
+<span class="nc" id="L171">            .withThrowable(ex);</span>
+<span class="nc" id="L172">      }</span>
+<span class="nc bnc" id="L173" title="All 2 branches missed.">      assert source != null;</span>
+
+<span class="nc" id="L175">      String toFormatText = cmdLine.getOptionValue(TO_OPTION);</span>
+<span class="nc" id="L176">      Format toFormat = Format.valueOf(toFormatText.toUpperCase(Locale.ROOT));</span>
+
+<span class="nc" id="L178">      IBindingContext bindingContext = getBindingContext();</span>
+      try {
+<span class="nc" id="L180">        IBoundLoader loader = bindingContext.newBoundLoader();</span>
+<span class="nc bnc" id="L181" title="All 2 branches missed.">        if (LOGGER.isInfoEnabled()) {</span>
+<span class="nc" id="L182">          LOGGER.info(&quot;Converting '{}'.&quot;, source);</span>
+        }
+
+<span class="nc bnc" id="L185" title="All 2 branches missed.">        if (destination == null) {</span>
+          // write to STDOUT
+<span class="nc" id="L187">          OutputStreamWriter writer = new OutputStreamWriter(System.out, StandardCharsets.UTF_8);</span>
+<span class="nc" id="L188">          handleConversion(source, toFormat, writer, loader);</span>
+<span class="nc" id="L189">        } else {</span>
+<span class="nc" id="L190">          try (Writer writer = Files.newBufferedWriter(</span>
+              destination,
+              StandardCharsets.UTF_8,
+              StandardOpenOption.CREATE,
+              StandardOpenOption.WRITE,
+              StandardOpenOption.TRUNCATE_EXISTING)) {
+<span class="nc bnc" id="L196" title="All 2 branches missed.">            assert writer != null;</span>
+<span class="nc" id="L197">            handleConversion(source, toFormat, writer, loader);</span>
+          }
+        }
+<span class="nc" id="L200">      } catch (IOException | IllegalArgumentException ex) {</span>
+<span class="nc" id="L201">        return ExitCode.PROCESSING_ERROR.exit().withThrowable(ex); // NOPMD readability</span>
+<span class="nc" id="L202">      }</span>
+<span class="nc bnc" id="L203" title="All 4 branches missed.">      if (destination != null &amp;&amp; LOGGER.isInfoEnabled()) {</span>
+<span class="nc" id="L204">        LOGGER.info(&quot;Generated {} file: {}&quot;, toFormat.toString(), destination);</span>
+      }
+<span class="nc" id="L206">      return ExitCode.OK.exit();</span>
+    }
+
+    protected abstract void handleConversion(
+        @NonNull URI source,
+        @NonNull Format toFormat,
+        @NonNull Writer writer,
+        @NonNull IBoundLoader loader) throws FileNotFoundException, IOException;
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

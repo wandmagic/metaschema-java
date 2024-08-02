@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang=""><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AssemblyModelContainerSupport.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Metaschema Java Data Binding and Code Generation</a> &gt; <a href="index.source.html" class="el_package">gov.nist.secauto.metaschema.databind.model.metaschema.impl</a> &gt; <span class="el_source">AssemblyModelContainerSupport.java</span></div><h1>AssemblyModelContainerSupport.java</h1><pre class="source lang-java linenums">/*
+ * SPDX-FileCopyrightText: none
+ * SPDX-License-Identifier: CC0-1.0
+ */
+
+package gov.nist.secauto.metaschema.databind.model.metaschema.impl;
+
+import gov.nist.secauto.metaschema.core.metapath.item.node.INodeItemFactory;
+import gov.nist.secauto.metaschema.core.model.IAssemblyInstanceAbsolute;
+import gov.nist.secauto.metaschema.core.model.IChoiceGroupInstance;
+import gov.nist.secauto.metaschema.core.model.IChoiceInstance;
+import gov.nist.secauto.metaschema.core.model.IContainerModelAssemblySupport;
+import gov.nist.secauto.metaschema.core.model.IFieldInstanceAbsolute;
+import gov.nist.secauto.metaschema.core.model.IModelInstanceAbsolute;
+import gov.nist.secauto.metaschema.core.model.INamedModelInstanceAbsolute;
+import gov.nist.secauto.metaschema.core.util.CollectionUtil;
+import gov.nist.secauto.metaschema.core.util.ObjectUtils;
+import gov.nist.secauto.metaschema.databind.model.IBoundInstanceModelAssembly;
+import gov.nist.secauto.metaschema.databind.model.IBoundInstanceModelChoiceGroup;
+import gov.nist.secauto.metaschema.databind.model.IBoundInstanceModelGroupedAssembly;
+import gov.nist.secauto.metaschema.databind.model.binding.metaschema.AssemblyModel;
+import gov.nist.secauto.metaschema.databind.model.binding.metaschema.AssemblyModel.Choice;
+import gov.nist.secauto.metaschema.databind.model.binding.metaschema.AssemblyModel.ChoiceGroup;
+import gov.nist.secauto.metaschema.databind.model.binding.metaschema.AssemblyReference;
+import gov.nist.secauto.metaschema.databind.model.binding.metaschema.FieldReference;
+import gov.nist.secauto.metaschema.databind.model.binding.metaschema.InlineDefineAssembly;
+import gov.nist.secauto.metaschema.databind.model.binding.metaschema.InlineDefineField;
+import gov.nist.secauto.metaschema.databind.model.metaschema.IBindingDefinitionModelAssembly;
+
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+
+import javax.xml.namespace.QName;
+
+import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.Nullable;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
+class AssemblyModelContainerSupport
+    extends AbstractBindingModelContainerSupport
+    implements IContainerModelAssemblySupport&lt;
+        IModelInstanceAbsolute,
+        INamedModelInstanceAbsolute,
+        IFieldInstanceAbsolute,
+        IAssemblyInstanceAbsolute,
+        IChoiceInstance,
+        IChoiceGroupInstance&gt; {
+  @NonNull
+  private final List&lt;IModelInstanceAbsolute&gt; modelInstances;
+  @NonNull
+  private final Map&lt;QName, INamedModelInstanceAbsolute&gt; namedModelInstances;
+  @NonNull
+  private final Map&lt;QName, IFieldInstanceAbsolute&gt; fieldInstances;
+  @NonNull
+  private final Map&lt;QName, IAssemblyInstanceAbsolute&gt; assemblyInstances;
+  @NonNull
+  private final List&lt;IChoiceInstance&gt; choiceInstances;
+  @NonNull
+  private final Map&lt;String, IChoiceGroupInstance&gt; choiceGroupInstances;
+
+  @SuppressWarnings(&quot;PMD.ShortMethodName&quot;)
+  @SuppressFBWarnings(value = &quot;CT_CONSTRUCTOR_THROW&quot;, justification = &quot;Use of final fields&quot;)
+  public static IContainerModelAssemblySupport&lt;
+      IModelInstanceAbsolute,
+      INamedModelInstanceAbsolute,
+      IFieldInstanceAbsolute,
+      IAssemblyInstanceAbsolute,
+      IChoiceInstance,
+      IChoiceGroupInstance&gt; of(
+          @Nullable AssemblyModel binding,
+          @NonNull IBoundInstanceModelAssembly bindingInstance,
+          @NonNull IBindingDefinitionModelAssembly parent,
+          @NonNull INodeItemFactory nodeItemFactory) {
+    List&lt;Object&gt; instances;
+<span class="pc bpc" id="L77" title="1 of 6 branches missed.">    return binding == null || (instances = binding.getInstances()) == null || instances.isEmpty()</span>
+<span class="fc" id="L78">        ? IContainerModelAssemblySupport.empty()</span>
+<span class="fc" id="L79">        : new AssemblyModelContainerSupport(</span>
+            binding,
+            bindingInstance,
+            parent,
+            nodeItemFactory);
+  }
+
+  /**
+   * Construct a new assembly model container.
+   *
+   * @param model
+   *          the assembly model object bound to a Java class
+   * @param modelInstance
+   *          the Metaschema module instance for the bound model object
+   * @param parent
+   *          the assembly definition containing this container
+   * @param nodeItemFactory
+   *          the node item factory used to generate child nodes
+   */
+  @SuppressWarnings({ &quot;PMD.AvoidInstantiatingObjectsInLoops&quot;, &quot;PMD.UseConcurrentHashMap&quot;, &quot;PMD.PrematureDeclaration&quot; })
+  @SuppressFBWarnings(value = &quot;CT_CONSTRUCTOR_THROW&quot;, justification = &quot;Use of final fields&quot;)
+  protected AssemblyModelContainerSupport(
+      @NonNull AssemblyModel model,
+      @NonNull IBoundInstanceModelAssembly modelInstance,
+      @NonNull IBindingDefinitionModelAssembly parent,
+<span class="fc" id="L104">      @NonNull INodeItemFactory nodeItemFactory) {</span>
+
+    // create temporary collections to store the child binding objects
+<span class="fc" id="L107">    final List&lt;IModelInstanceAbsolute&gt; modelInstances = new LinkedList&lt;&gt;();</span>
+<span class="fc" id="L108">    final Map&lt;QName, INamedModelInstanceAbsolute&gt; namedModelInstances = new LinkedHashMap&lt;&gt;();</span>
+<span class="fc" id="L109">    final Map&lt;QName, IFieldInstanceAbsolute&gt; fieldInstances = new LinkedHashMap&lt;&gt;();</span>
+<span class="fc" id="L110">    final Map&lt;QName, IAssemblyInstanceAbsolute&gt; assemblyInstances = new LinkedHashMap&lt;&gt;();</span>
+<span class="fc" id="L111">    final List&lt;IChoiceInstance&gt; choiceInstances = new LinkedList&lt;&gt;();</span>
+<span class="fc" id="L112">    final Map&lt;String, IChoiceGroupInstance&gt; choiceGroupInstances = new LinkedHashMap&lt;&gt;();</span>
+
+    // create counters to track child positions
+<span class="fc" id="L115">    int assemblyReferencePosition = 0;</span>
+<span class="fc" id="L116">    int assemblyInlineDefinitionPosition = 0;</span>
+<span class="fc" id="L117">    int fieldReferencePosition = 0;</span>
+<span class="fc" id="L118">    int fieldInlineDefinitionPosition = 0;</span>
+<span class="fc" id="L119">    int choicePosition = 0;</span>
+<span class="fc" id="L120">    int choiceGroupPosition = 0;</span>
+
+    // TODO: make &quot;instances&quot; a constant
+<span class="fc" id="L123">    IBoundInstanceModelChoiceGroup instance = ObjectUtils.requireNonNull(</span>
+<span class="fc" id="L124">        modelInstance.getDefinition().getChoiceGroupInstanceByName(&quot;instances&quot;));</span>
+<span class="fc bfc" id="L125" title="All 2 branches covered.">    for (Object obj : ObjectUtils.notNull(model.getInstances())) {</span>
+<span class="fc" id="L126">      IBoundInstanceModelGroupedAssembly objInstance</span>
+<span class="fc" id="L127">          = (IBoundInstanceModelGroupedAssembly) instance.getItemInstance(obj);</span>
+
+<span class="fc bfc" id="L129" title="All 2 branches covered.">      if (obj instanceof AssemblyReference) {</span>
+<span class="fc" id="L130">        IAssemblyInstanceAbsolute assembly = newInstance(</span>
+            (AssemblyReference) obj,
+            objInstance,
+            assemblyReferencePosition++,
+            parent);
+<span class="fc" id="L135">        addInstance(assembly, modelInstances, namedModelInstances, assemblyInstances);</span>
+<span class="fc bfc" id="L136" title="All 2 branches covered.">      } else if (obj instanceof InlineDefineAssembly) {</span>
+<span class="fc" id="L137">        IAssemblyInstanceAbsolute assembly = new InstanceModelAssemblyInline(</span>
+            (InlineDefineAssembly) obj,
+            objInstance,
+            assemblyInlineDefinitionPosition++,
+            parent,
+            nodeItemFactory);
+<span class="fc" id="L143">        addInstance(assembly, modelInstances, namedModelInstances, assemblyInstances);</span>
+<span class="fc bfc" id="L144" title="All 2 branches covered.">      } else if (obj instanceof FieldReference) {</span>
+<span class="fc" id="L145">        IFieldInstanceAbsolute field = newInstance(</span>
+            (FieldReference) obj,
+            objInstance,
+            fieldReferencePosition++,
+            parent);
+<span class="fc" id="L150">        addInstance(field, modelInstances, namedModelInstances, fieldInstances);</span>
+<span class="fc bfc" id="L151" title="All 2 branches covered.">      } else if (obj instanceof InlineDefineField) {</span>
+<span class="fc" id="L152">        IFieldInstanceAbsolute field = new InstanceModelFieldInline(</span>
+            (InlineDefineField) obj,
+            objInstance,
+            fieldInlineDefinitionPosition++,
+            parent);
+<span class="fc" id="L157">        addInstance(field, modelInstances, namedModelInstances, fieldInstances);</span>
+<span class="fc bfc" id="L158" title="All 2 branches covered.">      } else if (obj instanceof AssemblyModel.Choice) {</span>
+<span class="fc" id="L159">        IChoiceInstance choice = new InstanceModelChoice(</span>
+            (Choice) obj,
+            objInstance,
+            choicePosition++,
+            parent,
+            nodeItemFactory);
+<span class="fc" id="L165">        modelInstances.add(choice);</span>
+<span class="fc" id="L166">        choiceInstances.add(choice);</span>
+<span class="pc bpc" id="L167" title="1 of 2 branches missed.">      } else if (obj instanceof AssemblyModel.ChoiceGroup) {</span>
+<span class="fc" id="L168">        IChoiceGroupInstance choiceGroup = new InstanceModelChoiceGroup(</span>
+            (ChoiceGroup) obj,
+            objInstance,
+            choiceGroupPosition++,
+            parent,
+            nodeItemFactory);
+<span class="fc" id="L174">        modelInstances.add(choiceGroup);</span>
+<span class="fc" id="L175">        choiceGroupInstances.put(choiceGroup.getGroupAsName(), choiceGroup);</span>
+<span class="fc" id="L176">      } else {</span>
+<span class="nc" id="L177">        throw new UnsupportedOperationException(String.format(&quot;Unknown model instance class: %s&quot;, obj.getClass()));</span>
+      }
+<span class="fc" id="L179">    }</span>
+
+<span class="pc bpc" id="L181" title="1 of 2 branches missed.">    this.modelInstances = modelInstances.isEmpty()</span>
+<span class="nc" id="L182">        ? CollectionUtil.emptyList()</span>
+<span class="fc" id="L183">        : CollectionUtil.unmodifiableList(modelInstances);</span>
+<span class="fc bfc" id="L184" title="All 2 branches covered.">    this.namedModelInstances = namedModelInstances.isEmpty()</span>
+<span class="fc" id="L185">        ? CollectionUtil.emptyMap()</span>
+<span class="fc" id="L186">        : CollectionUtil.unmodifiableMap(namedModelInstances);</span>
+<span class="fc bfc" id="L187" title="All 2 branches covered.">    this.fieldInstances = fieldInstances.isEmpty()</span>
+<span class="fc" id="L188">        ? CollectionUtil.emptyMap()</span>
+<span class="fc" id="L189">        : CollectionUtil.unmodifiableMap(fieldInstances);</span>
+<span class="fc bfc" id="L190" title="All 2 branches covered.">    this.assemblyInstances = assemblyInstances.isEmpty()</span>
+<span class="fc" id="L191">        ? CollectionUtil.emptyMap()</span>
+<span class="fc" id="L192">        : CollectionUtil.unmodifiableMap(assemblyInstances);</span>
+<span class="fc bfc" id="L193" title="All 2 branches covered.">    this.choiceInstances = choiceInstances.isEmpty()</span>
+<span class="fc" id="L194">        ? CollectionUtil.emptyList()</span>
+<span class="fc" id="L195">        : CollectionUtil.unmodifiableList(choiceInstances);</span>
+<span class="fc bfc" id="L196" title="All 2 branches covered.">    this.choiceGroupInstances = choiceGroupInstances.isEmpty()</span>
+<span class="fc" id="L197">        ? CollectionUtil.emptyMap()</span>
+<span class="fc" id="L198">        : CollectionUtil.unmodifiableMap(choiceGroupInstances);</span>
+<span class="fc" id="L199">  }</span>
+
+  @Override
+  public List&lt;IModelInstanceAbsolute&gt; getModelInstances() {
+<span class="fc" id="L203">    return modelInstances;</span>
+  }
+
+  @Override
+  public Map&lt;QName, INamedModelInstanceAbsolute&gt; getNamedModelInstanceMap() {
+<span class="nc" id="L208">    return namedModelInstances;</span>
+  }
+
+  @Override
+  public Map&lt;QName, IFieldInstanceAbsolute&gt; getFieldInstanceMap() {
+<span class="nc" id="L213">    return fieldInstances;</span>
+  }
+
+  @Override
+  public Map&lt;QName, IAssemblyInstanceAbsolute&gt; getAssemblyInstanceMap() {
+<span class="nc" id="L218">    return assemblyInstances;</span>
+  }
+
+  @Override
+  public List&lt;IChoiceInstance&gt; getChoiceInstances() {
+<span class="nc" id="L223">    return choiceInstances;</span>
+  }
+
+  @Override
+  public Map&lt;String, IChoiceGroupInstance&gt; getChoiceGroupInstanceMap() {
+<span class="nc" id="L228">    return choiceGroupInstances;</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang=""><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Flag.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Metaschema Core API</a> &gt; <a href="index.source.html" class="el_package">gov.nist.secauto.metaschema.core.metapath.cst.path</a> &gt; <span class="el_source">Flag.java</span></div><h1>Flag.java</h1><pre class="source lang-java linenums">/*
+ * SPDX-FileCopyrightText: none
+ * SPDX-License-Identifier: CC0-1.0
+ */
+
+package gov.nist.secauto.metaschema.core.metapath.cst.path;
+
+import gov.nist.secauto.metaschema.core.metapath.DynamicContext;
+import gov.nist.secauto.metaschema.core.metapath.ISequence;
+import gov.nist.secauto.metaschema.core.metapath.cst.AbstractNamedInstanceExpression;
+import gov.nist.secauto.metaschema.core.metapath.cst.IExpression;
+import gov.nist.secauto.metaschema.core.metapath.cst.IExpressionVisitor;
+import gov.nist.secauto.metaschema.core.metapath.item.ItemUtils;
+import gov.nist.secauto.metaschema.core.metapath.item.node.IFlagNodeItem;
+import gov.nist.secauto.metaschema.core.metapath.item.node.INodeItem;
+import gov.nist.secauto.metaschema.core.util.ObjectUtils;
+
+import java.util.stream.Stream;
+
+import javax.xml.namespace.QName;
+
+import edu.umd.cs.findbugs.annotations.NonNull;
+
+<span class="fc" id="L24">public class Flag // NOPMD - intentional name</span>
+    extends AbstractNamedInstanceExpression&lt;IFlagNodeItem&gt; {
+
+  /**
+   * Construct a new expression that finds any child {@link IFlagNodeItem} that
+   * matches the provided {@code test}.
+   *
+   * @param test
+   *          the test to use to match
+   */
+  public Flag(@NonNull IExpression test) {
+<span class="fc" id="L35">    super(test);</span>
+<span class="fc" id="L36">  }</span>
+
+  @Override
+  public Class&lt;IFlagNodeItem&gt; getBaseResultType() {
+<span class="fc" id="L40">    return IFlagNodeItem.class;</span>
+  }
+
+  @Override
+  public &lt;RESULT, CONTEXT&gt; RESULT accept(IExpressionVisitor&lt;RESULT, CONTEXT&gt; visitor, CONTEXT context) {
+<span class="nc" id="L45">    return visitor.visitFlag(this, context);</span>
+  }
+
+  @Override
+  public ISequence&lt;? extends IFlagNodeItem&gt; accept(
+      DynamicContext dynamicContext,
+      ISequence&lt;?&gt; focus) {
+<span class="fc" id="L52">    return ISequence.of(ObjectUtils.notNull(focus.stream()</span>
+<span class="fc" id="L53">        .map(ItemUtils::checkItemIsNodeItemForStep)</span>
+<span class="fc" id="L54">        .flatMap(item -&gt; {</span>
+<span class="pc bpc" id="L55" title="1 of 2 branches missed.">          assert item != null;</span>
+<span class="fc" id="L56">          return match(item);</span>
+        })));
+  }
+
+  /**
+   * Get a stream of matching child node items for the provided {@code context}.
+   *
+   * @param focusedItem
+   *          the node item to match child items of
+   * @return the stream of matching node items
+   */
+  @SuppressWarnings(&quot;null&quot;)
+  @NonNull
+  protected Stream&lt;? extends IFlagNodeItem&gt; match(@NonNull INodeItem focusedItem) {
+    Stream&lt;? extends IFlagNodeItem&gt; retval;
+<span class="pc bpc" id="L71" title="1 of 2 branches missed.">    if (getTest() instanceof NameTest) {</span>
+<span class="fc" id="L72">      QName name = ((NameTest) getTest()).getName();</span>
+
+<span class="fc" id="L74">      IFlagNodeItem item = focusedItem.getFlagByName(name);</span>
+<span class="fc bfc" id="L75" title="All 2 branches covered.">      retval = item == null ? Stream.empty() : Stream.of(item);</span>
+<span class="fc" id="L76">    } else {</span>
+      // wildcard
+<span class="nc" id="L78">      retval = focusedItem.flags();</span>
+    }
+<span class="fc" id="L80">    return retval;</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

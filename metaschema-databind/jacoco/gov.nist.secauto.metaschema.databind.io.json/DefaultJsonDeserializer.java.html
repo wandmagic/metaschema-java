@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang=""><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DefaultJsonDeserializer.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Metaschema Java Data Binding and Code Generation</a> &gt; <a href="index.source.html" class="el_package">gov.nist.secauto.metaschema.databind.io.json</a> &gt; <span class="el_source">DefaultJsonDeserializer.java</span></div><h1>DefaultJsonDeserializer.java</h1><pre class="source lang-java linenums">/*
+ * SPDX-FileCopyrightText: none
+ * SPDX-License-Identifier: CC0-1.0
+ */
+
+package gov.nist.secauto.metaschema.databind.io.json;
+
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonParser;
+
+import gov.nist.secauto.metaschema.core.configuration.IConfiguration;
+import gov.nist.secauto.metaschema.core.metapath.item.node.INodeItem;
+import gov.nist.secauto.metaschema.core.metapath.item.node.INodeItemFactory;
+import gov.nist.secauto.metaschema.core.model.IBoundObject;
+import gov.nist.secauto.metaschema.core.util.ObjectUtils;
+import gov.nist.secauto.metaschema.databind.io.AbstractDeserializer;
+import gov.nist.secauto.metaschema.databind.io.DeserializationFeature;
+import gov.nist.secauto.metaschema.databind.model.IBoundDefinitionModelAssembly;
+
+import java.io.IOException;
+import java.io.Reader;
+import java.net.URI;
+
+import edu.umd.cs.findbugs.annotations.NonNull;
+
+<span class="fc" id="L26">public class DefaultJsonDeserializer&lt;CLASS extends IBoundObject&gt;</span>
+    extends AbstractDeserializer&lt;CLASS&gt; {
+  private JsonFactory jsonFactory;
+
+  /**
+   * Construct a new JSON deserializer that will parse the bound class identified
+   * by the {@code classBinding}.
+   *
+   * @param definition
+   *          the bound class information for the Java type this deserializer is
+   *          operating on
+   */
+  public DefaultJsonDeserializer(@NonNull IBoundDefinitionModelAssembly definition) {
+<span class="fc" id="L39">    super(definition);</span>
+<span class="fc" id="L40">  }</span>
+
+  /**
+   * Get a JSON factory instance.
+   * &lt;p&gt;
+   * This method can be used by sub-classes to create a customized factory
+   * instance.
+   *
+   * @return the factory
+   */
+  @NonNull
+  protected JsonFactory newJsonFactoryInstance() {
+<span class="fc" id="L52">    return JsonFactoryFactory.instance();</span>
+  }
+
+  /**
+   * Get the parser factory associated with this deserializer.
+   *
+   * @return the factory instance
+   */
+  @NonNull
+  protected JsonFactory getJsonFactory() {
+<span class="fc" id="L62">    synchronized (this) {</span>
+<span class="pc bpc" id="L63" title="1 of 2 branches missed.">      if (jsonFactory == null) {</span>
+<span class="fc" id="L64">        jsonFactory = newJsonFactoryInstance();</span>
+      }
+<span class="pc bpc" id="L66" title="1 of 2 branches missed.">      assert jsonFactory != null;</span>
+<span class="fc" id="L67">      return jsonFactory;</span>
+    }
+  }
+
+  /**
+   * Using the managed JSON factory, create a new JSON parser instance using the
+   * provided reader.
+   *
+   * @param reader
+   *          the reader for the parser to read data from
+   * @return the new parser
+   * @throws IOException
+   *           if an error occurred while creating the parser
+   */
+  @SuppressWarnings(&quot;resource&quot;) // reader resource not owned
+  @NonNull
+  protected final JsonParser newJsonParser(@NonNull Reader reader) throws IOException {
+<span class="fc" id="L84">    return ObjectUtils.notNull(getJsonFactory().createParser(reader));</span>
+  }
+
+  @Override
+  protected INodeItem deserializeToNodeItemInternal(@NonNull Reader reader, @NonNull URI documentUri)
+      throws IOException {
+    INodeItem retval;
+<span class="fc" id="L91">    try (JsonParser jsonParser = newJsonParser(reader)) {</span>
+<span class="fc" id="L92">      MetaschemaJsonReader parser = new MetaschemaJsonReader(jsonParser);</span>
+<span class="fc" id="L93">      IBoundDefinitionModelAssembly definition = getDefinition();</span>
+<span class="fc" id="L94">      IConfiguration&lt;DeserializationFeature&lt;?&gt;&gt; configuration = getConfiguration();</span>
+
+<span class="pc bpc" id="L96" title="1 of 2 branches missed.">      if (definition.isRoot()</span>
+<span class="pc bpc" id="L97" title="1 of 2 branches missed.">          &amp;&amp; configuration.isFeatureEnabled(DeserializationFeature.DESERIALIZE_JSON_ROOT_PROPERTY)) {</span>
+        // now parse the root property
+<span class="fc" id="L99">        CLASS value = ObjectUtils.requireNonNull(parser.readObjectRoot(definition, definition.getRootJsonName()));</span>
+
+<span class="fc" id="L101">        retval = INodeItemFactory.instance().newDocumentNodeItem(definition, documentUri, value);</span>
+<span class="fc" id="L102">      } else {</span>
+        // read the top-level definition
+<span class="nc" id="L104">        CLASS value = ObjectUtils.asType(parser.readObject(definition));</span>
+
+<span class="nc" id="L106">        retval = INodeItemFactory.instance().newAssemblyNodeItem(definition, documentUri, value);</span>
+      }
+<span class="fc" id="L108">      return retval;</span>
+    }
+  }
+
+  @Override
+  public CLASS deserializeToValueInternal(@NonNull Reader reader, @NonNull URI documentUri) throws IOException {
+<span class="fc" id="L114">    try (JsonParser jsonParser = newJsonParser(reader)) {</span>
+<span class="fc" id="L115">      MetaschemaJsonReader parser = new MetaschemaJsonReader(jsonParser);</span>
+<span class="fc" id="L116">      IBoundDefinitionModelAssembly definition = getDefinition();</span>
+<span class="fc" id="L117">      IConfiguration&lt;DeserializationFeature&lt;?&gt;&gt; configuration = getConfiguration();</span>
+
+      CLASS retval;
+<span class="pc bpc" id="L120" title="1 of 2 branches missed.">      if (definition.isRoot()</span>
+<span class="pc bpc" id="L121" title="1 of 2 branches missed.">          &amp;&amp; configuration.isFeatureEnabled(DeserializationFeature.DESERIALIZE_JSON_ROOT_PROPERTY)) {</span>
+
+        // now parse the root property
+<span class="fc" id="L124">        retval = ObjectUtils.requireNonNull(parser.readObjectRoot(definition, definition.getRootJsonName()));</span>
+      } else {
+        // read the top-level definition
+<span class="nc" id="L127">        retval = ObjectUtils.asType(ObjectUtils.requireNonNull(</span>
+<span class="nc" id="L128">            parser.readObject(definition)));</span>
+      }
+<span class="fc" id="L130">      return retval;</span>
+    }
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

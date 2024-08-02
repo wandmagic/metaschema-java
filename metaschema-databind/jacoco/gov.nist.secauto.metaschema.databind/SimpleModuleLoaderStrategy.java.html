@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang=""><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SimpleModuleLoaderStrategy.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Metaschema Java Data Binding and Code Generation</a> &gt; <a href="index.source.html" class="el_package">gov.nist.secauto.metaschema.databind</a> &gt; <span class="el_source">SimpleModuleLoaderStrategy.java</span></div><h1>SimpleModuleLoaderStrategy.java</h1><pre class="source lang-java linenums">/*
+ * SPDX-FileCopyrightText: none
+ * SPDX-License-Identifier: CC0-1.0
+ */
+
+package gov.nist.secauto.metaschema.databind;
+
+import gov.nist.secauto.metaschema.core.model.IBoundObject;
+import gov.nist.secauto.metaschema.core.util.ObjectUtils;
+import gov.nist.secauto.metaschema.databind.model.AbstractBoundModule;
+import gov.nist.secauto.metaschema.databind.model.IBoundDefinitionModelComplex;
+import gov.nist.secauto.metaschema.databind.model.IBoundModule;
+import gov.nist.secauto.metaschema.databind.model.annotations.MetaschemaAssembly;
+import gov.nist.secauto.metaschema.databind.model.annotations.MetaschemaField;
+import gov.nist.secauto.metaschema.databind.model.impl.DefinitionAssembly;
+import gov.nist.secauto.metaschema.databind.model.impl.DefinitionField;
+
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.Nullable;
+
+public class SimpleModuleLoaderStrategy implements IBindingContext.IModuleLoaderStrategy {
+  @NonNull
+  private final IBindingContext bindingContext;
+<span class="fc" id="L27">  @NonNull</span>
+  private final Map&lt;Class&lt;?&gt;, IBoundModule&gt; modulesByClass = new ConcurrentHashMap&lt;&gt;();
+<span class="fc" id="L29">  @NonNull</span>
+  private final Map&lt;Class&lt;?&gt;, IBoundDefinitionModelComplex&gt; definitionsByClass = new ConcurrentHashMap&lt;&gt;();
+
+<span class="fc" id="L32">  protected SimpleModuleLoaderStrategy(@NonNull IBindingContext bindingContext) {</span>
+<span class="fc" id="L33">    this.bindingContext = bindingContext;</span>
+<span class="fc" id="L34">  }</span>
+
+  @NonNull
+  private IBindingContext getBindingContext() {
+<span class="fc" id="L38">    return bindingContext;</span>
+  }
+
+  @Override
+  public IBoundModule loadModule(@NonNull Class&lt;? extends IBoundModule&gt; clazz) {
+    IBoundModule retval;
+<span class="fc" id="L44">    synchronized (this) {</span>
+<span class="fc" id="L45">      retval = modulesByClass.get(clazz);</span>
+<span class="fc bfc" id="L46" title="All 2 branches covered.">      if (retval == null) {</span>
+<span class="fc" id="L47">        retval = AbstractBoundModule.createInstance(clazz, getBindingContext());</span>
+<span class="fc" id="L48">        modulesByClass.put(clazz, retval);</span>
+      }
+<span class="fc" id="L50">    }</span>
+<span class="fc" id="L51">    return ObjectUtils.notNull(retval);</span>
+  }
+
+  @Override
+  public IBoundDefinitionModelComplex getBoundDefinitionForClass(@NonNull Class&lt;? extends IBoundObject&gt; clazz) {
+    IBoundDefinitionModelComplex retval;
+<span class="fc" id="L57">    synchronized (this) {</span>
+<span class="fc" id="L58">      retval = definitionsByClass.get(clazz);</span>
+<span class="fc bfc" id="L59" title="All 2 branches covered.">      if (retval == null) {</span>
+<span class="fc" id="L60">        retval = newBoundDefinition(clazz);</span>
+<span class="pc bpc" id="L61" title="1 of 2 branches missed.">        if (retval != null) {</span>
+<span class="fc" id="L62">          definitionsByClass.put(clazz, retval);</span>
+        }
+      }
+<span class="fc" id="L65">    }</span>
+<span class="fc" id="L66">    return retval;</span>
+  }
+
+  @Nullable
+  private IBoundDefinitionModelComplex newBoundDefinition(@NonNull Class&lt;? extends IBoundObject&gt; clazz) {
+<span class="fc" id="L71">    IBoundDefinitionModelComplex retval = null;</span>
+<span class="fc bfc" id="L72" title="All 2 branches covered.">    if (clazz.isAnnotationPresent(MetaschemaAssembly.class)) {</span>
+<span class="fc" id="L73">      retval = DefinitionAssembly.newInstance(clazz, getBindingContext());</span>
+<span class="pc bpc" id="L74" title="1 of 2 branches missed.">    } else if (clazz.isAnnotationPresent(MetaschemaField.class)) {</span>
+<span class="fc" id="L75">      retval = DefinitionField.newInstance(clazz, getBindingContext());</span>
+    }
+<span class="fc" id="L77">    return retval;</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
