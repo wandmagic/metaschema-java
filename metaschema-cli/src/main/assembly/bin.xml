@@ -54,8 +54,8 @@
 <!-- 				</excludes> -->
 				<entities>
 					<entity>
-						<name>National Institute of Standards and Technology</name>
-						<regid>nist.gov</regid>
+						<name>Metaschema.dev</name>
+						<regid>metaschema.dev</regid>
 						<roles>
 							<role>tagCreator</role>
 							<role>softwareCreator</role>

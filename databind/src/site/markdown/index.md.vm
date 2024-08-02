@@ -49,7 +49,7 @@ serializer.serialize(object, new File("target/bound-class-simple.xml"));
 
 A serializer is associated with a specific format, which in this case is XML.
 
-For a more complex example, the [liboscal-java](https://github.com/usnistgov/liboscal-java/) library illustrates how to build a domain-specific API using some of the more advanced features of this library.
+For a more complex example, the [liboscal-java](https://github.com/metaschema-framework/liboscal-java/) library illustrates how to build a domain-specific API using some of the more advanced features of this library.
 
 ## Known Limitations
 
