@@ -6,7 +6,7 @@ on:
 name: Deploy Tagged Release
 env:
   MAVEN_VERSION: 3.9.8
-  JAVA_DISTRO: temurin
+  JAVA_DISTRO: 'temurin'
   JAVA_VERSION_FILE: .java-version
   GH_TOKEN: ${{ secrets.GH_TOKEN }}
 jobs:
@@ -27,7 +27,7 @@ jobs:
       uses: stCarolas/setup-maven@d6af6abeda15e98926a57b5aa970a96bb37f97d1
       with:
         maven-version: ${{ env.MAVEN_VERSION }}
-    - name: Set up JDK 11
+    - name: Set up JDK
       uses: actions/setup-java@99b8673ff64fbf99d8d325f52d9a5bdedb8483e9
       with:
         java-version-file: ${{ env.JAVA_VERSION_FILE }}
@@ -71,7 +71,7 @@ jobs:
       uses: stCarolas/setup-maven@d6af6abeda15e98926a57b5aa970a96bb37f97d1
       with:
         maven-version: ${{ env.MAVEN_VERSION }}
-    - name: Set up JDK 11
+    - name: Set up JDK
       uses: actions/setup-java@99b8673ff64fbf99d8d325f52d9a5bdedb8483e9
       with:
         java-version-file: ${{ env.JAVA_VERSION_FILE }}
