@@ -9,7 +9,7 @@
 
 	<groupId>dev.metaschema.java</groupId>
 	<artifactId>metaschema-framework</artifactId>
-	<version>1.0.0</version>
+	<version>1.0.1-SNAPSHOT</version>
 
 	<packaging>pom</packaging>
 	<name>Metaschema Framework Parent</name>
@@ -24,7 +24,7 @@
 		<url>https://github.com/metaschema-framework/metaschema-java/tree/main</url>
 		<connection>scm:git:git@github.com/metaschema-framework/metaschema-java.git</connection>
 		<developerConnection>scm:git:git@github.com:metaschema-framework/metaschema-java.git</developerConnection>
-	  <tag>v1.0.0</tag>
+	  <tag>HEAD</tag>
   </scm>
 	<distributionManagement>
 		<repository>
