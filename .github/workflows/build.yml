@@ -37,7 +37,7 @@ jobs:
     permissions:
       actions: read
       contents: read
-#      security-events: write
+      security-events: write
 
     steps:
     - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633
@@ -117,7 +117,7 @@ jobs:
       name: Link Checker
       uses: lycheeverse/lychee-action@2b973e86fc7b1f6b36a93795fe2c9c6ae1118621
       with:
-        args: --verbose --no-progress --accept 200,206,429 './target/staging/**/*.html'  --remap "https://github.com/metaschema-framework/oss-maven/tree/main/ file://${GITHUB_WORKSPACE}/" --remap "https://oss-maven.metaschema.dev/ file://${GITHUB_WORKSPACE}/target/staging/" --exclude-mail
+        args: --verbose --no-progress --accept 200,206,429 './target/staging/**/*.html'  --remap "https://github.com/metaschema-framework/metaschema-java/tree/main/ file://${GITHUB_WORKSPACE}/" --remap "https://metaschema-java.metaschema.dev/ file://${GITHUB_WORKSPACE}/target/staging/" --exclude-mail
         format: markdown
         output: html-link-report.md
         debug: true

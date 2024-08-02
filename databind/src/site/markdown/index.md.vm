@@ -1,8 +1,8 @@
 # ${project.name}
 
 This module provides:
-- A Java parser library, that can read and write XML, JSON, and YAML content that is valid to the associated Metaschema model from and to bound Java objects. This library is a dependency for Java code generated from a Metaschema using the Metaschema Java [code generator plugin](../metaschema-maven-plugin) or this library.
-- A Java code generator [Java API](apidocs/index.html) that generates Java classes for a Metaschema definition. These generated classes can be used to read and write XML, JSON, and YAML content that is valid to the associated Metaschema model using the parser in this library.
+- A Java parser library, that can read and write XML, JSON, and YAML content from and to bound Java objectst hat is valid to a model described by a Metaschema module. This library is a dependency for Java code generated from a Metaschema using the Metaschema Java [code generator plugin](../metaschema-maven-plugin) or this library.
+- A Java code generator [Java API](apidocs/index.html) that generates Java classes for a Metaschema module. These generated classes can be used to read and write XML, JSON, and YAML content that is valid to the associated Metaschema model using the parser in this library.
 
 This parser uses a set of annotations, that allow Metaschema constructs to be annotated on a Java class, to drive parsing behavior. These annotations provide the information needed by (META-B) to read and write XML, JSON, and YAML content that is valid to the associated Metaschema model.
 

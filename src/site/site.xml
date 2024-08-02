@@ -101,7 +101,7 @@
 			<item name="Fork on GitHub"
 				href="http://github.com/metaschema-framework/metaschema-java/" />
 			<item name="License"
-				href="http://github.com/metaschema-framework/metaschema-java/blob/master/LICENSE.md" />
+				href="http://github.com/metaschema-framework/metaschema-java/blob/main/LICENSE.md" />
 		</menu>
 		<menu name="Modules" ref="modules" />
 		<menu name="Maven Documentation" ref="reports" inherit="bottom" />
