@@ -13,49 +13,9 @@
 
 	<packaging>pom</packaging>
 	<name>Metaschema Framework Parent</name>
-	<description>A common build root for all Java projects related to the
-		Metaschema framework.</description>
+	<description>A common build root for all Java projects related to the Metaschema framework.</description>
 	<url>${site.url}</url>
-	<issueManagement>
-		<url>https://github.com/metaschema-framework/metaschema-java/issues</url>
-		<system>GitHub Issues</system>
-	</issueManagement>
-	<scm>
-		<url>https://github.com/metaschema-framework/metaschema-java/tree/main</url>
-		<connection>scm:git:git@github.com/metaschema-framework/metaschema-java.git</connection>
-		<developerConnection>scm:git:git@github.com:metaschema-framework/metaschema-java.git</developerConnection>
-	  <tag>HEAD</tag>
-  </scm>
-	<distributionManagement>
-		<repository>
-			<id>central</id>
-			<url>https://central.sonatype.com</url>
-		</repository>
-		<site>
-			<id>pages</id>
-			<url>${site.url}</url>
-		</site>
-	</distributionManagement>
-	<licenses>
-		<license>
-			<name>CC0-1.0</name>
-			<url>https://creativecommons.org/publicdomain/zero/1.0/</url>
-			<distribution>repo</distribution>
-		</license>
-	</licenses>
-	<developers>
-		<developer>
-			<id>david.waltermire@gsa.gov</id>
-			<name>David Waltermire</name>
-			<email>david.waltermire@gsa.gov</email>
-			<organization>General Services Administration</organization>
-			<roles>
-				<role>architect</role>
-				<role>developer</role>
-				<role>maintainer</role>
-			</roles>
-		</developer>
-	</developers>
+
 	<properties>
 		<!-- site configuration -->
 		<site.url>https://metaschema-java.metaschema.dev</site.url>
@@ -114,6 +74,7 @@
 		<dependency.plexus-utils.version>4.0.0</dependency.plexus-utils.version>
 		<dependency.plexus-build-api.version>1.2.0</dependency.plexus-build-api.version>
 		<dependency.pmd.version>7.4.0</dependency.pmd.version>
+		<dependency.reflowSkin.version>2.3.4</dependency.reflowSkin.version>
 		<dependency.saxon.version>12.4</dependency.saxon.version>
 		<dependency.spotbugs-annotations.version>4.8.3</dependency.spotbugs-annotations.version>
 		<dependency.stax2-api.version>4.2.2</dependency.stax2-api.version>
@@ -144,6 +105,48 @@
         -->
 		<argLine />
 	</properties>
+
+	<issueManagement>
+		<url>https://github.com/metaschema-framework/metaschema-java/issues</url>
+		<system>GitHub Issues</system>
+	</issueManagement>
+	<scm>
+		<url>${scm.url}/tree/main</url>
+		<connection>scm:git:git@github.com/metaschema-framework/metaschema-java.git</connection>
+		<developerConnection>scm:git:git@github.com:metaschema-framework/metaschema-java.git</developerConnection>
+	  <tag>HEAD</tag>
+  </scm>
+	<distributionManagement>
+		<repository>
+			<id>central</id>
+			<url>https://central.sonatype.com</url>
+		</repository>
+		<site>
+			<id>pages</id>
+			<url>${site.url}</url>
+		</site>
+	</distributionManagement>
+	<licenses>
+		<license>
+			<name>CC0-1.0</name>
+			<url>https://creativecommons.org/publicdomain/zero/1.0/</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+	<developers>
+		<developer>
+			<id>david.waltermire@gsa.gov</id>
+			<name>David Waltermire</name>
+			<email>david.waltermire@gsa.gov</email>
+			<organization>General Services Administration</organization>
+			<roles>
+				<role>architect</role>
+				<role>developer</role>
+				<role>maintainer</role>
+			</roles>
+		</developer>
+	</developers>
+
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
@@ -489,6 +492,11 @@
 			    <artifactId>org.eclipse.jdt.annotation</artifactId>
 			    <version>2.3.0</version>
 			</dependency>
+			<dependency>
+		        <groupId>org.apache.velocity.tools</groupId>
+		        <artifactId>velocity-tools-generic</artifactId>
+		        <version>3.1</version>
+			</dependency>
 		</dependencies>
 	</dependencyManagement>
 	<dependencies>
@@ -578,9 +586,41 @@
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-site-plugin</artifactId>
+					<version>${plugin.maven-site.version}</version>
 					<configuration>
-						<topSiteURL>${site.url}</topSiteURL>
+						<!-- deploy is handled by the scm plugin -->
+						<skipDeploy>true</skipDeploy>
+						<!-- <scmBranch>github-pages</scmBranch> -->
+						<relativizeSiteLinks>true</relativizeSiteLinks>
+						<generateReports>true</generateReports>
+						<!--
+						<templateDirectory>${project.basedir}/target/site-files/site</templateDirectory> -->
+						<!-- <template>site.vm</template> -->
 					</configuration>
+					<dependencies>
+						<dependency>
+							<groupId>io.github.devacfr.maven.skins</groupId>
+							<artifactId>reflow-velocity-tools</artifactId>
+							<version>${dependency.reflowSkin.version}</version>
+						</dependency>
+						<dependency>
+							<groupId>org.apache.maven.doxia</groupId>
+							<artifactId>doxia-core</artifactId>
+							<version>${dependency.doxia.version}</version>
+						</dependency>
+						<dependency>
+							<groupId>org.apache.maven.doxia</groupId>
+							<artifactId>doxia-module-markdown</artifactId>
+							<version>${dependency.doxia.version}</version>
+						</dependency>
+<!--
+						<dependency>
+							<groupId>org.apache.velocity</groupId>
+							<artifactId>velocity-engine-core</artifactId>
+							<version>${dependency.maven-velocity.version}</version>
+						</dependency>
+-->
+					</dependencies>
 				</plugin>
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
@@ -738,7 +778,80 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-site-plugin</artifactId>
+				<version>4.0.0-M9</version>
+				<configuration>
+				    <inputEncoding>${project.build.sourceEncoding}</inputEncoding>
+      				<outputEncoding>${project.build.sourceEncoding}</outputEncoding>
+      			</configuration>
+				<dependencies>
+					<dependency>
+						<groupId>io.github.devacfr.maven.skins</groupId>
+						<artifactId>reflow-velocity-tools</artifactId>
+						<version>2.4.0-beta2</version>
+					</dependency>
+					<dependency>
+						<groupId>org.apache.maven.doxia</groupId>
+						<artifactId>doxia-core</artifactId>
+						<version>2.0.0-M7</version>
+					</dependency>
+				    <dependency>
+						<groupId>org.apache.maven.doxia</groupId>
+						<artifactId>doxia-site-renderer</artifactId>
+						<version>2.0.0-M11</version>
+					</dependency>
+				    <dependency>
+						<groupId>org.apache.maven.doxia</groupId>
+						<artifactId>doxia-site-model</artifactId>
+						<version>2.0.0-M11</version>
+					</dependency>
+					<dependency>
+						<groupId>org.apache.maven.doxia</groupId>
+						<artifactId>doxia-module-markdown</artifactId>
+						<version>2.0.0-M7</version>
+					</dependency>
+<!--
+				<version>4.0.0-M9</version>
+				<configuration>
+				    <inputEncoding>${project.build.sourceEncoding}</inputEncoding>
+      				<outputEncoding>${project.build.sourceEncoding}</outputEncoding>
+      			</configuration>
+				<dependencies>
+					<dependency>
+						<groupId>io.github.devacfr.maven.skins</groupId>
+						<artifactId>reflow-velocity-tools</artifactId>
+						<version>2.3.4</version>
+					</dependency>
+					<dependency>
+						<groupId>org.apache.maven.doxia</groupId>
+						<artifactId>doxia-core</artifactId>
+						<version>2.0.0-M7</version>
+					</dependency>
+				    <dependency>
+						<groupId>org.apache.maven.doxia</groupId>
+						<artifactId>doxia-site-renderer</artifactId>
+						<version>2.0.0-M11</version>
+					</dependency>
+				    <dependency>
+						<groupId>org.apache.maven.doxia</groupId>
+						<artifactId>doxia-site-model</artifactId>
+						<version>2.0.0-M11</version>
+					</dependency>
+					<dependency>
+						<groupId>org.apache.maven.doxia</groupId>
+						<artifactId>doxia-module-markdown</artifactId>
+						<version>2.0.0-M7</version>
+					</dependency>
+-->
+<!--
+						<dependency>
+							<groupId>org.apache.velocity</groupId>
+							<artifactId>velocity-engine-core</artifactId>
+							<version>${dependency.maven-velocity.version}</version>
+						</dependency>
+-->
+				</dependencies>
 				<!--                        <inherited>false</inherited>-->
+<!--
 				<executions>
 					<execution>
 						<id>attach-descriptor</id>
@@ -748,6 +861,7 @@
 						</goals>
 					</execution>
 				</executions>
+-->
 			</plugin>
 		</plugins>
 	</build>
@@ -758,7 +872,7 @@
 				<artifactId>maven-jxr-plugin</artifactId>
 				<reportSets>
 					<reportSet>
-                      	<id>default</id>
+            <id>default</id>
 						<configuration>
 							<linkJavadoc>false</linkJavadoc>
 						</configuration>

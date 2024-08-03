@@ -1,24 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/DECORATION/1.7.0"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/DECORATION/1.7.0 http://maven.apache.org/xsd/decoration-1.7.0.xsd"
+<project xmlns="http://maven.apache.org/DECORATION/1.8.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/DECORATION/1.8.0 http://maven.apache.org/xsd/decoration-1.8.0.xsd"
 	name="Metaschema Java Tools">
+
+  <skin>
+    <groupId>io.github.devacfr.maven.skins</groupId>
+    <artifactId>reflow-maven-skin</artifactId>
+    <version>${this.dependency.reflowSkin.version}</version>
+  </skin>
+
+	<publishDate position="bottom" format="yyyy-MM-dd" />
+	<version position="left"/>
+
+  <edit>${this.scm.url}</edit>
+
 	<bannerLeft>
 		<name><![CDATA[
-      <span class="color-highlight">Metaschema Java Tools</span> Maven Project
-      ]]>
+      <span class="color-highlight">Metaschema Java Tools</span> Project
+    ]]>
 		</name>
 		<href>${this.site.url}</href>
 	</bannerLeft>
-
-	<publishDate position="bottom" format="yyyy-MM-dd" />
-	<version position="left" />
-
-	<skin>
-		<groupId>io.github.devacfr.maven.skins</groupId>
-		<artifactId>reflow-maven-skin</artifactId>
-		<version>2.3.0</version>
-	</skin>
 
 	<custom>
 		<reflowSkin>
@@ -27,44 +30,29 @@
 			<localResources>false</localResources>
 			<smoothScroll>true</smoothScroll>
 			<theme>default</theme>
+
 			<highlightJs>true</highlightJs>
 			<highlightJsTheme>${this.highlightJsTheme}</highlightJsTheme>
 			<highlightJsVersion>${this.highlightJsVersion}</highlightJsVersion>
+<!--
 			<bootstrapVersion>${this.bootstrapVersion}</bootstrapVersion>
 			<bootswatchVersion>${this.bootswatchVersion}</bootswatchVersion>
+-->
 			<brand>
 				<name>
             <![CDATA[
-            <span class="color-highlight">Metaschema Java Tools</span> Maven Project
+            <span class="color-highlight">Metaschema Java Tools</span> Project
             ]]>
 				</name>
 				<href>${this.site.url}</href>
 			</brand>
+
 			<slogan>Providing Java-based Metaschema tools</slogan>
-			<titleTemplate>%2$s | %1$s</titleTemplate>
-			<header type="banner" enabled="false" />
-			<!-- Use Table of Contents at the top of the page (max 6 elements) -->
-			<toc position="fixed" autoExpandable="true" expanded="false">sidebar</toc>
-			<!-- Include the documentation and tools in the top navigation (in addition 
-				to links) -->
-			<navbar filterMenu="Documentation|Maven Documentation|modules"
-				theme="light" background="light" cssClass="border-bottom"
-				center="true" alignMenu="left" />
-			<navside-menu theme="light" background="light" />
-			<footer theme="dark" background="dark" />
-			<!-- Split menus in the bottom navigation -->
-			<bottomNav>
-				<column>Main|Tools</column>
-				<column>Contribute</column>
-				<column>Documentation|reports</column>
-			</bottomNav>
-			<bottomDescription>
+      <bottomDescription quote="false">
         <![CDATA[
           <span class="color-highlight">Metaschema Java tools</span> provide a set of tools and libraries that allow developers to quickly develop applications based on Metaschema models.
         ]]>
 			</bottomDescription>
-			<markPageHeader>false</markPageHeader>
-			<skinAttribution>false</skinAttribution>
 			<pages>
 				<index project="metaschema-databind">
 					<shortTitle>Java Metaschema Binding Library</shortTitle>
@@ -73,6 +61,29 @@
 					</sections>
 				</index>
 			</pages>
+
+			<!-- Include the documentation and tools in the top navigation (in addition 
+				to links) -->
+			<navbar filterMenu="Documentation|Maven Documentation|modules"
+				theme="light" background="light" cssClass="border-bottom"
+				center="true" alignMenu="left" />
+			<!-- Split menus in the bottom navigation -->
+			<bottomNav>
+				<column>Main|Tools</column>
+				<column>Contribute</column>
+				<column>Documentation|reports</column>
+			</bottomNav>
+
+			<skinAttribution>false</skinAttribution>
+      <breadcrumbs>true</breadcrumbs>
+
+			<titleTemplate>%2$s | %1$s</titleTemplate>
+			<header enabled="true"/>
+ 			<!-- Use Table of Contents at the top of the page (max 6 elements) -->
+			<toc position="fixed" autoExpandable="true" expanded="false">sidebar</toc>
+      <navside-menu cssClass="navside-light bg-light"/>
+			<footer theme="dark" background="dark" />
+			<markPageHeader>false</markPageHeader>
 		</reflowSkin>
 	</custom>
 
@@ -80,8 +91,8 @@
 		<!-- Add a rel to Google profile for all pages -->
 		<head>
 		<![CDATA[
-            <link rel="stylesheet" href="$resourcePath/css/custom.css">
-        ]]>
+      <link rel="stylesheet" href="$resourcePath/css/custom.css">
+    ]]>
 		</head>
 
 		<links>
@@ -105,6 +116,7 @@
 		</menu>
 		<menu name="Modules" ref="modules" />
 		<menu name="Maven Documentation" ref="reports" inherit="bottom" />
-		<footer><![CDATA[]]></footer>
+    <!-- Disable copyright footer -->
+    <footer/>
 	</body>
 </project>
