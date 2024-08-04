@@ -10,8 +10,10 @@
     <artifactId>metaschema-core</artifactId>
 
     <name>Metaschema Core API</name>
+    <description>The core API for working with Metaschema-based models.</description>
 
     <url>${site.url}/${project.artifactId}/</url>
+
     <distributionManagement>
         <site>
             <id>pages</id>
@@ -19,7 +21,9 @@
         </site>
     </distributionManagement>
 
-    <description>The core API for working with Metaschema-based models.</description>
+	<scm>
+		<url>${scm.url}/tree/develop/core</url>
+	</scm>
 
     <dependencies>
         <dependency>
@@ -245,15 +249,15 @@
                 </executions>
             </plugin>
             <plugin>
-                <groupId>dev.metaschema</groupId>
-                <artifactId>oss-build-support</artifactId>
+                <groupId>org.apache.xmlbeans</groupId>
+                <artifactId>xmlbeans</artifactId>
                 <executions>
                     <execution>
                         <id>metaschema-beans</id>
                         <inherited>false</inherited>
                         <phase>generate-sources</phase>
                         <goals>
-                            <goal>generate-xmlbeans</goal>
+                            <goal>compile</goal>
                         </goals>
                         <configuration>
                             <xmlConfigs>

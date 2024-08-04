@@ -22,6 +22,10 @@
 		</site>
 	</distributionManagement>
 
+	<scm>
+		<url>${scm.url}/tree/develop/databind</url>
+	</scm>
+
 	<dependencies>
 		<dependency>
 			<groupId>${project.groupId}</groupId>
@@ -132,15 +136,15 @@
 		</pluginManagement>
 		<plugins>
 			<plugin>
-				<groupId>dev.metaschema</groupId>
-				<artifactId>oss-build-support</artifactId>
+				<groupId>org.apache.xmlbeans</groupId>
+				<artifactId>xmlbeans</artifactId>
 				<executions>
 					<execution>
 						<id>metaschema-codegen-beans</id>
 						<inherited>false</inherited>
 						<phase>generate-sources</phase>
 						<goals>
-							<goal>generate-xmlbeans</goal>
+							<goal>compile</goal>
 						</goals>
 						<configuration>
 							<xmlConfigs>

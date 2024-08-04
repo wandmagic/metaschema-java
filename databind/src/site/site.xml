@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/DECORATION/1.8.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/DECORATION/1.8.0 http://maven.apache.org/xsd/decoration-1.8.0.xsd"
+  name="Data Binding and Query">
+
+  <edit>${this.scm.url}</edit>
+
+  <body>
+    <head>
+      <![CDATA[
+      <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+      <meta http-equiv="Content-Type" content="text/html; charset=${outputEncoding}" />
+      <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.12.1/css/all.css" crossorigin="anonymous" />
+      <link rel="stylesheet" href="../css/custom.css" />
+      ]]>
+    </head>
+    <breadcrumbs>
+      <item name="Data Binding" href="./"/>
+    </breadcrumbs>
+  </body>
+</project>

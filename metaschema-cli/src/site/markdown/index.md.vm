@@ -1,0 +1,34 @@
+# ${project.name}
+
+This module provides a command line interfaces (CLIs) that uses the Metaschema capabilities provided by this project.
+
+The following dependency can be added to your POM to use this library.
+
+```xml
+<dependency>
+  <groupId>${project.groupId}</groupId>
+  <artifactId>${project.artifactId}</artifactId>
+  <version>${project.version}</version>
+</dependency>
+```
+
+## Usage
+
+The CLI supports the following commands:
+
+```text
+usage: metaschema-cli <command> [<options>]
+ -h,--help               display this help message
+    --no-color           do not colorize output
+ -q,--quiet              minimize output to include only errors
+    --show-stack-trace   display the stack trace associated with an error
+    --version            display the application version
+
+The following are available commands:
+   validate         Validate that the specified Module is well-formed and valid to the Module model
+   generate-schema  Generate a schema for the specified Module module
+   validate-content Verify that the provided resource is well-formed and valid to the provided Module-based model.
+   metapath         Perform a Metapath operation.
+
+'metaschema-cli <command> --help' will show help on that specific command.
+```

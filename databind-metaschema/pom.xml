@@ -10,8 +10,10 @@
 	<artifactId>metaschema-databind-modules</artifactId>
 
 	<name>Metaschema Modules</name>
+	<description>Code to read and write Metaschema modules and extensions.</description>
 
 	<url>${site.url}/${project.artifactId}/</url>
+
 	<distributionManagement>
 		<site>
 			<id>pages</id>
@@ -19,7 +21,9 @@
 		</site>
 	</distributionManagement>
 
-	<description>Code to read and write Metaschema modules and extensions.</description>
+	<scm>
+		<url>${scm.url}/tree/develop/databind-metaschema</url>
+	</scm>
 
 	<dependencies>
 		<dependency>

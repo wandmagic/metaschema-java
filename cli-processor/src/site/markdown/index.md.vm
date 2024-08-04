@@ -1,0 +1,13 @@
+# ${project.name}
+
+This module provides support for building command line interfaces (CLIs) that use the Metaschema capabilities provided by this project.
+
+The following dependency can be added to your POM to use this library.
+
+```xml
+<dependency>
+  <groupId>${project.groupId}</groupId>
+  <artifactId>${project.artifactId}</artifactId>
+  <version>${project.version}</version>
+</dependency>
+```

@@ -7,14 +7,20 @@
 	</parent>
 	<artifactId>metaschema-testing</artifactId>
 	<name>Metaschema Unit Testing Support</name>
+	<description>Provides unit testing support used by other modules in this project.</description>
 
 	<url>${site.url}/${project.artifactId}/</url>
+
 	<distributionManagement>
 		<site>
 			<id>pages</id>
 			<url>${site.url}/${project.artifactId}/</url>
 		</site>
 	</distributionManagement>
+
+	<scm>
+		<url>${scm.url}/tree/develop/metaschema-testing</url>
+	</scm>
 
 	<dependencies>
 		<dependency>
@@ -66,15 +72,15 @@
 		</pluginManagement>
 		<plugins>
 			<plugin>
-				<groupId>dev.metaschema</groupId>
-				<artifactId>oss-build-support</artifactId>
+				<groupId>org.apache.xmlbeans</groupId>
+				<artifactId>xmlbeans</artifactId>
 				<executions>
 					<execution>
 						<id>metaschema-testing-beans</id>
 						<inherited>false</inherited>
 						<phase>generate-sources</phase>
 						<goals>
-							<goal>generate-xmlbeans</goal>
+							<goal>compile</goal>
 						</goals>
 						<configuration>
 	                        <xmlConfigs>${project.basedir}/src/schema/xmlconfig.xml</xmlConfigs>

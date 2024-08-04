@@ -33,7 +33,7 @@ import java.util.stream.Collectors;
 import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
- * Goal which generates Java source files for a given set of Module definitions.
+ * Goal which generates Java source files for a given set of Metaschema modules.
  */
 @Mojo(name = "generate-sources", defaultPhase = LifecyclePhase.GENERATE_SOURCES)
 public class GenerateSourcesMojo

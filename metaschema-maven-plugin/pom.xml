@@ -12,8 +12,10 @@
     <packaging>maven-plugin</packaging>
 
     <name>Metaschema Maven Plugin</name>
+    <description>A Maven plugin for generating Java bindings, and XML and JSON schemas.</description>
 
     <url>${site.url}/${project.artifactId}/</url>
+
     <distributionManagement>
         <site>
             <id>pages</id>
@@ -21,9 +23,10 @@
         </site>
     </distributionManagement>
 
-    <prerequisites>
-        <maven>${plugin.maven-plugin.version}</maven>
-    </prerequisites>
+	<scm>
+		<url>${scm.url}/tree/develop/metaschema-maven-plugin</url>
+	</scm>
+
     <dependencies>
         <dependency>
 			<groupId>${project.groupId}</groupId>
@@ -71,6 +74,7 @@
         <dependency>
             <groupId>org.apache.maven.plugin-tools</groupId>
             <artifactId>maven-plugin-annotations</artifactId>
+            <version>${dependency.maven-plugin-tools.version}</version>
             <scope>provided</scope>
             <optional>true</optional>
         </dependency>
@@ -154,6 +158,15 @@
             </plugin>
         </plugins>
     </build>
+    <reporting>
+        <plugins>
+            <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-plugin-report-plugin</artifactId>
+            <version>3.13.1</version>
+            </plugin>
+        </plugins>
+    </reporting>
     <profiles>
         <profile>
             <id>run-its</id>

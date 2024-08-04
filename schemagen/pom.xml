@@ -8,6 +8,7 @@
 	</parent>
 	<artifactId>metaschema-schema-generator</artifactId>
 	<name>Metaschema XML and JSON Schema Generator</name>
+	<description>Java API for XML and JSON schema generation.</description>
 	<url>${site.url}/${project.artifactId}/</url>
 
 	<distributionManagement>
@@ -16,6 +17,10 @@
 			<url>${site.url}/${project.artifactId}/</url>
 		</site>
 	</distributionManagement>
+
+	<scm>
+		<url>${scm.url}/tree/develop/schemagen</url>
+	</scm>
 
 	<dependencies>
 		<dependency>

@@ -1,0 +1,17 @@
+# ${project.name}
+
+This module provides a [Java API](apidocs/index.html) for generating XML and JSON schema using a Metaschema module.
+
+The following dependency can be added to your POM to use this library.
+
+```xml
+<dependency>
+  <groupId>${project.groupId}</groupId>
+  <artifactId>${project.artifactId}</artifactId>
+  <version>${project.version}</version>
+</dependency>
+```
+
+## Examples
+
+Please review the [Metaschema module unit test](xref-test/gov/nist/secauto/metaschema/schemagen/MetaschemaModuleTest.html#MetaschemaModuleTest) which provides a few examples.

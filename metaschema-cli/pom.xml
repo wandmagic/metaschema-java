@@ -10,8 +10,11 @@
 	<artifactId>metaschema-cli</artifactId>
 
 	<name>Metaschema Command Line Tool</name>
+	<description>A simple command line tool supporting common Metaschema
+		operations.</description>
 
 	<url>${site.url}/${project.artifactId}/</url>
+
 	<distributionManagement>
 		<site>
 			<id>pages</id>
@@ -19,8 +22,9 @@
 		</site>
 	</distributionManagement>
 
-	<description>A simple command line tool supporting common Metaschema
-		operations.</description>
+	<scm>
+		<url>${scm.url}/tree/develop/metaschema-cli</url>
+	</scm>
 
 	<dependencies>
 		<dependency>

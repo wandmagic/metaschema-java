@@ -41,7 +41,8 @@ import java.util.stream.Collectors;
 import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
- * Goal which generates Java source files for a given set of Module definitions.
+ * Goal which generates XML and JSON schemas for a given set of Metaschema
+ * modules.
  */
 @Mojo(name = "generate-schemas", defaultPhase = LifecyclePhase.GENERATE_RESOURCES)
 public class GenerateSchemaMojo

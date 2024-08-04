@@ -5,9 +5,9 @@
 	name="Metaschema Java Tools">
 
   <skin>
-    <groupId>io.github.devacfr.maven.skins</groupId>
-    <artifactId>reflow-maven-skin</artifactId>
-    <version>${this.dependency.reflowSkin.version}</version>
+		<groupId>org.apache.maven.skins</groupId>
+		<artifactId>maven-fluido-skin</artifactId>
+		<version>2.0.0-M9</version>
   </skin>
 
 	<publishDate position="bottom" format="yyyy-MM-dd" />
@@ -17,13 +17,23 @@
 
 	<bannerLeft>
 		<name><![CDATA[
-      <span class="color-highlight">Metaschema Java Tools</span> Project
+      Metaschema Java APIs and Tools Project
     ]]>
 		</name>
 		<href>${this.site.url}</href>
 	</bannerLeft>
 
 	<custom>
+		<fluidoSkin>
+      <googleSearch>
+        <sitesearch/>
+      </googleSearch>
+      <gitHub>
+        <projectId>metaschema-framework/metaschema-java</projectId>
+        <ribbonOrientation>right</ribbonOrientation>
+        <ribbonColor>black</ribbonColor>
+      </gitHub>
+    </fluidoSkin>
 		<reflowSkin>
 			<protocolRelativeURLs>false</protocolRelativeURLs>
 			<absoluteResourceURL>${this.site.url}</absoluteResourceURL>
@@ -91,32 +101,33 @@
 		<!-- Add a rel to Google profile for all pages -->
 		<head>
 		<![CDATA[
-      <link rel="stylesheet" href="$resourcePath/css/custom.css">
+      <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+      <meta http-equiv="Content-Type" content="text/html; charset=${outputEncoding}" />
+      <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.12.1/css/all.css" crossorigin="anonymous" />
+      <link rel="stylesheet" href="./css/custom.css" />
     ]]>
 		</head>
 
-		<links>
-			<item name="GitHub project" href="http://github.com/metaschema-framework/metaschema-java/" />
-		</links>
-
-		<breadcrumbs>
-			<item name="Summary" href="./" />
-		</breadcrumbs>
+    <breadcrumbs>
+      <item name="Metaschema Java" href="./"/>
+    </breadcrumbs>
 
 		<menu name="Main" inherit="top">
-			<item name="Home" href="./" />
-		</menu>
-		<menu name="Contribute" inherit="bottom">
-			<item name="Issues"
-				href="http://github.com/metaschema-framework/metaschema-java/issues" />
-			<item name="Fork on GitHub"
-				href="http://github.com/metaschema-framework/metaschema-java/" />
-			<item name="License"
-				href="http://github.com/metaschema-framework/metaschema-java/blob/main/LICENSE.md" />
-		</menu>
-		<menu name="Modules" ref="modules" />
-		<menu name="Maven Documentation" ref="reports" inherit="bottom" />
-    <!-- Disable copyright footer -->
-    <footer/>
+      <item name="Home" href="./"/>
+      <item name="GitHub" href="${this.scm.url}"/>
+    </menu>
+    <menu name="Modules" ref="modules"/>
+    <menu name="Contribute" inherit="bottom">
+      <item name="Contribute" href="${this.scm.url}/CONTRIBUTING.md"/>
+      <item name="Issues" href="${this.issueManagement.url}"/>
+    </menu>
+    <menu name="Maven Documentation" ref="reports" inherit="bottom"/>
+
+		<!-- Disable copyright footer -->
+    <footer>
+      <![CDATA[
+      Copyright and related rights waived via <a href="https://creativecommons.org/publicdomain/zero/1.0/">CC0</a>.
+      ]]>
+    </footer>
 	</body>
 </project>

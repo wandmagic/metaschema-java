@@ -2,46 +2,11 @@
 
 This Maven build plugin automates the generation of Java classes for a set of Metaschema definitions as part of a Maven build.
 
-The following is an example of a Maven configuration for this plugin.
+## Goals Overview
 
-```xml
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
+- [metaschema:generate-schemas](generate-schemas-mojo.html)	is used to generate Java source files for a given set of Metaschema modules.
+- [metaschema:generate-sources](generate-sources-mojo.html)	Goal which generates Java source files for a given set of Module definitions.
 
-	<groupId>my.group</groupId>
-	<artifactId>my-library</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
-	<packaging>jar</packaging>
+## Usage
 
-	<name>An example project</name>
-
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>${project.groupId}</groupId>
-				<artifactId>${project.artifactId}</artifactId>
-				<version>${project.version}</version>
-				<executions>
-					<execution>
-						<id>generate-model-sources</id>
-						<goals>
-							<goal>generate-sources</goal>
-						</goals>
-						<configuration>
-							<!-- defines where to find the Metaschemas to generate Java classes from -->
-							<metaschemaDir>\${project.build.directory}/src/main/metaschema</metaschemaDir>
-							<!-- defines which metaschema in the above directory to use -->
-							<includes>
-								<include>*_metaschema.xml</include>
-							</includes>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-		</plugins>
-	</build>
-</project>
-```
-
+General instructions for use of this plugin can be found on the [usage page](./usage.html).
