@@ -180,7 +180,7 @@ import edu.umd.cs.findbugs.annotations.Nullable;
 <span class="fc" id="L180">    Class&lt;? extends IBoundObject&gt; retval = null;</span>
 <span class="fc" id="L181">    JsonUtil.advanceAndAssert(parser, JsonToken.START_OBJECT);</span>
 <span class="pc bpc" id="L182" title="1 of 2 branches missed.">    outer: while (JsonToken.FIELD_NAME.equals(parser.nextToken())) {</span>
-<span class="fc" id="L183">      String name = ObjectUtils.notNull(parser.getCurrentName());</span>
+<span class="fc" id="L183">      String name = ObjectUtils.notNull(parser.currentName());</span>
 <span class="fc bfc" id="L184" title="All 2 branches covered.">      if (!&quot;$schema&quot;.equals(name)) {</span>
 <span class="fc" id="L185">        IBindingContext bindingContext = getBindingContext();</span>
 <span class="fc" id="L186">        retval = bindingContext.getBoundClassForRootJsonName(name);</span>

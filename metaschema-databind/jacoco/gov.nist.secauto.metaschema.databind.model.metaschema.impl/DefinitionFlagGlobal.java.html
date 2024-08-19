@@ -18,7 +18,6 @@ import gov.nist.secauto.metaschema.core.model.constraint.ISource;
 import gov.nist.secauto.metaschema.core.model.constraint.IValueConstrained;
 import gov.nist.secauto.metaschema.core.model.constraint.ValueConstraintSet;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
-import gov.nist.secauto.metaschema.databind.model.IBoundDefinition;
 import gov.nist.secauto.metaschema.databind.model.IBoundInstanceModelGroupedAssembly;
 import gov.nist.secauto.metaschema.databind.model.binding.metaschema.FlagConstraints;
 import gov.nist.secauto.metaschema.databind.model.binding.metaschema.METASCHEMA;
@@ -65,93 +64,93 @@ public class DefinitionFlagGlobal
       @NonNull IBoundInstanceModelGroupedAssembly bindingInstance,
       int position,
       @NonNull IBindingMetaschemaModule module) {
-<span class="fc" id="L68">    super(module);</span>
-<span class="fc" id="L69">    this.binding = binding;</span>
-<span class="fc" id="L70">    this.properties = ModelSupport.parseProperties(ObjectUtils.requireNonNull(binding.getProps()));</span>
-<span class="fc" id="L71">    this.javaTypeAdapter = ModelSupport.dataType(binding.getAsType());</span>
-<span class="fc" id="L72">    this.defaultValue = ModelSupport.defaultValue(binding.getDefault(), this.javaTypeAdapter);</span>
-<span class="fc" id="L73">    this.valueConstraints = ObjectUtils.notNull(Lazy.lazy(() -&gt; {</span>
-<span class="fc" id="L74">      IValueConstrained retval = new ValueConstraintSet();</span>
-<span class="fc" id="L75">      FlagConstraints constraints = binding.getConstraint();</span>
-<span class="fc bfc" id="L76" title="All 2 branches covered.">      if (constraints != null) {</span>
-<span class="fc" id="L77">        ConstraintBindingSupport.parse(retval, constraints, ISource.modelSource(module));</span>
+<span class="fc" id="L67">    super(module);</span>
+<span class="fc" id="L68">    this.binding = binding;</span>
+<span class="fc" id="L69">    this.properties = ModelSupport.parseProperties(ObjectUtils.requireNonNull(binding.getProps()));</span>
+<span class="fc" id="L70">    this.javaTypeAdapter = ModelSupport.dataType(binding.getAsType());</span>
+<span class="fc" id="L71">    this.defaultValue = ModelSupport.defaultValue(binding.getDefault(), this.javaTypeAdapter);</span>
+<span class="fc" id="L72">    this.valueConstraints = ObjectUtils.notNull(Lazy.lazy(() -&gt; {</span>
+<span class="fc" id="L73">      IValueConstrained retval = new ValueConstraintSet();</span>
+<span class="fc" id="L74">      FlagConstraints constraints = binding.getConstraint();</span>
+<span class="fc bfc" id="L75" title="All 2 branches covered.">      if (constraints != null) {</span>
+<span class="fc" id="L76">        ConstraintBindingSupport.parse(retval, constraints, ISource.modelSource(module));</span>
       }
-<span class="fc" id="L79">      return retval;</span>
+<span class="fc" id="L78">      return retval;</span>
     }));
-<span class="pc" id="L81">    this.boundNodeItem = ObjectUtils.notNull(Lazy.lazy(() -&gt; ObjectUtils.requireNonNull(ModelSupport.toNodeItem(</span>
+<span class="pc" id="L80">    this.boundNodeItem = ObjectUtils.notNull(Lazy.lazy(() -&gt; ObjectUtils.requireNonNull(ModelSupport.toNodeItem(</span>
         module,
-<span class="nc" id="L83">        bindingInstance.getXmlQName(),</span>
+<span class="nc" id="L82">        bindingInstance.getXmlQName(),</span>
         position))));
-<span class="fc" id="L85">  }</span>
+<span class="fc" id="L84">  }</span>
 
   @NonNull
   protected METASCHEMA.DefineFlag getBinding() {
-<span class="fc" id="L89">    return binding;</span>
+<span class="fc" id="L88">    return binding;</span>
   }
 
   @Override
   public IValueConstrained getConstraintSupport() {
-<span class="fc" id="L94">    return ObjectUtils.notNull(valueConstraints.get());</span>
+<span class="fc" id="L93">    return ObjectUtils.notNull(valueConstraints.get());</span>
   }
 
   @Override
   public Map&lt;IAttributable.Key, Set&lt;String&gt;&gt; getProperties() {
-<span class="nc" id="L99">    return properties;</span>
+<span class="nc" id="L98">    return properties;</span>
   }
 
   @Override
   public IDataTypeAdapter&lt;?&gt; getJavaTypeAdapter() {
-<span class="fc" id="L104">    return javaTypeAdapter;</span>
+<span class="fc" id="L103">    return javaTypeAdapter;</span>
   }
 
   @Override
   public Object getDefaultValue() {
-<span class="fc" id="L109">    return defaultValue;</span>
+<span class="fc" id="L108">    return defaultValue;</span>
   }
 
   @Override
   public String getName() {
-<span class="fc" id="L114">    return ObjectUtils.notNull(getBinding().getName());</span>
+<span class="fc" id="L113">    return ObjectUtils.notNull(getBinding().getName());</span>
   }
 
   @Override
   public String getFormalName() {
-<span class="fc" id="L119">    return getBinding().getFormalName();</span>
+<span class="fc" id="L118">    return getBinding().getFormalName();</span>
   }
 
   @Override
   public MarkupLine getDescription() {
-<span class="fc" id="L124">    return getBinding().getDescription();</span>
+<span class="fc" id="L123">    return getBinding().getDescription();</span>
   }
 
   @Override
   public ModuleScopeEnum getModuleScope() {
-<span class="fc" id="L129">    return ModelSupport.moduleScope(ObjectUtils.requireNonNull(getBinding().getScope()));</span>
+<span class="fc" id="L128">    return ModelSupport.moduleScope(ObjectUtils.requireNonNull(getBinding().getScope()));</span>
   }
 
   @Override
   public Integer getIndex() {
-<span class="fc" id="L134">    return ModelSupport.index(getBinding().getIndex());</span>
+<span class="fc" id="L133">    return ModelSupport.index(getBinding().getIndex());</span>
   }
 
   @Override
   public String getUseName() {
-<span class="fc" id="L139">    return ModelSupport.useName(getBinding().getUseName());</span>
+<span class="fc" id="L138">    return ModelSupport.useName(getBinding().getUseName());</span>
   }
 
   @Override
   public Integer getUseIndex() {
-<span class="fc" id="L144">    return ModelSupport.useIndex(getBinding().getUseName());</span>
+<span class="fc" id="L143">    return ModelSupport.useIndex(getBinding().getUseName());</span>
   }
 
   @Override
   public MarkupMultiline getRemarks() {
-<span class="nc" id="L149">    return ModelSupport.remarks(getBinding().getRemarks());</span>
+<span class="nc" id="L148">    return ModelSupport.remarks(getBinding().getRemarks());</span>
   }
 
   @NonNull
   public INodeItem getNodeItem() {
-<span class="nc" id="L154">    return boundNodeItem.get();</span>
+<span class="nc" id="L153">    return boundNodeItem.get();</span>
   }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

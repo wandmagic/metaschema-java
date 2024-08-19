@@ -8,7 +8,6 @@ package gov.nist.secauto.metaschema.core.metapath.cst.path;
 import gov.nist.secauto.metaschema.core.metapath.DynamicContext;
 import gov.nist.secauto.metaschema.core.metapath.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.cst.AbstractNamedInstanceExpression;
-import gov.nist.secauto.metaschema.core.metapath.cst.IExpression;
 import gov.nist.secauto.metaschema.core.metapath.cst.IExpressionVisitor;
 import gov.nist.secauto.metaschema.core.metapath.item.ItemUtils;
 import gov.nist.secauto.metaschema.core.metapath.item.node.IModelNodeItem;
@@ -22,7 +21,7 @@ import javax.xml.namespace.QName;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
-<span class="fc" id="L25">@SuppressWarnings(&quot;rawtypes&quot;)</span>
+<span class="fc" id="L24">@SuppressWarnings(&quot;rawtypes&quot;)</span>
 public class ModelInstance
     extends AbstractNamedInstanceExpression&lt;IModelNodeItem&gt; {
 
@@ -33,35 +32,37 @@ public class ModelInstance
    * @param test
    *          the test to use to match
    */
-  public ModelInstance(@NonNull IExpression test) {
-<span class="fc" id="L37">    super(test);</span>
-<span class="fc" id="L38">  }</span>
+  public ModelInstance(@NonNull INodeTestExpression test) {
+<span class="fc" id="L36">    super(test);</span>
+<span class="fc" id="L37">  }</span>
 
   @Override
   public Class&lt;IModelNodeItem&gt; getBaseResultType() {
-<span class="fc" id="L42">    return IModelNodeItem.class;</span>
+<span class="fc" id="L41">    return IModelNodeItem.class;</span>
   }
 
   @Override
   public &lt;RESULT, CONTEXT&gt; RESULT accept(IExpressionVisitor&lt;RESULT, CONTEXT&gt; visitor, CONTEXT context) {
-<span class="nc" id="L47">    return visitor.visitModelInstance(this, context);</span>
+<span class="nc" id="L46">    return visitor.visitModelInstance(this, context);</span>
   }
 
   @Override
   public ISequence&lt;? extends IModelNodeItem&lt;?, ?&gt;&gt; accept(
       DynamicContext dynamicContext,
       ISequence&lt;?&gt; focus) {
-<span class="fc" id="L54">    return ISequence.of(ObjectUtils.notNull(focus.stream()</span>
-<span class="fc" id="L55">        .map(ItemUtils::checkItemIsNodeItemForStep)</span>
-<span class="fc" id="L56">        .flatMap(item -&gt; {</span>
-<span class="pc bpc" id="L57" title="1 of 2 branches missed.">          assert item != null;</span>
-<span class="fc" id="L58">          return match(item);</span>
+<span class="fc" id="L53">    return ISequence.of(ObjectUtils.notNull(focus.stream()</span>
+<span class="fc" id="L54">        .map(ItemUtils::checkItemIsNodeItemForStep)</span>
+<span class="fc" id="L55">        .flatMap(item -&gt; {</span>
+<span class="pc bpc" id="L56" title="1 of 2 branches missed.">          assert item != null;</span>
+<span class="fc" id="L57">          return match(dynamicContext, item);</span>
         })));
   }
 
   /**
    * Get a stream of matching child node items for the provided {@code context}.
    *
+   * @param dynamicContext
+   *          the evaluation context
    * @param focusedItem
    *          the node item to match child items of
    * @return the stream of matching node items
@@ -69,17 +70,22 @@ public class ModelInstance
   @SuppressWarnings(&quot;null&quot;)
   @NonNull
   protected Stream&lt;? extends IModelNodeItem&lt;?, ?&gt;&gt; match(
+      @NonNull DynamicContext dynamicContext,
       @NonNull INodeItem focusedItem) {
     Stream&lt;? extends IModelNodeItem&lt;?, ?&gt;&gt; retval;
-<span class="pc bpc" id="L74" title="1 of 2 branches missed.">    if (getTest() instanceof NameTest) {</span>
-<span class="fc" id="L75">      QName name = ((NameTest) getTest()).getName();</span>
-<span class="fc" id="L76">      List&lt;? extends IModelNodeItem&lt;?, ?&gt;&gt; items = focusedItem.getModelItemsByName(name);</span>
-<span class="fc" id="L77">      retval = items.stream();</span>
-<span class="fc" id="L78">    } else {</span>
-      // wildcard
-<span class="nc" id="L80">      retval = focusedItem.modelItems();</span>
+
+<span class="fc" id="L77">    INodeTestExpression test = getTest();</span>
+<span class="pc bpc" id="L78" title="1 of 2 branches missed.">    if (test instanceof NameTest) {</span>
+<span class="fc" id="L79">      QName name = ((NameTest) getTest()).getName();</span>
+<span class="fc" id="L80">      List&lt;? extends IModelNodeItem&lt;?, ?&gt;&gt; items = focusedItem.getModelItemsByName(name);</span>
+<span class="fc" id="L81">      retval = items.stream();</span>
+<span class="pc bnc" id="L82" title="All 2 branches missed.">    } else if (test instanceof Wildcard) {</span>
+      // match all items
+<span class="nc" id="L84">      retval = ((Wildcard) test).match(focusedItem.modelItems());</span>
+    } else {
+<span class="nc" id="L86">      throw new UnsupportedOperationException(test.getClass().getName());</span>
     }
-<span class="fc" id="L82">    return retval;</span>
+<span class="fc" id="L88">    return retval;</span>
   }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

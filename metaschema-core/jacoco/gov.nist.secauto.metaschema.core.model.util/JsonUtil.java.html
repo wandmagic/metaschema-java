@@ -359,7 +359,7 @@ public final class JsonUtil {
    */
   @NonNull
   public static CharSequence generateLocationMessage(@NonNull JsonParser parser) {
-<span class="nc" id="L362">    JsonLocation location = parser.getCurrentLocation();</span>
+<span class="nc" id="L362">    JsonLocation location = parser.currentLocation();</span>
 <span class="nc bnc" id="L363" title="All 2 branches missed.">    return location == null ? &quot;&quot; : generateLocationMessage(location);</span>
   }
 

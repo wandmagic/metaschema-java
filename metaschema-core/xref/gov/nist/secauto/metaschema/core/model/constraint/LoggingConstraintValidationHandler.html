@@ -245,7 +245,19 @@
 <a class="jxr_linenumber" name="L237" href="#L237">237</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> handlePass(<a name="IConstraint" href="../../../../../../../gov/nist/secauto/metaschema/core/model/constraint/IConstraint.html#IConstraint">IConstraint</a> constraint, <a name="INodeItem" href="../../../../../../../gov/nist/secauto/metaschema/core/metapath/item/node/INodeItem.html#INodeItem">INodeItem</a> node, <a name="INodeItem" href="../../../../../../../gov/nist/secauto/metaschema/core/metapath/item/node/INodeItem.html#INodeItem">INodeItem</a> target) {
 <a class="jxr_linenumber" name="L238" href="#L238">238</a>     <em class="jxr_comment">// do nothing</em>
 <a class="jxr_linenumber" name="L239" href="#L239">239</a>   }
-<a class="jxr_linenumber" name="L240" href="#L240">240</a> }
+<a class="jxr_linenumber" name="L240" href="#L240">240</a> 
+<a class="jxr_linenumber" name="L241" href="#L241">241</a>   @Override
+<a class="jxr_linenumber" name="L242" href="#L242">242</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> handleError(
+<a class="jxr_linenumber" name="L243" href="#L243">243</a>       <a name="IConstraint" href="../../../../../../../gov/nist/secauto/metaschema/core/model/constraint/IConstraint.html#IConstraint">IConstraint</a> constraint,
+<a class="jxr_linenumber" name="L244" href="#L244">244</a>       <a name="INodeItem" href="../../../../../../../gov/nist/secauto/metaschema/core/metapath/item/node/INodeItem.html#INodeItem">INodeItem</a> node,
+<a class="jxr_linenumber" name="L245" href="#L245">245</a>       String message,
+<a class="jxr_linenumber" name="L246" href="#L246">246</a>       Throwable exception) {
+<a class="jxr_linenumber" name="L247" href="#L247">247</a>     Level level = Level.CRITICAL;
+<a class="jxr_linenumber" name="L248" href="#L248">248</a>     <strong class="jxr_keyword">if</strong> (isLogged(level)) {
+<a class="jxr_linenumber" name="L249" href="#L249">249</a>       logConstraint(level, node, message, exception);
+<a class="jxr_linenumber" name="L250" href="#L250">250</a>     }
+<a class="jxr_linenumber" name="L251" href="#L251">251</a>   }
+<a class="jxr_linenumber" name="L252" href="#L252">252</a> }
 </pre>
 <hr/>
 <div id="footer">Copyright &#169; 2024. All rights reserved.</div>

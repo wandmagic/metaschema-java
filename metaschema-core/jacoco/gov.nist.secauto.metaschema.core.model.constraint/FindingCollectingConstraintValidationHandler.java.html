@@ -218,9 +218,9 @@ import edu.umd.cs.findbugs.annotations.NonNull;
   public void handleIndexDuplicateViolation(IIndexConstraint constraint, INodeItem node) {
 <span class="nc" id="L219">    addFinding(ConstraintValidationFinding.builder(constraint, node)</span>
 <span class="nc" id="L220">        .kind(Kind.FAIL)</span>
-<span class="nc" id="L221">        .target(node)</span>
-<span class="nc" id="L222">        .message(newIndexDuplicateViolationMessage(constraint, node))</span>
-<span class="nc" id="L223">        .severity(Level.CRITICAL)</span>
+<span class="nc" id="L221">        .severity(Level.CRITICAL)</span>
+<span class="nc" id="L222">        .target(node)</span>
+<span class="nc" id="L223">        .message(newIndexDuplicateViolationMessage(constraint, node))</span>
 <span class="nc" id="L224">        .build());</span>
 <span class="nc" id="L225">  }</span>
 
@@ -251,10 +251,25 @@ import edu.umd.cs.findbugs.annotations.NonNull;
   @Override
   public void handlePass(IConstraint constraint, INodeItem node, INodeItem target) {
 <span class="nc" id="L253">    addFinding(ConstraintValidationFinding.builder(constraint, node)</span>
-<span class="nc" id="L254">        .target(target)</span>
+<span class="nc" id="L254">        .kind(Kind.PASS)</span>
 <span class="nc" id="L255">        .severity(Level.NONE)</span>
-<span class="nc" id="L256">        .kind(Kind.PASS)</span>
+<span class="nc" id="L256">        .target(target)</span>
 <span class="nc" id="L257">        .build());</span>
 <span class="nc" id="L258">  }</span>
+
+  @Override
+  public void handleError(
+      IConstraint constraint,
+      INodeItem node,
+      String message,
+      Throwable exception) {
+<span class="nc" id="L266">    addFinding(ConstraintValidationFinding.builder(constraint, node)</span>
+<span class="nc" id="L267">        .kind(Kind.FAIL)</span>
+<span class="nc" id="L268">        .severity(Level.CRITICAL)</span>
+<span class="nc" id="L269">        .target(node)</span>
+<span class="nc" id="L270">        .message(message)</span>
+<span class="nc" id="L271">        .cause(exception)</span>
+<span class="nc" id="L272">        .build());</span>
+<span class="nc" id="L273">  }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

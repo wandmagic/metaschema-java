@@ -66,42 +66,41 @@
 <a class="jxr_linenumber" name="L58" href="#L58">58</a>      Stream&lt;? <strong class="jxr_keyword">extends</strong> IBoundProperty&lt;?&gt;&gt; instanceStream;
 <a class="jxr_linenumber" name="L59" href="#L59">59</a>      <strong class="jxr_keyword">if</strong> (targetDefinition instanceof <a name="IBoundDefinitionModelAssembly" href="../../../../../../../gov/nist/secauto/metaschema/databind/model/IBoundDefinitionModelAssembly.html#IBoundDefinitionModelAssembly">IBoundDefinitionModelAssembly</a>) {
 <a class="jxr_linenumber" name="L60" href="#L60">60</a>        <em class="jxr_comment">// use all child instances</em>
-<a class="jxr_linenumber" name="L61" href="#L61">61</a>        instanceStream = ((<a name="IBoundDefinitionModelAssembly" href="../../../../../../../gov/nist/secauto/metaschema/databind/model/IBoundDefinitionModelAssembly.html#IBoundDefinitionModelAssembly">IBoundDefinitionModelAssembly</a>) targetDefinition).getModelInstances().stream()
-<a class="jxr_linenumber" name="L62" href="#L62">62</a>            .map(instance -&gt; (IBoundProperty&lt;?&gt;) instance);
-<a class="jxr_linenumber" name="L63" href="#L63">63</a>      } <strong class="jxr_keyword">else</strong> <strong class="jxr_keyword">if</strong> (targetDefinition instanceof <a name="IBoundDefinitionModelFieldComplex" href="../../../../../../../gov/nist/secauto/metaschema/databind/model/IBoundDefinitionModelFieldComplex.html#IBoundDefinitionModelFieldComplex">IBoundDefinitionModelFieldComplex</a>) {
-<a class="jxr_linenumber" name="L64" href="#L64">64</a>        <a name="IBoundDefinitionModelFieldComplex" href="../../../../../../../gov/nist/secauto/metaschema/databind/model/IBoundDefinitionModelFieldComplex.html#IBoundDefinitionModelFieldComplex">IBoundDefinitionModelFieldComplex</a> targetFieldDefinition = (<a name="IBoundDefinitionModelFieldComplex" href="../../../../../../../gov/nist/secauto/metaschema/databind/model/IBoundDefinitionModelFieldComplex.html#IBoundDefinitionModelFieldComplex">IBoundDefinitionModelFieldComplex</a>) targetDefinition;
-<a class="jxr_linenumber" name="L65" href="#L65">65</a>  
-<a class="jxr_linenumber" name="L66" href="#L66">66</a>        <a name="IBoundInstanceFlag" href="../../../../../../../gov/nist/secauto/metaschema/databind/model/IBoundInstanceFlag.html#IBoundInstanceFlag">IBoundInstanceFlag</a> jsonValueKeyFlag = targetFieldDefinition.getJsonValueKeyFlagInstance();
-<a class="jxr_linenumber" name="L67" href="#L67">67</a>        <strong class="jxr_keyword">if</strong> (jsonValueKeyFlag == <strong class="jxr_keyword">null</strong> &amp;&amp; flagCount &gt; 0) {
-<a class="jxr_linenumber" name="L68" href="#L68">68</a>          <em class="jxr_comment">// the field value is handled as named field</em>
-<a class="jxr_linenumber" name="L69" href="#L69">69</a>          <a name="IBoundFieldValue" href="../../../../../../../gov/nist/secauto/metaschema/databind/model/IBoundFieldValue.html#IBoundFieldValue">IBoundFieldValue</a> fieldValue = targetFieldDefinition.getFieldValue();
-<a class="jxr_linenumber" name="L70" href="#L70">70</a>          instanceStream = Stream.of(fieldValue);
-<a class="jxr_linenumber" name="L71" href="#L71">71</a>        } <strong class="jxr_keyword">else</strong> {
-<a class="jxr_linenumber" name="L72" href="#L72">72</a>          <em class="jxr_comment">// only the value, with no flags or a JSON value key flag</em>
-<a class="jxr_linenumber" name="L73" href="#L73">73</a>          instanceStream = Stream.empty();
-<a class="jxr_linenumber" name="L74" href="#L74">74</a>        }
-<a class="jxr_linenumber" name="L75" href="#L75">75</a>      } <strong class="jxr_keyword">else</strong> {
-<a class="jxr_linenumber" name="L76" href="#L76">76</a>        <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> UnsupportedOperationException(
-<a class="jxr_linenumber" name="L77" href="#L77">77</a>            String.format(<span class="jxr_string">"Unsupported class binding type: %s"</span>, targetDefinition.getClass().getName()));
-<a class="jxr_linenumber" name="L78" href="#L78">78</a>      }
-<a class="jxr_linenumber" name="L79" href="#L79">79</a>  
-<a class="jxr_linenumber" name="L80" href="#L80">80</a>      <strong class="jxr_keyword">if</strong> (jsonKey != <strong class="jxr_keyword">null</strong>) {
-<a class="jxr_linenumber" name="L81" href="#L81">81</a>        instanceStream = Stream.concat(
-<a class="jxr_linenumber" name="L82" href="#L82">82</a>            flags.stream().filter(flag -&gt; !jsonKey.equals(flag)),
-<a class="jxr_linenumber" name="L83" href="#L83">83</a>            instanceStream);
-<a class="jxr_linenumber" name="L84" href="#L84">84</a>      } <strong class="jxr_keyword">else</strong> {
-<a class="jxr_linenumber" name="L85" href="#L85">85</a>        instanceStream = Stream.concat(
-<a class="jxr_linenumber" name="L86" href="#L86">86</a>            flags.stream(),
-<a class="jxr_linenumber" name="L87" href="#L87">87</a>            instanceStream);
-<a class="jxr_linenumber" name="L88" href="#L88">88</a>      }
-<a class="jxr_linenumber" name="L89" href="#L89">89</a>      <strong class="jxr_keyword">return</strong> CollectionUtil.unmodifiableMap(ObjectUtils.notNull(instanceStream.collect(
-<a class="jxr_linenumber" name="L90" href="#L90">90</a>          Collectors.toMap(
-<a class="jxr_linenumber" name="L91" href="#L91">91</a>              IBoundProperty::getJsonName,
-<a class="jxr_linenumber" name="L92" href="#L92">92</a>              Function.identity(),
-<a class="jxr_linenumber" name="L93" href="#L93">93</a>              (v1, v2) -&gt; v2,
-<a class="jxr_linenumber" name="L94" href="#L94">94</a>              LinkedHashMap::<strong class="jxr_keyword">new</strong>))));
-<a class="jxr_linenumber" name="L95" href="#L95">95</a>    }
-<a class="jxr_linenumber" name="L96" href="#L96">96</a>  }
+<a class="jxr_linenumber" name="L61" href="#L61">61</a>        instanceStream = ((<a name="IBoundDefinitionModelAssembly" href="../../../../../../../gov/nist/secauto/metaschema/databind/model/IBoundDefinitionModelAssembly.html#IBoundDefinitionModelAssembly">IBoundDefinitionModelAssembly</a>) targetDefinition).getModelInstances().stream();
+<a class="jxr_linenumber" name="L62" href="#L62">62</a>      } <strong class="jxr_keyword">else</strong> <strong class="jxr_keyword">if</strong> (targetDefinition instanceof <a name="IBoundDefinitionModelFieldComplex" href="../../../../../../../gov/nist/secauto/metaschema/databind/model/IBoundDefinitionModelFieldComplex.html#IBoundDefinitionModelFieldComplex">IBoundDefinitionModelFieldComplex</a>) {
+<a class="jxr_linenumber" name="L63" href="#L63">63</a>        <a name="IBoundDefinitionModelFieldComplex" href="../../../../../../../gov/nist/secauto/metaschema/databind/model/IBoundDefinitionModelFieldComplex.html#IBoundDefinitionModelFieldComplex">IBoundDefinitionModelFieldComplex</a> targetFieldDefinition = (<a name="IBoundDefinitionModelFieldComplex" href="../../../../../../../gov/nist/secauto/metaschema/databind/model/IBoundDefinitionModelFieldComplex.html#IBoundDefinitionModelFieldComplex">IBoundDefinitionModelFieldComplex</a>) targetDefinition;
+<a class="jxr_linenumber" name="L64" href="#L64">64</a>  
+<a class="jxr_linenumber" name="L65" href="#L65">65</a>        <a name="IBoundInstanceFlag" href="../../../../../../../gov/nist/secauto/metaschema/databind/model/IBoundInstanceFlag.html#IBoundInstanceFlag">IBoundInstanceFlag</a> jsonValueKeyFlag = targetFieldDefinition.getJsonValueKeyFlagInstance();
+<a class="jxr_linenumber" name="L66" href="#L66">66</a>        <strong class="jxr_keyword">if</strong> (jsonValueKeyFlag == <strong class="jxr_keyword">null</strong> &amp;&amp; flagCount &gt; 0) {
+<a class="jxr_linenumber" name="L67" href="#L67">67</a>          <em class="jxr_comment">// the field value is handled as named field</em>
+<a class="jxr_linenumber" name="L68" href="#L68">68</a>          <a name="IBoundFieldValue" href="../../../../../../../gov/nist/secauto/metaschema/databind/model/IBoundFieldValue.html#IBoundFieldValue">IBoundFieldValue</a> fieldValue = targetFieldDefinition.getFieldValue();
+<a class="jxr_linenumber" name="L69" href="#L69">69</a>          instanceStream = Stream.of(fieldValue);
+<a class="jxr_linenumber" name="L70" href="#L70">70</a>        } <strong class="jxr_keyword">else</strong> {
+<a class="jxr_linenumber" name="L71" href="#L71">71</a>          <em class="jxr_comment">// only the value, with no flags or a JSON value key flag</em>
+<a class="jxr_linenumber" name="L72" href="#L72">72</a>          instanceStream = Stream.empty();
+<a class="jxr_linenumber" name="L73" href="#L73">73</a>        }
+<a class="jxr_linenumber" name="L74" href="#L74">74</a>      } <strong class="jxr_keyword">else</strong> {
+<a class="jxr_linenumber" name="L75" href="#L75">75</a>        <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> UnsupportedOperationException(
+<a class="jxr_linenumber" name="L76" href="#L76">76</a>            String.format(<span class="jxr_string">"Unsupported class binding type: %s"</span>, targetDefinition.getClass().getName()));
+<a class="jxr_linenumber" name="L77" href="#L77">77</a>      }
+<a class="jxr_linenumber" name="L78" href="#L78">78</a>  
+<a class="jxr_linenumber" name="L79" href="#L79">79</a>      <strong class="jxr_keyword">if</strong> (jsonKey != <strong class="jxr_keyword">null</strong>) {
+<a class="jxr_linenumber" name="L80" href="#L80">80</a>        instanceStream = Stream.concat(
+<a class="jxr_linenumber" name="L81" href="#L81">81</a>            flags.stream().filter(flag -&gt; !jsonKey.equals(flag)),
+<a class="jxr_linenumber" name="L82" href="#L82">82</a>            instanceStream);
+<a class="jxr_linenumber" name="L83" href="#L83">83</a>      } <strong class="jxr_keyword">else</strong> {
+<a class="jxr_linenumber" name="L84" href="#L84">84</a>        instanceStream = Stream.concat(
+<a class="jxr_linenumber" name="L85" href="#L85">85</a>            flags.stream(),
+<a class="jxr_linenumber" name="L86" href="#L86">86</a>            instanceStream);
+<a class="jxr_linenumber" name="L87" href="#L87">87</a>      }
+<a class="jxr_linenumber" name="L88" href="#L88">88</a>      <strong class="jxr_keyword">return</strong> CollectionUtil.unmodifiableMap(ObjectUtils.notNull(instanceStream.collect(
+<a class="jxr_linenumber" name="L89" href="#L89">89</a>          Collectors.toMap(
+<a class="jxr_linenumber" name="L90" href="#L90">90</a>              IBoundProperty::getJsonName,
+<a class="jxr_linenumber" name="L91" href="#L91">91</a>              Function.identity(),
+<a class="jxr_linenumber" name="L92" href="#L92">92</a>              (v1, v2) -&gt; v2,
+<a class="jxr_linenumber" name="L93" href="#L93">93</a>              LinkedHashMap::<strong class="jxr_keyword">new</strong>))));
+<a class="jxr_linenumber" name="L94" href="#L94">94</a>    }
+<a class="jxr_linenumber" name="L95" href="#L95">95</a>  }
 </pre>
 <hr/>
 <div id="footer">Copyright &#169; 2024. All rights reserved.</div>

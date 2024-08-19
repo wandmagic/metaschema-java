@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<licensePluginReport goal="FORMAT" timestamp="1722747885999">
-    <module artifactId="metaschema-testing" groupId="dev.metaschema.java" version="1.0.1"/>
+<licensePluginReport goal="FORMAT" timestamp="1724090863804">
+    <module artifactId="metaschema-testing" groupId="dev.metaschema.java" version="1.0.2"/>
     <files/>
 </licensePluginReport>

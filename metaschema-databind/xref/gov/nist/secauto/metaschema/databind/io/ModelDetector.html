@@ -188,7 +188,7 @@
 <a class="jxr_linenumber" name="L180" href="#L180">180</a>     Class&lt;? <strong class="jxr_keyword">extends</strong> IBoundObject&gt; retval = <strong class="jxr_keyword">null</strong>;
 <a class="jxr_linenumber" name="L181" href="#L181">181</a>     JsonUtil.advanceAndAssert(parser, JsonToken.START_OBJECT);
 <a class="jxr_linenumber" name="L182" href="#L182">182</a>     <strong class="jxr_keyword">outer</strong>: <strong class="jxr_keyword">while</strong> (JsonToken.FIELD_NAME.equals(parser.nextToken())) {
-<a class="jxr_linenumber" name="L183" href="#L183">183</a>       String name = ObjectUtils.notNull(parser.getCurrentName());
+<a class="jxr_linenumber" name="L183" href="#L183">183</a>       String name = ObjectUtils.notNull(parser.currentName());
 <a class="jxr_linenumber" name="L184" href="#L184">184</a>       <strong class="jxr_keyword">if</strong> (!<span class="jxr_string">"$schema"</span>.equals(name)) {
 <a class="jxr_linenumber" name="L185" href="#L185">185</a>         <a name="IBindingContext" href="../../../../../../gov/nist/secauto/metaschema/databind/IBindingContext.html#IBindingContext">IBindingContext</a> bindingContext = getBindingContext();
 <a class="jxr_linenumber" name="L186" href="#L186">186</a>         retval = bindingContext.getBoundClassForRootJsonName(name);

@@ -6,6 +6,7 @@
 package gov.nist.secauto.metaschema.core.metapath.cst;
 
 import gov.nist.secauto.metaschema.core.metapath.cst.path.AbstractPathExpression;
+import gov.nist.secauto.metaschema.core.metapath.cst.path.INodeTestExpression;
 import gov.nist.secauto.metaschema.core.metapath.cst.path.NameTest;
 import gov.nist.secauto.metaschema.core.metapath.cst.path.Wildcard;
 import gov.nist.secauto.metaschema.core.metapath.item.node.INodeItem;
@@ -17,7 +18,7 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 public abstract class AbstractNamedInstanceExpression&lt;RESULT_TYPE extends INodeItem&gt;
     extends AbstractPathExpression&lt;RESULT_TYPE&gt; {
   @NonNull
-  private final IExpression test;
+  private final INodeTestExpression test;
 
   /**
    * Construct a new expression that finds children that match the provided
@@ -26,9 +27,9 @@ public abstract class AbstractNamedInstanceExpression&lt;RESULT_TYPE extends INo
    * @param test
    *          the expression to use to determine a match
    */
-<span class="fc" id="L29">  public AbstractNamedInstanceExpression(@NonNull IExpression test) {</span>
-<span class="fc" id="L30">    this.test = test;</span>
-<span class="fc" id="L31">  }</span>
+<span class="fc" id="L30">  public AbstractNamedInstanceExpression(@NonNull INodeTestExpression test) {</span>
+<span class="fc" id="L31">    this.test = test;</span>
+<span class="fc" id="L32">  }</span>
 
   /**
    * Get the {@link Wildcard} or {@link NameTest} test.
@@ -36,14 +37,14 @@ public abstract class AbstractNamedInstanceExpression&lt;RESULT_TYPE extends INo
    * @return the test
    */
   @NonNull
-  public IExpression getTest() {
-<span class="fc" id="L40">    return test;</span>
+  public INodeTestExpression getTest() {
+<span class="fc" id="L41">    return test;</span>
   }
 
   @SuppressWarnings(&quot;null&quot;)
   @Override
   public List&lt;? extends IExpression&gt; getChildren() {
-<span class="nc" id="L46">    return List.of(test);</span>
+<span class="nc" id="L47">    return List.of(test);</span>
   }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

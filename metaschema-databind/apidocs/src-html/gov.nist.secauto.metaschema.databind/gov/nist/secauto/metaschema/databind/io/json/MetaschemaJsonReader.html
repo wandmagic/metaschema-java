@@ -665,7 +665,7 @@
 <span class="source-line-no">652</span><span id="line-652">        retval = delegate.handleUnknownProperty(definition, parentItem, fieldName, parser);</span>
 <span class="source-line-no">653</span><span id="line-653">      } else {</span>
 <span class="source-line-no">654</span><span id="line-654">        // handle JSON value key</span>
-<span class="source-line-no">655</span><span id="line-655">        String key = ObjectUtils.notNull(parser.getCurrentName());</span>
+<span class="source-line-no">655</span><span id="line-655">        String key = ObjectUtils.notNull(parser.currentName());</span>
 <span class="source-line-no">656</span><span id="line-656">        Object keyValue = jsonValueKyeFlag.getJavaTypeAdapter().parse(key);</span>
 <span class="source-line-no">657</span><span id="line-657">        jsonValueKyeFlag.setValue(ObjectUtils.notNull(parentItem), keyValue);</span>
 <span class="source-line-no">658</span><span id="line-658"></span>

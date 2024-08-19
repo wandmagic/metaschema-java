@@ -660,7 +660,7 @@
 <a class="jxr_linenumber" name="L652" href="#L652">652</a>         retval = delegate.handleUnknownProperty(definition, parentItem, fieldName, parser);
 <a class="jxr_linenumber" name="L653" href="#L653">653</a>       } <strong class="jxr_keyword">else</strong> {
 <a class="jxr_linenumber" name="L654" href="#L654">654</a>         <em class="jxr_comment">// handle JSON value key</em>
-<a class="jxr_linenumber" name="L655" href="#L655">655</a>         String key = ObjectUtils.notNull(parser.getCurrentName());
+<a class="jxr_linenumber" name="L655" href="#L655">655</a>         String key = ObjectUtils.notNull(parser.currentName());
 <a class="jxr_linenumber" name="L656" href="#L656">656</a>         Object keyValue = jsonValueKyeFlag.getJavaTypeAdapter().parse(key);
 <a class="jxr_linenumber" name="L657" href="#L657">657</a>         jsonValueKyeFlag.setValue(ObjectUtils.notNull(parentItem), keyValue);
 <a class="jxr_linenumber" name="L658" href="#L658">658</a> 

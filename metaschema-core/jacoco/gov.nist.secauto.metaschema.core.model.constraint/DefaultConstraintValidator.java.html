@@ -235,7 +235,7 @@ public class DefaultConstraintValidator
       try {
 <span class="nc" id="L236">        validateHasCardinality(constraint, item, targets);</span>
 <span class="nc" id="L237">      } catch (MetapathException ex) {</span>
-<span class="nc" id="L238">        rethrowConstraintError(constraint, item, ex);</span>
+<span class="nc" id="L238">        handleError(constraint, item, ex);</span>
 <span class="nc" id="L239">      }</span>
 <span class="nc" id="L240">    }</span>
 <span class="nc" id="L241">  }</span>
@@ -300,7 +300,7 @@ public class DefaultConstraintValidator
       try {
 <span class="nc" id="L301">        validateIndex(constraint, item, targets, dynamicContext);</span>
 <span class="nc" id="L302">      } catch (MetapathException ex) {</span>
-<span class="nc" id="L303">        rethrowConstraintError(constraint, item, ex);</span>
+<span class="nc" id="L303">        handleError(constraint, item, ex);</span>
 <span class="nc" id="L304">      }</span>
 <span class="nc" id="L305">    }</span>
 <span class="nc" id="L306">  }</span>
@@ -362,6 +362,41 @@ public class DefaultConstraintValidator
     }
 <span class="fc" id="L363">  }</span>
 
+  private void handleError(
+      @NonNull IConstraint constraint,
+      @NonNull INodeItem node,
+      @NonNull MetapathException ex) {
+<span class="nc" id="L369">    getConstraintValidationHandler().handleError(constraint, node, toErrorMessage(constraint, node, ex), ex);</span>
+<span class="nc" id="L370">  }</span>
+
+  @NonNull
+  private static String toErrorMessage(
+      @NonNull IConstraint constraint,
+      @NonNull INodeItem item,
+      @NonNull MetapathException ex) {
+<span class="nc" id="L377">    StringBuilder builder = new StringBuilder(128);</span>
+<span class="nc" id="L378">    builder.append(&quot;A &quot;)</span>
+<span class="nc" id="L379">        .append(constraint.getClass().getName())</span>
+<span class="nc" id="L380">        .append(&quot; constraint&quot;);</span>
+
+<span class="nc" id="L382">    String id = constraint.getId();</span>
+<span class="nc bnc" id="L383" title="All 2 branches missed.">    if (id == null) {</span>
+<span class="nc" id="L384">      builder.append(&quot; targeting the metapath '&quot;)</span>
+<span class="nc" id="L385">          .append(constraint.getTarget())</span>
+<span class="nc" id="L386">          .append('\'');</span>
+    } else {
+<span class="nc" id="L388">      builder.append(&quot; with id '&quot;)</span>
+<span class="nc" id="L389">          .append(id)</span>
+<span class="nc" id="L390">          .append('\'');</span>
+    }
+
+<span class="nc" id="L393">    builder.append(&quot;, matching the item at path '&quot;)</span>
+<span class="nc" id="L394">        .append(item.getMetapath())</span>
+<span class="nc" id="L395">        .append(&quot;', resulted in an unexpected error. The error was: &quot;)</span>
+<span class="nc" id="L396">        .append(ex.getLocalizedMessage());</span>
+<span class="nc" id="L397">    return ObjectUtils.notNull(builder.toString());</span>
+  }
+
   /**
    * Evaluates the provided collection of {@code constraints} in the context of
    * the {@code item}.
@@ -378,15 +413,15 @@ public class DefaultConstraintValidator
       @NonNull List&lt;? extends IUniqueConstraint&gt; constraints,
       @NonNull IAssemblyNodeItem item,
       @NonNull DynamicContext dynamicContext) {
-<span class="nc bnc" id="L381" title="All 2 branches missed.">    for (IUniqueConstraint constraint : constraints) {</span>
-<span class="nc" id="L382">      ISequence&lt;? extends IDefinitionNodeItem&lt;?, ?&gt;&gt; targets = constraint.matchTargets(item, dynamicContext);</span>
+<span class="nc bnc" id="L416" title="All 2 branches missed.">    for (IUniqueConstraint constraint : constraints) {</span>
+<span class="nc" id="L417">      ISequence&lt;? extends IDefinitionNodeItem&lt;?, ?&gt;&gt; targets = constraint.matchTargets(item, dynamicContext);</span>
       try {
-<span class="nc" id="L384">        validateUnique(constraint, item, targets, dynamicContext);</span>
-<span class="nc" id="L385">      } catch (MetapathException ex) {</span>
-<span class="nc" id="L386">        rethrowConstraintError(constraint, item, ex);</span>
-<span class="nc" id="L387">      }</span>
-<span class="nc" id="L388">    }</span>
-<span class="nc" id="L389">  }</span>
+<span class="nc" id="L419">        validateUnique(constraint, item, targets, dynamicContext);</span>
+<span class="nc" id="L420">      } catch (MetapathException ex) {</span>
+<span class="nc" id="L421">        handleError(constraint, item, ex);</span>
+<span class="nc" id="L422">      }</span>
+<span class="nc" id="L423">    }</span>
+<span class="nc" id="L424">  }</span>
 
   /**
    * Evaluates the provided {@code constraint} against each of the
@@ -410,26 +445,26 @@ public class DefaultConstraintValidator
       @NonNull ISequence&lt;? extends INodeItem&gt; targets,
       @NonNull DynamicContext dynamicContext) {
 
-<span class="nc" id="L413">    IConstraintValidationHandler handler = getConstraintValidationHandler();</span>
-<span class="nc" id="L414">    IIndex index = IIndex.newInstance(constraint.getKeyFields());</span>
-<span class="nc" id="L415">    targets.stream()</span>
-<span class="nc" id="L416">        .forEachOrdered(item -&gt; {</span>
-<span class="nc bnc" id="L417" title="All 2 branches missed.">          assert item != null;</span>
-<span class="nc bnc" id="L418" title="All 2 branches missed.">          if (item.hasValue()) {</span>
+<span class="nc" id="L448">    IConstraintValidationHandler handler = getConstraintValidationHandler();</span>
+<span class="nc" id="L449">    IIndex index = IIndex.newInstance(constraint.getKeyFields());</span>
+<span class="nc" id="L450">    targets.stream()</span>
+<span class="nc" id="L451">        .forEachOrdered(item -&gt; {</span>
+<span class="nc bnc" id="L452" title="All 2 branches missed.">          assert item != null;</span>
+<span class="nc bnc" id="L453" title="All 2 branches missed.">          if (item.hasValue()) {</span>
             try {
-<span class="nc" id="L420">              INodeItem oldItem = index.put(item, dynamicContext);</span>
-<span class="nc bnc" id="L421" title="All 2 branches missed.">              if (oldItem == null) {</span>
-<span class="nc" id="L422">                handlePass(constraint, node, item);</span>
+<span class="nc" id="L455">              INodeItem oldItem = index.put(item, dynamicContext);</span>
+<span class="nc bnc" id="L456" title="All 2 branches missed.">              if (oldItem == null) {</span>
+<span class="nc" id="L457">                handlePass(constraint, node, item);</span>
               } else {
-<span class="nc" id="L424">                handler.handleUniqueKeyViolation(constraint, node, oldItem, item);</span>
+<span class="nc" id="L459">                handler.handleUniqueKeyViolation(constraint, node, oldItem, item);</span>
               }
-<span class="nc" id="L426">            } catch (MetapathException ex) {</span>
-<span class="nc" id="L427">              handler.handleKeyMatchError(constraint, node, item, ex);</span>
-<span class="nc" id="L428">              throw ex;</span>
-<span class="nc" id="L429">            }</span>
+<span class="nc" id="L461">            } catch (MetapathException ex) {</span>
+<span class="nc" id="L462">              handler.handleKeyMatchError(constraint, node, item, ex);</span>
+<span class="nc" id="L463">              throw ex;</span>
+<span class="nc" id="L464">            }</span>
           }
-<span class="nc" id="L431">        });</span>
-<span class="nc" id="L432">  }</span>
+<span class="nc" id="L466">        });</span>
+<span class="nc" id="L467">  }</span>
 
   /**
    * Evaluates the provided collection of {@code constraints} in the context of
@@ -448,15 +483,15 @@ public class DefaultConstraintValidator
       @NonNull IDefinitionNodeItem&lt;?, ?&gt; item,
       @NonNull DynamicContext dynamicContext) {
 
-<span class="pc bpc" id="L451" title="1 of 2 branches missed.">    for (IMatchesConstraint constraint : constraints) {</span>
-<span class="nc" id="L452">      ISequence&lt;? extends IDefinitionNodeItem&lt;?, ?&gt;&gt; targets = constraint.matchTargets(item, dynamicContext);</span>
+<span class="pc bpc" id="L486" title="1 of 2 branches missed.">    for (IMatchesConstraint constraint : constraints) {</span>
+<span class="nc" id="L487">      ISequence&lt;? extends IDefinitionNodeItem&lt;?, ?&gt;&gt; targets = constraint.matchTargets(item, dynamicContext);</span>
       try {
-<span class="nc" id="L454">        validateMatches(constraint, item, targets);</span>
-<span class="nc" id="L455">      } catch (MetapathException ex) {</span>
-<span class="nc" id="L456">        rethrowConstraintError(constraint, item, ex);</span>
-<span class="nc" id="L457">      }</span>
-<span class="nc" id="L458">    }</span>
-<span class="fc" id="L459">  }</span>
+<span class="nc" id="L489">        validateMatches(constraint, item, targets);</span>
+<span class="nc" id="L490">      } catch (MetapathException ex) {</span>
+<span class="nc" id="L491">        handleError(constraint, item, ex);</span>
+<span class="nc" id="L492">      }</span>
+<span class="nc" id="L493">    }</span>
+<span class="fc" id="L494">  }</span>
 
   /**
    * Evaluates the provided {@code constraint} against each of the
@@ -475,44 +510,44 @@ public class DefaultConstraintValidator
       @NonNull IMatchesConstraint constraint,
       @NonNull INodeItem node,
       @NonNull ISequence&lt;? extends INodeItem&gt; targets) {
-<span class="nc" id="L478">    targets.stream()</span>
-<span class="nc" id="L479">        .forEachOrdered(item -&gt; {</span>
-<span class="nc bnc" id="L480" title="All 2 branches missed.">          assert item != null;</span>
-<span class="nc bnc" id="L481" title="All 2 branches missed.">          if (item.hasValue()) {</span>
-<span class="nc" id="L482">            validateMatchesItem(constraint, node, item);</span>
+<span class="nc" id="L513">    targets.stream()</span>
+<span class="nc" id="L514">        .forEachOrdered(item -&gt; {</span>
+<span class="nc bnc" id="L515" title="All 2 branches missed.">          assert item != null;</span>
+<span class="nc bnc" id="L516" title="All 2 branches missed.">          if (item.hasValue()) {</span>
+<span class="nc" id="L517">            validateMatchesItem(constraint, node, item);</span>
           }
-<span class="nc" id="L484">        });</span>
-<span class="nc" id="L485">  }</span>
+<span class="nc" id="L519">        });</span>
+<span class="nc" id="L520">  }</span>
 
   private void validateMatchesItem(
       @NonNull IMatchesConstraint constraint,
       @NonNull INodeItem node,
       @NonNull INodeItem item) {
-<span class="nc" id="L491">    String value = FnData.fnDataItem(item).asString();</span>
+<span class="nc" id="L526">    String value = FnData.fnDataItem(item).asString();</span>
 
-<span class="nc" id="L493">    IConstraintValidationHandler handler = getConstraintValidationHandler();</span>
-<span class="nc" id="L494">    boolean valid = true;</span>
-<span class="nc" id="L495">    Pattern pattern = constraint.getPattern();</span>
-<span class="nc bnc" id="L496" title="All 4 branches missed.">    if (pattern != null &amp;&amp; !pattern.asMatchPredicate().test(value)) {</span>
+<span class="nc" id="L528">    IConstraintValidationHandler handler = getConstraintValidationHandler();</span>
+<span class="nc" id="L529">    boolean valid = true;</span>
+<span class="nc" id="L530">    Pattern pattern = constraint.getPattern();</span>
+<span class="nc bnc" id="L531" title="All 4 branches missed.">    if (pattern != null &amp;&amp; !pattern.asMatchPredicate().test(value)) {</span>
       // failed pattern match
-<span class="nc" id="L498">      handler.handleMatchPatternViolation(constraint, node, item, value, pattern);</span>
-<span class="nc" id="L499">      valid = false;</span>
+<span class="nc" id="L533">      handler.handleMatchPatternViolation(constraint, node, item, value, pattern);</span>
+<span class="nc" id="L534">      valid = false;</span>
     }
 
-<span class="nc" id="L502">    IDataTypeAdapter&lt;?&gt; adapter = constraint.getDataType();</span>
-<span class="nc bnc" id="L503" title="All 2 branches missed.">    if (adapter != null) {</span>
+<span class="nc" id="L537">    IDataTypeAdapter&lt;?&gt; adapter = constraint.getDataType();</span>
+<span class="nc bnc" id="L538" title="All 2 branches missed.">    if (adapter != null) {</span>
       try {
-<span class="nc" id="L505">        adapter.parse(value);</span>
-<span class="nc" id="L506">      } catch (IllegalArgumentException ex) {</span>
-<span class="nc" id="L507">        handler.handleMatchDatatypeViolation(constraint, node, item, value, adapter, ex);</span>
-<span class="nc" id="L508">        valid = false;</span>
-<span class="nc" id="L509">      }</span>
+<span class="nc" id="L540">        adapter.parse(value);</span>
+<span class="nc" id="L541">      } catch (IllegalArgumentException ex) {</span>
+<span class="nc" id="L542">        handler.handleMatchDatatypeViolation(constraint, node, item, value, adapter, ex);</span>
+<span class="nc" id="L543">        valid = false;</span>
+<span class="nc" id="L544">      }</span>
     }
 
-<span class="nc bnc" id="L512" title="All 2 branches missed.">    if (valid) {</span>
-<span class="nc" id="L513">      handlePass(constraint, node, item);</span>
+<span class="nc bnc" id="L547" title="All 2 branches missed.">    if (valid) {</span>
+<span class="nc" id="L548">      handlePass(constraint, node, item);</span>
     }
-<span class="nc" id="L515">  }</span>
+<span class="nc" id="L550">  }</span>
 
   /**
    * Evaluates the provided collection of {@code constraints} in the context of
@@ -531,11 +566,11 @@ public class DefaultConstraintValidator
       @NonNull IDefinitionNodeItem&lt;?, ?&gt; item,
       @NonNull DynamicContext dynamicContext) {
 
-<span class="pc bpc" id="L534" title="1 of 2 branches missed.">    for (IIndexHasKeyConstraint constraint : constraints) {</span>
-<span class="nc" id="L535">      ISequence&lt;? extends IDefinitionNodeItem&lt;?, ?&gt;&gt; targets = constraint.matchTargets(item, dynamicContext);</span>
-<span class="nc" id="L536">      validateIndexHasKey(constraint, item, targets);</span>
-<span class="nc" id="L537">    }</span>
-<span class="fc" id="L538">  }</span>
+<span class="pc bpc" id="L569" title="1 of 2 branches missed.">    for (IIndexHasKeyConstraint constraint : constraints) {</span>
+<span class="nc" id="L570">      ISequence&lt;? extends IDefinitionNodeItem&lt;?, ?&gt;&gt; targets = constraint.matchTargets(item, dynamicContext);</span>
+<span class="nc" id="L571">      validateIndexHasKey(constraint, item, targets);</span>
+<span class="nc" id="L572">    }</span>
+<span class="fc" id="L573">  }</span>
 
   /**
    * Evaluates the provided {@code constraint} against each of the
@@ -554,17 +589,17 @@ public class DefaultConstraintValidator
       @NonNull IIndexHasKeyConstraint constraint,
       @NonNull IDefinitionNodeItem&lt;?, ?&gt; node,
       @NonNull ISequence&lt;? extends INodeItem&gt; targets) {
-<span class="nc" id="L557">    String indexName = constraint.getIndexName();</span>
+<span class="nc" id="L592">    String indexName = constraint.getIndexName();</span>
 
-<span class="nc" id="L559">    List&lt;KeyRef&gt; keyRefItems = indexNameToKeyRefMap.get(indexName);</span>
-<span class="nc bnc" id="L560" title="All 2 branches missed.">    if (keyRefItems == null) {</span>
-<span class="nc" id="L561">      keyRefItems = new LinkedList&lt;&gt;();</span>
-<span class="nc" id="L562">      indexNameToKeyRefMap.put(indexName, keyRefItems);</span>
+<span class="nc" id="L594">    List&lt;KeyRef&gt; keyRefItems = indexNameToKeyRefMap.get(indexName);</span>
+<span class="nc bnc" id="L595" title="All 2 branches missed.">    if (keyRefItems == null) {</span>
+<span class="nc" id="L596">      keyRefItems = new LinkedList&lt;&gt;();</span>
+<span class="nc" id="L597">      indexNameToKeyRefMap.put(indexName, keyRefItems);</span>
     }
 
-<span class="nc" id="L565">    KeyRef keyRef = new KeyRef(constraint, node, new ArrayList&lt;&gt;(targets.getValue()));</span>
-<span class="nc" id="L566">    keyRefItems.add(keyRef);</span>
-<span class="nc" id="L567">  }</span>
+<span class="nc" id="L600">    KeyRef keyRef = new KeyRef(constraint, node, new ArrayList&lt;&gt;(targets.getValue()));</span>
+<span class="nc" id="L601">    keyRefItems.add(keyRef);</span>
+<span class="nc" id="L602">  }</span>
 
   /**
    * Evaluates the provided collection of {@code constraints} in the context of
@@ -582,11 +617,11 @@ public class DefaultConstraintValidator
       @NonNull List&lt;? extends IExpectConstraint&gt; constraints,
       @NonNull IDefinitionNodeItem&lt;?, ?&gt; item,
       @NonNull DynamicContext dynamicContext) {
-<span class="pc bpc" id="L585" title="1 of 2 branches missed.">    for (IExpectConstraint constraint : constraints) {</span>
-<span class="nc" id="L586">      ISequence&lt;? extends IDefinitionNodeItem&lt;?, ?&gt;&gt; targets = constraint.matchTargets(item, dynamicContext);</span>
-<span class="nc" id="L587">      validateExpect(constraint, item, targets, dynamicContext);</span>
-<span class="nc" id="L588">    }</span>
-<span class="fc" id="L589">  }</span>
+<span class="pc bpc" id="L620" title="1 of 2 branches missed.">    for (IExpectConstraint constraint : constraints) {</span>
+<span class="nc" id="L621">      ISequence&lt;? extends IDefinitionNodeItem&lt;?, ?&gt;&gt; targets = constraint.matchTargets(item, dynamicContext);</span>
+<span class="nc" id="L622">      validateExpect(constraint, item, targets, dynamicContext);</span>
+<span class="nc" id="L623">    }</span>
+<span class="fc" id="L624">  }</span>
 
   /**
    * Evaluates the provided {@code constraint} against each of the
@@ -609,29 +644,29 @@ public class DefaultConstraintValidator
       @NonNull INodeItem node,
       @NonNull ISequence&lt;? extends INodeItem&gt; targets,
       @NonNull DynamicContext dynamicContext) {
-<span class="nc" id="L612">    MetapathExpression metapath = MetapathExpression.compile(</span>
-<span class="nc" id="L613">        constraint.getTest(),</span>
-<span class="nc" id="L614">        dynamicContext.getStaticContext());</span>
+<span class="nc" id="L647">    MetapathExpression metapath = MetapathExpression.compile(</span>
+<span class="nc" id="L648">        constraint.getTest(),</span>
+<span class="nc" id="L649">        dynamicContext.getStaticContext());</span>
 
-<span class="nc" id="L616">    IConstraintValidationHandler handler = getConstraintValidationHandler();</span>
-<span class="nc" id="L617">    targets.stream()</span>
-<span class="nc" id="L618">        .forEachOrdered(item -&gt; {</span>
-<span class="nc bnc" id="L619" title="All 2 branches missed.">          assert item != null;</span>
+<span class="nc" id="L651">    IConstraintValidationHandler handler = getConstraintValidationHandler();</span>
+<span class="nc" id="L652">    targets.stream()</span>
+<span class="nc" id="L653">        .forEachOrdered(item -&gt; {</span>
+<span class="nc bnc" id="L654" title="All 2 branches missed.">          assert item != null;</span>
 
-<span class="nc bnc" id="L621" title="All 2 branches missed.">          if (item.hasValue()) {</span>
+<span class="nc bnc" id="L656" title="All 2 branches missed.">          if (item.hasValue()) {</span>
             try {
-<span class="nc" id="L623">              ISequence&lt;?&gt; result = metapath.evaluate(item, dynamicContext);</span>
-<span class="nc bnc" id="L624" title="All 2 branches missed.">              if (FnBoolean.fnBoolean(result).toBoolean()) {</span>
-<span class="nc" id="L625">                handlePass(constraint, node, item);</span>
+<span class="nc" id="L658">              ISequence&lt;?&gt; result = metapath.evaluate(item, dynamicContext);</span>
+<span class="nc bnc" id="L659" title="All 2 branches missed.">              if (FnBoolean.fnBoolean(result).toBoolean()) {</span>
+<span class="nc" id="L660">                handlePass(constraint, node, item);</span>
               } else {
-<span class="nc" id="L627">                handler.handleExpectViolation(constraint, node, item, dynamicContext);</span>
+<span class="nc" id="L662">                handler.handleExpectViolation(constraint, node, item, dynamicContext);</span>
               }
-<span class="nc" id="L629">            } catch (MetapathException ex) {</span>
-<span class="nc" id="L630">              rethrowConstraintError(constraint, item, ex);</span>
-<span class="nc" id="L631">            }</span>
+<span class="nc" id="L664">            } catch (MetapathException ex) {</span>
+<span class="nc" id="L665">              handleError(constraint, item, ex);</span>
+<span class="nc" id="L666">            }</span>
           }
-<span class="nc" id="L633">        });</span>
-<span class="nc" id="L634">  }</span>
+<span class="nc" id="L668">        });</span>
+<span class="nc" id="L669">  }</span>
 
   /**
    * Evaluates the provided collection of {@code constraints} in the context of
@@ -649,11 +684,11 @@ public class DefaultConstraintValidator
       @NonNull List&lt;? extends IAllowedValuesConstraint&gt; constraints,
       @NonNull IDefinitionNodeItem&lt;?, ?&gt; item,
       @NonNull DynamicContext dynamicContext) {
-<span class="fc bfc" id="L652" title="All 2 branches covered.">    for (IAllowedValuesConstraint constraint : constraints) {</span>
-<span class="fc" id="L653">      ISequence&lt;? extends IDefinitionNodeItem&lt;?, ?&gt;&gt; targets = constraint.matchTargets(item, dynamicContext);</span>
-<span class="fc" id="L654">      validateAllowedValues(constraint, item, targets);</span>
-<span class="fc" id="L655">    }</span>
-<span class="fc" id="L656">  }</span>
+<span class="fc bfc" id="L687" title="All 2 branches covered.">    for (IAllowedValuesConstraint constraint : constraints) {</span>
+<span class="fc" id="L688">      ISequence&lt;? extends IDefinitionNodeItem&lt;?, ?&gt;&gt; targets = constraint.matchTargets(item, dynamicContext);</span>
+<span class="fc" id="L689">      validateAllowedValues(constraint, item, targets);</span>
+<span class="fc" id="L690">    }</span>
+<span class="fc" id="L691">  }</span>
 
   /**
    * Evaluates the provided {@code constraint} against each of the
@@ -672,45 +707,17 @@ public class DefaultConstraintValidator
       @NonNull IAllowedValuesConstraint constraint,
       @NonNull IDefinitionNodeItem&lt;?, ?&gt; node,
       @NonNull ISequence&lt;? extends IDefinitionNodeItem&lt;?, ?&gt;&gt; targets) {
-<span class="fc" id="L675">    targets.stream().forEachOrdered(item -&gt; {</span>
-<span class="pc bpc" id="L676" title="1 of 2 branches missed.">      assert item != null;</span>
-<span class="pc bpc" id="L677" title="1 of 2 branches missed.">      if (item.hasValue()) {</span>
+<span class="fc" id="L710">    targets.stream().forEachOrdered(item -&gt; {</span>
+<span class="pc bpc" id="L711" title="1 of 2 branches missed.">      assert item != null;</span>
+<span class="pc bpc" id="L712" title="1 of 2 branches missed.">      if (item.hasValue()) {</span>
         try {
-<span class="fc" id="L679">          updateValueStatus(item, constraint, node);</span>
-<span class="nc" id="L680">        } catch (MetapathException ex) {</span>
-<span class="nc" id="L681">          rethrowConstraintError(constraint, item, ex);</span>
-<span class="fc" id="L682">        }</span>
+<span class="fc" id="L714">          updateValueStatus(item, constraint, node);</span>
+<span class="nc" id="L715">        } catch (MetapathException ex) {</span>
+<span class="nc" id="L716">          handleError(constraint, item, ex);</span>
+<span class="fc" id="L717">        }</span>
       }
-<span class="fc" id="L684">    });</span>
-<span class="fc" id="L685">  }</span>
-
-  private static void rethrowConstraintError(
-      @NonNull IConstraint constraint,
-      @NonNull INodeItem item,
-      @NonNull MetapathException ex) {
-<span class="nc" id="L691">    StringBuilder builder = new StringBuilder(128);</span>
-<span class="nc" id="L692">    builder.append(&quot;A &quot;)</span>
-<span class="nc" id="L693">        .append(constraint.getClass().getName())</span>
-<span class="nc" id="L694">        .append(&quot; constraint&quot;);</span>
-
-<span class="nc" id="L696">    String id = constraint.getId();</span>
-<span class="nc bnc" id="L697" title="All 2 branches missed.">    if (id == null) {</span>
-<span class="nc" id="L698">      builder.append(&quot; targeting the metapath '&quot;)</span>
-<span class="nc" id="L699">          .append(constraint.getTarget())</span>
-<span class="nc" id="L700">          .append('\'');</span>
-    } else {
-<span class="nc" id="L702">      builder.append(&quot; with id '&quot;)</span>
-<span class="nc" id="L703">          .append(id)</span>
-<span class="nc" id="L704">          .append('\'');</span>
-    }
-
-<span class="nc" id="L707">    builder.append(&quot;, matching the item at path '&quot;)</span>
-<span class="nc" id="L708">        .append(item.getMetapath())</span>
-<span class="nc" id="L709">        .append(&quot;', resulted in an unexpected error. The error was: &quot;)</span>
-<span class="nc" id="L710">        .append(ex.getLocalizedMessage());</span>
-
-<span class="nc" id="L712">    throw new MetapathException(builder.toString(), ex);</span>
-  }
+<span class="fc" id="L719">    });</span>
+<span class="fc" id="L720">  }</span>
 
   /**
    * Add a new allowed value to the value status tracker.
@@ -729,14 +736,14 @@ public class DefaultConstraintValidator
       @NonNull IDefinitionNodeItem&lt;?, ?&gt; node) {
     // constraint.getAllowedValues().containsKey(value)
 
-<span class="fc" id="L732">    @Nullable ValueStatus valueStatus = valueMap.get(targetItem);</span>
-<span class="fc bfc" id="L733" title="All 2 branches covered.">    if (valueStatus == null) {</span>
-<span class="fc" id="L734">      valueStatus = new ValueStatus(targetItem);</span>
-<span class="fc" id="L735">      valueMap.put(targetItem, valueStatus);</span>
+<span class="fc" id="L739">    @Nullable ValueStatus valueStatus = valueMap.get(targetItem);</span>
+<span class="fc bfc" id="L740" title="All 2 branches covered.">    if (valueStatus == null) {</span>
+<span class="fc" id="L741">      valueStatus = new ValueStatus(targetItem);</span>
+<span class="fc" id="L742">      valueMap.put(targetItem, valueStatus);</span>
     }
 
-<span class="fc" id="L738">    valueStatus.registerAllowedValue(allowedValues, node);</span>
-<span class="fc" id="L739">  }</span>
+<span class="fc" id="L745">    valueStatus.registerAllowedValue(allowedValues, node);</span>
+<span class="fc" id="L746">  }</span>
 
   /**
    * Evaluate the value associated with the {@code targetItem} and update the
@@ -746,34 +753,34 @@ public class DefaultConstraintValidator
    *          the item whose value will be validated
    */
   protected void handleAllowedValues(@NonNull INodeItem targetItem) {
-<span class="fc" id="L749">    ValueStatus valueStatus = valueMap.remove(targetItem);</span>
-<span class="pc bpc" id="L750" title="1 of 2 branches missed.">    if (valueStatus != null) {</span>
-<span class="fc" id="L751">      valueStatus.validate();</span>
+<span class="fc" id="L756">    ValueStatus valueStatus = valueMap.remove(targetItem);</span>
+<span class="pc bpc" id="L757" title="1 of 2 branches missed.">    if (valueStatus != null) {</span>
+<span class="fc" id="L758">      valueStatus.validate();</span>
     }
-<span class="fc" id="L753">  }</span>
+<span class="fc" id="L760">  }</span>
 
   @Override
   public void finalizeValidation(DynamicContext dynamicContext) {
     // key references
-<span class="pc bpc" id="L758" title="1 of 2 branches missed.">    for (Map.Entry&lt;String, List&lt;KeyRef&gt;&gt; entry : indexNameToKeyRefMap.entrySet()) {</span>
-<span class="nc" id="L759">      String indexName = ObjectUtils.notNull(entry.getKey());</span>
-<span class="nc" id="L760">      IIndex index = indexNameToIndexMap.get(indexName);</span>
+<span class="pc bpc" id="L765" title="1 of 2 branches missed.">    for (Map.Entry&lt;String, List&lt;KeyRef&gt;&gt; entry : indexNameToKeyRefMap.entrySet()) {</span>
+<span class="nc" id="L766">      String indexName = ObjectUtils.notNull(entry.getKey());</span>
+<span class="nc" id="L767">      IIndex index = indexNameToIndexMap.get(indexName);</span>
 
-<span class="nc" id="L762">      List&lt;KeyRef&gt; keyRefs = entry.getValue();</span>
+<span class="nc" id="L769">      List&lt;KeyRef&gt; keyRefs = entry.getValue();</span>
 
-<span class="nc bnc" id="L764" title="All 2 branches missed.">      for (KeyRef keyRef : keyRefs) {</span>
-<span class="nc" id="L765">        IIndexHasKeyConstraint constraint = keyRef.getConstraint();</span>
+<span class="nc bnc" id="L771" title="All 2 branches missed.">      for (KeyRef keyRef : keyRefs) {</span>
+<span class="nc" id="L772">        IIndexHasKeyConstraint constraint = keyRef.getConstraint();</span>
 
-<span class="nc" id="L767">        INodeItem node = keyRef.getNode();</span>
-<span class="nc" id="L768">        List&lt;INodeItem&gt; targets = keyRef.getTargets();</span>
-<span class="nc bnc" id="L769" title="All 2 branches missed.">        for (INodeItem item : targets) {</span>
-<span class="nc bnc" id="L770" title="All 2 branches missed.">          assert item != null;</span>
+<span class="nc" id="L774">        INodeItem node = keyRef.getNode();</span>
+<span class="nc" id="L775">        List&lt;INodeItem&gt; targets = keyRef.getTargets();</span>
+<span class="nc bnc" id="L776" title="All 2 branches missed.">        for (INodeItem item : targets) {</span>
+<span class="nc bnc" id="L777" title="All 2 branches missed.">          assert item != null;</span>
 
-<span class="nc" id="L772">          validateKeyRef(constraint, node, item, indexName, index, dynamicContext);</span>
-<span class="nc" id="L773">        }</span>
-<span class="nc" id="L774">      }</span>
-<span class="nc" id="L775">    }</span>
-<span class="fc" id="L776">  }</span>
+<span class="nc" id="L779">          validateKeyRef(constraint, node, item, indexName, index, dynamicContext);</span>
+<span class="nc" id="L780">        }</span>
+<span class="nc" id="L781">      }</span>
+<span class="nc" id="L782">    }</span>
+<span class="fc" id="L783">  }</span>
 
   private void validateKeyRef(
       @NonNull IIndexHasKeyConstraint constraint,
@@ -782,102 +789,102 @@ public class DefaultConstraintValidator
       @NonNull String indexName,
       @Nullable IIndex index,
       @NonNull DynamicContext dynamicContext) {
-<span class="nc" id="L785">    IConstraintValidationHandler handler = getConstraintValidationHandler();</span>
+<span class="nc" id="L792">    IConstraintValidationHandler handler = getConstraintValidationHandler();</span>
     try {
-<span class="nc" id="L787">      List&lt;String&gt; key = IIndex.toKey(item, constraint.getKeyFields(), dynamicContext);</span>
+<span class="nc" id="L794">      List&lt;String&gt; key = IIndex.toKey(item, constraint.getKeyFields(), dynamicContext);</span>
 
-<span class="nc bnc" id="L789" title="All 2 branches missed.">      if (index == null) {</span>
-<span class="nc" id="L790">        handler.handleMissingIndexViolation(constraint, contextNode, item, ObjectUtils.notNull(</span>
-<span class="nc" id="L791">            String.format(&quot;Key reference to undefined index with name '%s'&quot;, indexName)));</span>
+<span class="nc bnc" id="L796" title="All 2 branches missed.">      if (index == null) {</span>
+<span class="nc" id="L797">        handler.handleMissingIndexViolation(constraint, contextNode, item, ObjectUtils.notNull(</span>
+<span class="nc" id="L798">            String.format(&quot;Key reference to undefined index with name '%s'&quot;, indexName)));</span>
       } else {
-<span class="nc" id="L793">        INodeItem referencedItem = index.get(key);</span>
+<span class="nc" id="L800">        INodeItem referencedItem = index.get(key);</span>
 
-<span class="nc bnc" id="L795" title="All 2 branches missed.">        if (referencedItem == null) {</span>
-<span class="nc" id="L796">          handler.handleIndexMiss(constraint, contextNode, item, key);</span>
+<span class="nc bnc" id="L802" title="All 2 branches missed.">        if (referencedItem == null) {</span>
+<span class="nc" id="L803">          handler.handleIndexMiss(constraint, contextNode, item, key);</span>
         } else {
-<span class="nc" id="L798">          handlePass(constraint, contextNode, item);</span>
+<span class="nc" id="L805">          handlePass(constraint, contextNode, item);</span>
         }
       }
-<span class="nc" id="L801">    } catch (MetapathException ex) {</span>
-<span class="nc" id="L802">      handler.handleKeyMatchError(constraint, contextNode, item, ex);</span>
-<span class="nc" id="L803">    }</span>
-<span class="nc" id="L804">  }</span>
+<span class="nc" id="L808">    } catch (MetapathException ex) {</span>
+<span class="nc" id="L809">      handler.handleKeyMatchError(constraint, contextNode, item, ex);</span>
+<span class="nc" id="L810">    }</span>
+<span class="nc" id="L811">  }</span>
 
   private class ValueStatus {
-<span class="fc" id="L807">    @NonNull</span>
+<span class="fc" id="L814">    @NonNull</span>
     private final List&lt;Pair&lt;IAllowedValuesConstraint, IDefinitionNodeItem&lt;?, ?&gt;&gt;&gt; constraints = new LinkedList&lt;&gt;();
     @NonNull
     private final String value;
     @NonNull
     private final INodeItem item;
-<span class="fc" id="L813">    private boolean allowOthers = true;</span>
-<span class="fc" id="L814">    @NonNull</span>
+<span class="fc" id="L820">    private boolean allowOthers = true;</span>
+<span class="fc" id="L821">    @NonNull</span>
     private IAllowedValuesConstraint.Extensible extensible = IAllowedValuesConstraint.Extensible.EXTERNAL;
 
-<span class="fc" id="L817">    public ValueStatus(@NonNull INodeItem item) {</span>
-<span class="fc" id="L818">      this.item = item;</span>
-<span class="fc" id="L819">      this.value = FnData.fnDataItem(item).asString();</span>
-<span class="fc" id="L820">    }</span>
+<span class="fc" id="L824">    public ValueStatus(@NonNull INodeItem item) {</span>
+<span class="fc" id="L825">      this.item = item;</span>
+<span class="fc" id="L826">      this.value = FnData.fnDataItem(item).asString();</span>
+<span class="fc" id="L827">    }</span>
 
     public void registerAllowedValue(
         @NonNull IAllowedValuesConstraint allowedValues,
         @NonNull IDefinitionNodeItem&lt;?, ?&gt; node) {
-<span class="fc" id="L825">      this.constraints.add(Pair.of(allowedValues, node));</span>
-<span class="fc bfc" id="L826" title="All 2 branches covered.">      if (!allowedValues.isAllowedOther()) {</span>
+<span class="fc" id="L832">      this.constraints.add(Pair.of(allowedValues, node));</span>
+<span class="fc bfc" id="L833" title="All 2 branches covered.">      if (!allowedValues.isAllowedOther()) {</span>
         // record the most restrictive value
-<span class="fc" id="L828">        allowOthers = false;</span>
+<span class="fc" id="L835">        allowOthers = false;</span>
       }
 
-<span class="fc" id="L831">      IAllowedValuesConstraint.Extensible newExtensible = allowedValues.getExtensible();</span>
-<span class="pc bpc" id="L832" title="1 of 2 branches missed.">      if (newExtensible.ordinal() &gt; extensible.ordinal()) {</span>
+<span class="fc" id="L838">      IAllowedValuesConstraint.Extensible newExtensible = allowedValues.getExtensible();</span>
+<span class="pc bpc" id="L839" title="1 of 2 branches missed.">      if (newExtensible.ordinal() &gt; extensible.ordinal()) {</span>
         // record the most restrictive value
-<span class="nc" id="L834">        extensible = allowedValues.getExtensible();</span>
-<span class="pc bpc" id="L835" title="1 of 2 branches missed.">      } else if (IAllowedValuesConstraint.Extensible.NONE.equals(newExtensible)</span>
-<span class="nc bnc" id="L836" title="All 2 branches missed.">          &amp;&amp; IAllowedValuesConstraint.Extensible.NONE.equals(extensible)) {</span>
+<span class="nc" id="L841">        extensible = allowedValues.getExtensible();</span>
+<span class="pc bpc" id="L842" title="1 of 2 branches missed.">      } else if (IAllowedValuesConstraint.Extensible.NONE.equals(newExtensible)</span>
+<span class="nc bnc" id="L843" title="All 2 branches missed.">          &amp;&amp; IAllowedValuesConstraint.Extensible.NONE.equals(extensible)) {</span>
         // this is an error, where there are two none constraints that conflict
-<span class="nc" id="L838">        throw new MetapathException(</span>
-<span class="nc" id="L839">            String.format(&quot;Multiple constraints have extensibility scope=none at path '%s'&quot;, item.getMetapath()));</span>
-<span class="pc bpc" id="L840" title="1 of 2 branches missed.">      } else if (allowedValues.getExtensible().ordinal() &lt; extensible.ordinal()) {</span>
-<span class="nc" id="L841">        String msg = String.format(</span>
+<span class="nc" id="L845">        throw new MetapathException(</span>
+<span class="nc" id="L846">            String.format(&quot;Multiple constraints have extensibility scope=none at path '%s'&quot;, item.getMetapath()));</span>
+<span class="pc bpc" id="L847" title="1 of 2 branches missed.">      } else if (allowedValues.getExtensible().ordinal() &lt; extensible.ordinal()) {</span>
+<span class="nc" id="L848">        String msg = String.format(</span>
             &quot;An allowed values constraint with an extensibility scope '%s'&quot;
                 + &quot; exceeds the allowed scope '%s' at path '%s'&quot;,
-<span class="nc" id="L844">            allowedValues.getExtensible().name(), extensible.name(), item.getMetapath());</span>
-<span class="nc" id="L845">        LOGGER.atError().log(msg);</span>
-<span class="nc" id="L846">        throw new MetapathException(msg);</span>
+<span class="nc" id="L851">            allowedValues.getExtensible().name(), extensible.name(), item.getMetapath());</span>
+<span class="nc" id="L852">        LOGGER.atError().log(msg);</span>
+<span class="nc" id="L853">        throw new MetapathException(msg);</span>
       }
-<span class="fc" id="L848">    }</span>
+<span class="fc" id="L855">    }</span>
 
     public void validate() {
-<span class="pc bpc" id="L851" title="1 of 2 branches missed.">      if (!constraints.isEmpty()) {</span>
-<span class="fc" id="L852">        boolean match = false;</span>
-<span class="fc" id="L853">        List&lt;IAllowedValuesConstraint&gt; failedConstraints = new LinkedList&lt;&gt;();</span>
-<span class="fc" id="L854">        IConstraintValidationHandler handler = getConstraintValidationHandler();</span>
-<span class="fc bfc" id="L855" title="All 2 branches covered.">        for (Pair&lt;IAllowedValuesConstraint, IDefinitionNodeItem&lt;?, ?&gt;&gt; pair : constraints) {</span>
-<span class="fc" id="L856">          IAllowedValuesConstraint allowedValues = pair.getLeft();</span>
-<span class="fc" id="L857">          IDefinitionNodeItem&lt;?, ?&gt; node = ObjectUtils.notNull(pair.getRight());</span>
-<span class="fc" id="L858">          IAllowedValue matchingValue = allowedValues.getAllowedValue(value);</span>
-<span class="fc bfc" id="L859" title="All 2 branches covered.">          if (matchingValue != null) {</span>
-<span class="fc" id="L860">            match = true;</span>
-<span class="fc" id="L861">            handlePass(allowedValues, node, item);</span>
-<span class="pc bpc" id="L862" title="1 of 2 branches missed.">          } else if (IAllowedValuesConstraint.Extensible.NONE.equals(allowedValues.getExtensible())) {</span>
+<span class="pc bpc" id="L858" title="1 of 2 branches missed.">      if (!constraints.isEmpty()) {</span>
+<span class="fc" id="L859">        boolean match = false;</span>
+<span class="fc" id="L860">        List&lt;IAllowedValuesConstraint&gt; failedConstraints = new LinkedList&lt;&gt;();</span>
+<span class="fc" id="L861">        IConstraintValidationHandler handler = getConstraintValidationHandler();</span>
+<span class="fc bfc" id="L862" title="All 2 branches covered.">        for (Pair&lt;IAllowedValuesConstraint, IDefinitionNodeItem&lt;?, ?&gt;&gt; pair : constraints) {</span>
+<span class="fc" id="L863">          IAllowedValuesConstraint allowedValues = pair.getLeft();</span>
+<span class="fc" id="L864">          IDefinitionNodeItem&lt;?, ?&gt; node = ObjectUtils.notNull(pair.getRight());</span>
+<span class="fc" id="L865">          IAllowedValue matchingValue = allowedValues.getAllowedValue(value);</span>
+<span class="fc bfc" id="L866" title="All 2 branches covered.">          if (matchingValue != null) {</span>
+<span class="fc" id="L867">            match = true;</span>
+<span class="fc" id="L868">            handlePass(allowedValues, node, item);</span>
+<span class="pc bpc" id="L869" title="1 of 2 branches missed.">          } else if (IAllowedValuesConstraint.Extensible.NONE.equals(allowedValues.getExtensible())) {</span>
             // hard failure, since no other values can satisfy this constraint
-<span class="nc" id="L864">            failedConstraints = CollectionUtil.singletonList(allowedValues);</span>
-<span class="nc" id="L865">            match = false;</span>
-<span class="nc" id="L866">            break;</span>
+<span class="nc" id="L871">            failedConstraints = CollectionUtil.singletonList(allowedValues);</span>
+<span class="nc" id="L872">            match = false;</span>
+<span class="nc" id="L873">            break;</span>
           } else {
-<span class="fc" id="L868">            failedConstraints.add(allowedValues);</span>
+<span class="fc" id="L875">            failedConstraints.add(allowedValues);</span>
           } // this constraint passes, but we need to make sure other constraints do as well
-<span class="fc" id="L870">        }</span>
+<span class="fc" id="L877">        }</span>
 
         // it's not a failure if allow others is true
-<span class="fc bfc" id="L873" title="All 4 branches covered.">        if (!match &amp;&amp; !allowOthers) {</span>
-<span class="fc" id="L874">          handler.handleAllowedValuesViolation(failedConstraints, item);</span>
+<span class="fc bfc" id="L880" title="All 4 branches covered.">        if (!match &amp;&amp; !allowOthers) {</span>
+<span class="fc" id="L881">          handler.handleAllowedValuesViolation(failedConstraints, item);</span>
         }
       }
-<span class="fc" id="L877">    }</span>
+<span class="fc" id="L884">    }</span>
   }
 
-<span class="fc" id="L880">  class Visitor</span>
+<span class="fc" id="L887">  class Visitor</span>
       extends AbstractNodeItemVisitor&lt;DynamicContext, Void&gt; {
 
     @NonNull
@@ -887,73 +894,73 @@ public class DefaultConstraintValidator
         @NonNull DynamicContext dynamicContext) {
 
       DynamicContext retval;
-<span class="fc" id="L890">      Collection&lt;ILet&gt; lets = letExpressions.values();</span>
-<span class="pc bpc" id="L891" title="1 of 2 branches missed.">      if (lets.isEmpty()) {</span>
-<span class="fc" id="L892">        retval = dynamicContext;</span>
+<span class="fc" id="L897">      Collection&lt;ILet&gt; lets = letExpressions.values();</span>
+<span class="pc bpc" id="L898" title="1 of 2 branches missed.">      if (lets.isEmpty()) {</span>
+<span class="fc" id="L899">        retval = dynamicContext;</span>
       } else {
-<span class="nc" id="L894">        final DynamicContext subContext = dynamicContext.subContext();</span>
+<span class="nc" id="L901">        final DynamicContext subContext = dynamicContext.subContext();</span>
 
-<span class="nc bnc" id="L896" title="All 2 branches missed.">        for (ILet let : lets) {</span>
-<span class="nc" id="L897">          QName name = let.getName();</span>
-<span class="nc" id="L898">          ISequence&lt;?&gt; result = let.getValueExpression().evaluate(focus, subContext);</span>
+<span class="nc bnc" id="L903" title="All 2 branches missed.">        for (ILet let : lets) {</span>
+<span class="nc" id="L904">          QName name = let.getName();</span>
+<span class="nc" id="L905">          ISequence&lt;?&gt; result = let.getValueExpression().evaluate(focus, subContext);</span>
 
           // ensure the sequence is list backed
-<span class="nc" id="L901">          result.getValue();</span>
+<span class="nc" id="L908">          result.getValue();</span>
 
-<span class="nc" id="L903">          subContext.bindVariableValue(name, result);</span>
-<span class="nc" id="L904">        }</span>
-<span class="nc" id="L905">        retval = subContext;</span>
+<span class="nc" id="L910">          subContext.bindVariableValue(name, result);</span>
+<span class="nc" id="L911">        }</span>
+<span class="nc" id="L912">        retval = subContext;</span>
       }
-<span class="fc" id="L907">      return retval;</span>
+<span class="fc" id="L914">      return retval;</span>
     }
 
     @Override
     public Void visitFlag(@NonNull IFlagNodeItem item, DynamicContext context) {
-<span class="pc bpc" id="L912" title="1 of 2 branches missed.">      assert context != null;</span>
+<span class="pc bpc" id="L919" title="1 of 2 branches missed.">      assert context != null;</span>
 
-<span class="fc" id="L914">      IFlagDefinition definition = item.getDefinition();</span>
-<span class="fc" id="L915">      DynamicContext effectiveContext = handleLetStatements(item, definition.getLetExpressions(), context);</span>
+<span class="fc" id="L921">      IFlagDefinition definition = item.getDefinition();</span>
+<span class="fc" id="L922">      DynamicContext effectiveContext = handleLetStatements(item, definition.getLetExpressions(), context);</span>
 
-<span class="fc" id="L917">      validateFlag(item, effectiveContext);</span>
-<span class="fc" id="L918">      super.visitFlag(item, effectiveContext);</span>
-<span class="fc" id="L919">      handleAllowedValues(item);</span>
-<span class="fc" id="L920">      return null;</span>
+<span class="fc" id="L924">      validateFlag(item, effectiveContext);</span>
+<span class="fc" id="L925">      super.visitFlag(item, effectiveContext);</span>
+<span class="fc" id="L926">      handleAllowedValues(item);</span>
+<span class="fc" id="L927">      return null;</span>
     }
 
     @Override
     public Void visitField(@NonNull IFieldNodeItem item, DynamicContext context) {
-<span class="nc bnc" id="L925" title="All 2 branches missed.">      assert context != null;</span>
+<span class="nc bnc" id="L932" title="All 2 branches missed.">      assert context != null;</span>
 
-<span class="nc" id="L927">      IFieldDefinition definition = item.getDefinition();</span>
-<span class="nc" id="L928">      DynamicContext effectiveContext = handleLetStatements(item, definition.getLetExpressions(), context);</span>
+<span class="nc" id="L934">      IFieldDefinition definition = item.getDefinition();</span>
+<span class="nc" id="L935">      DynamicContext effectiveContext = handleLetStatements(item, definition.getLetExpressions(), context);</span>
 
-<span class="nc" id="L930">      validateField(item, effectiveContext);</span>
-<span class="nc" id="L931">      super.visitField(item, effectiveContext);</span>
-<span class="nc" id="L932">      handleAllowedValues(item);</span>
-<span class="nc" id="L933">      return null;</span>
+<span class="nc" id="L937">      validateField(item, effectiveContext);</span>
+<span class="nc" id="L938">      super.visitField(item, effectiveContext);</span>
+<span class="nc" id="L939">      handleAllowedValues(item);</span>
+<span class="nc" id="L940">      return null;</span>
     }
 
     @Override
     public Void visitAssembly(@NonNull IAssemblyNodeItem item, DynamicContext context) {
-<span class="nc bnc" id="L938" title="All 2 branches missed.">      assert context != null;</span>
+<span class="nc bnc" id="L945" title="All 2 branches missed.">      assert context != null;</span>
 
-<span class="nc" id="L940">      IAssemblyDefinition definition = item.getDefinition();</span>
-<span class="nc" id="L941">      DynamicContext effectiveContext = handleLetStatements(item, definition.getLetExpressions(), context);</span>
+<span class="nc" id="L947">      IAssemblyDefinition definition = item.getDefinition();</span>
+<span class="nc" id="L948">      DynamicContext effectiveContext = handleLetStatements(item, definition.getLetExpressions(), context);</span>
 
-<span class="nc" id="L943">      validateAssembly(item, effectiveContext);</span>
-<span class="nc" id="L944">      super.visitAssembly(item, effectiveContext);</span>
-<span class="nc" id="L945">      return null;</span>
+<span class="nc" id="L950">      validateAssembly(item, effectiveContext);</span>
+<span class="nc" id="L951">      super.visitAssembly(item, effectiveContext);</span>
+<span class="nc" id="L952">      return null;</span>
     }
 
     @Override
     public Void visitMetaschema(@NonNull IModuleNodeItem item, DynamicContext context) {
-<span class="nc" id="L950">      throw new UnsupportedOperationException(&quot;not needed&quot;);</span>
+<span class="nc" id="L957">      throw new UnsupportedOperationException(&quot;not needed&quot;);</span>
     }
 
     @Override
     protected Void defaultResult() {
       // no result value
-<span class="fc" id="L956">      return null;</span>
+<span class="fc" id="L963">      return null;</span>
     }
   }
 
@@ -968,25 +975,25 @@ public class DefaultConstraintValidator
     public KeyRef(
         @NonNull IIndexHasKeyConstraint constraint,
         @NonNull INodeItem node,
-<span class="nc" id="L971">        @NonNull List&lt;INodeItem&gt; targets) {</span>
-<span class="nc" id="L972">      this.node = node;</span>
-<span class="nc" id="L973">      this.constraint = constraint;</span>
-<span class="nc" id="L974">      this.targets = targets;</span>
-<span class="nc" id="L975">    }</span>
+<span class="nc" id="L978">        @NonNull List&lt;INodeItem&gt; targets) {</span>
+<span class="nc" id="L979">      this.node = node;</span>
+<span class="nc" id="L980">      this.constraint = constraint;</span>
+<span class="nc" id="L981">      this.targets = targets;</span>
+<span class="nc" id="L982">    }</span>
 
     @NonNull
     public IIndexHasKeyConstraint getConstraint() {
-<span class="nc" id="L979">      return constraint;</span>
+<span class="nc" id="L986">      return constraint;</span>
     }
 
     @NonNull
     protected INodeItem getNode() {
-<span class="nc" id="L984">      return node;</span>
+<span class="nc" id="L991">      return node;</span>
     }
 
     @NonNull
     public List&lt;INodeItem&gt; getTargets() {
-<span class="nc" id="L989">      return targets;</span>
+<span class="nc" id="L996">      return targets;</span>
     }
   }
 }

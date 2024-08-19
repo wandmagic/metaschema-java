@@ -237,5 +237,17 @@ import edu.umd.cs.findbugs.annotations.Nullable;
   public void handlePass(IConstraint constraint, INodeItem node, INodeItem target) {
     // do nothing
 <span class="nc" id="L239">  }</span>
+
+  @Override
+  public void handleError(
+      IConstraint constraint,
+      INodeItem node,
+      String message,
+      Throwable exception) {
+<span class="nc" id="L247">    Level level = Level.CRITICAL;</span>
+<span class="nc bnc" id="L248" title="All 2 branches missed.">    if (isLogged(level)) {</span>
+<span class="nc" id="L249">      logConstraint(level, node, message, exception);</span>
+    }
+<span class="nc" id="L251">  }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

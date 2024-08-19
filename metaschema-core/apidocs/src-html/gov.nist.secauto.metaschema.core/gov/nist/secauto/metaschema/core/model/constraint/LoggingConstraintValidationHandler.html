@@ -250,7 +250,19 @@
 <span class="source-line-no">237</span><span id="line-237">  public void handlePass(IConstraint constraint, INodeItem node, INodeItem target) {</span>
 <span class="source-line-no">238</span><span id="line-238">    // do nothing</span>
 <span class="source-line-no">239</span><span id="line-239">  }</span>
-<span class="source-line-no">240</span><span id="line-240">}</span>
+<span class="source-line-no">240</span><span id="line-240"></span>
+<span class="source-line-no">241</span><span id="line-241">  @Override</span>
+<span class="source-line-no">242</span><span id="line-242">  public void handleError(</span>
+<span class="source-line-no">243</span><span id="line-243">      IConstraint constraint,</span>
+<span class="source-line-no">244</span><span id="line-244">      INodeItem node,</span>
+<span class="source-line-no">245</span><span id="line-245">      String message,</span>
+<span class="source-line-no">246</span><span id="line-246">      Throwable exception) {</span>
+<span class="source-line-no">247</span><span id="line-247">    Level level = Level.CRITICAL;</span>
+<span class="source-line-no">248</span><span id="line-248">    if (isLogged(level)) {</span>
+<span class="source-line-no">249</span><span id="line-249">      logConstraint(level, node, message, exception);</span>
+<span class="source-line-no">250</span><span id="line-250">    }</span>
+<span class="source-line-no">251</span><span id="line-251">  }</span>
+<span class="source-line-no">252</span><span id="line-252">}</span>
 
 
 

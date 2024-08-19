@@ -652,7 +652,7 @@ public class MetaschemaJsonReader
 <span class="nc" id="L652">        retval = delegate.handleUnknownProperty(definition, parentItem, fieldName, parser);</span>
       } else {
         // handle JSON value key
-<span class="fc" id="L655">        String key = ObjectUtils.notNull(parser.getCurrentName());</span>
+<span class="fc" id="L655">        String key = ObjectUtils.notNull(parser.currentName());</span>
 <span class="fc" id="L656">        Object keyValue = jsonValueKyeFlag.getJavaTypeAdapter().parse(key);</span>
 <span class="fc" id="L657">        jsonValueKyeFlag.setValue(ObjectUtils.notNull(parentItem), keyValue);</span>
 

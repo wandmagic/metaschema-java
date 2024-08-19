@@ -58,39 +58,38 @@ final class MetaschemaJsonUtil {
     Stream&lt;? extends IBoundProperty&lt;?&gt;&gt; instanceStream;
 <span class="nc bnc" id="L59" title="All 2 branches missed.">    if (targetDefinition instanceof IBoundDefinitionModelAssembly) {</span>
       // use all child instances
-<span class="nc" id="L61">      instanceStream = ((IBoundDefinitionModelAssembly) targetDefinition).getModelInstances().stream()</span>
-<span class="nc" id="L62">          .map(instance -&gt; (IBoundProperty&lt;?&gt;) instance);</span>
-<span class="nc bnc" id="L63" title="All 2 branches missed.">    } else if (targetDefinition instanceof IBoundDefinitionModelFieldComplex) {</span>
-<span class="nc" id="L64">      IBoundDefinitionModelFieldComplex targetFieldDefinition = (IBoundDefinitionModelFieldComplex) targetDefinition;</span>
+<span class="nc" id="L61">      instanceStream = ((IBoundDefinitionModelAssembly) targetDefinition).getModelInstances().stream();</span>
+<span class="nc bnc" id="L62" title="All 2 branches missed.">    } else if (targetDefinition instanceof IBoundDefinitionModelFieldComplex) {</span>
+<span class="nc" id="L63">      IBoundDefinitionModelFieldComplex targetFieldDefinition = (IBoundDefinitionModelFieldComplex) targetDefinition;</span>
 
-<span class="nc" id="L66">      IBoundInstanceFlag jsonValueKeyFlag = targetFieldDefinition.getJsonValueKeyFlagInstance();</span>
-<span class="nc bnc" id="L67" title="All 4 branches missed.">      if (jsonValueKeyFlag == null &amp;&amp; flagCount &gt; 0) {</span>
+<span class="nc" id="L65">      IBoundInstanceFlag jsonValueKeyFlag = targetFieldDefinition.getJsonValueKeyFlagInstance();</span>
+<span class="nc bnc" id="L66" title="All 4 branches missed.">      if (jsonValueKeyFlag == null &amp;&amp; flagCount &gt; 0) {</span>
         // the field value is handled as named field
-<span class="nc" id="L69">        IBoundFieldValue fieldValue = targetFieldDefinition.getFieldValue();</span>
-<span class="nc" id="L70">        instanceStream = Stream.of(fieldValue);</span>
-<span class="nc" id="L71">      } else {</span>
+<span class="nc" id="L68">        IBoundFieldValue fieldValue = targetFieldDefinition.getFieldValue();</span>
+<span class="nc" id="L69">        instanceStream = Stream.of(fieldValue);</span>
+<span class="nc" id="L70">      } else {</span>
         // only the value, with no flags or a JSON value key flag
-<span class="nc" id="L73">        instanceStream = Stream.empty();</span>
+<span class="nc" id="L72">        instanceStream = Stream.empty();</span>
       }
-<span class="nc" id="L75">    } else {</span>
-<span class="nc" id="L76">      throw new UnsupportedOperationException(</span>
-<span class="nc" id="L77">          String.format(&quot;Unsupported class binding type: %s&quot;, targetDefinition.getClass().getName()));</span>
+<span class="nc" id="L74">    } else {</span>
+<span class="nc" id="L75">      throw new UnsupportedOperationException(</span>
+<span class="nc" id="L76">          String.format(&quot;Unsupported class binding type: %s&quot;, targetDefinition.getClass().getName()));</span>
     }
 
-<span class="nc bnc" id="L80" title="All 2 branches missed.">    if (jsonKey != null) {</span>
-<span class="nc" id="L81">      instanceStream = Stream.concat(</span>
-<span class="nc bnc" id="L82" title="All 2 branches missed.">          flags.stream().filter(flag -&gt; !jsonKey.equals(flag)),</span>
+<span class="nc bnc" id="L79" title="All 2 branches missed.">    if (jsonKey != null) {</span>
+<span class="nc" id="L80">      instanceStream = Stream.concat(</span>
+<span class="nc bnc" id="L81" title="All 2 branches missed.">          flags.stream().filter(flag -&gt; !jsonKey.equals(flag)),</span>
           instanceStream);
     } else {
-<span class="nc" id="L85">      instanceStream = Stream.concat(</span>
-<span class="nc" id="L86">          flags.stream(),</span>
+<span class="nc" id="L84">      instanceStream = Stream.concat(</span>
+<span class="nc" id="L85">          flags.stream(),</span>
           instanceStream);
     }
-<span class="nc" id="L89">    return CollectionUtil.unmodifiableMap(ObjectUtils.notNull(instanceStream.collect(</span>
-<span class="nc" id="L90">        Collectors.toMap(</span>
+<span class="nc" id="L88">    return CollectionUtil.unmodifiableMap(ObjectUtils.notNull(instanceStream.collect(</span>
+<span class="nc" id="L89">        Collectors.toMap(</span>
             IBoundProperty::getJsonName,
-<span class="nc" id="L92">            Function.identity(),</span>
-<span class="nc" id="L93">            (v1, v2) -&gt; v2,</span>
+<span class="nc" id="L91">            Function.identity(),</span>
+<span class="nc" id="L92">            (v1, v2) -&gt; v2,</span>
             LinkedHashMap::new))));
   }
 }
