@@ -1,0 +1,18 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Debug CLI",
+            "request": "launch",
+            "mainClass": "gov.nist.secauto.metaschema.cli.CLI",
+            "projectName": "metaschema-cli",
+            "cwd": "${workspaceFolder}",
+            "classPaths": [
+                "${workspaceFolder}/metaschema-cli/target/classes",
+                "${workspaceFolder}/metaschema-cli/target/dependency/*"
+            ],
+            "args": []
+        }
+    ]
+}
