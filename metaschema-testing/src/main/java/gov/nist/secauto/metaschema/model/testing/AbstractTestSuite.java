@@ -77,7 +77,7 @@ public abstract class AbstractTestSuite {
 
   /**
    * Get the content format used by the test suite.
-   * 
+   *
    * @return the format
    */
   @NonNull
@@ -85,7 +85,7 @@ public abstract class AbstractTestSuite {
 
   /**
    * Get the resource describing the tests to execute.
-   * 
+   *
    * @return the resource
    */
   @NonNull
@@ -93,7 +93,7 @@ public abstract class AbstractTestSuite {
 
   /**
    * Get the filesystem location to use for generating content.
-   * 
+   *
    * @return the filesystem path
    */
   @NonNull
@@ -102,7 +102,7 @@ public abstract class AbstractTestSuite {
   /**
    * Get the method used to generate a schema using a given Metaschema module and
    * writer.
-   * 
+   *
    * @return the schema generator supplier
    */
   @NonNull
@@ -110,7 +110,7 @@ public abstract class AbstractTestSuite {
 
   /**
    * Get the method used to provide a schema validator.
-   * 
+   *
    * @return the method as a supplier
    */
   @Nullable
@@ -118,7 +118,7 @@ public abstract class AbstractTestSuite {
 
   /**
    * Get the method used to provide a content validator.
-   * 
+   *
    * @return the method as a supplier
    */
   @NonNull
@@ -126,7 +126,7 @@ public abstract class AbstractTestSuite {
 
   /**
    * Dynamically generate the unit tests.
-   * 
+   *
    * @return the steam of unit tests
    */
   @NonNull
@@ -159,7 +159,7 @@ public abstract class AbstractTestSuite {
 
   /**
    * Configure removal of the provided directory after test execution.
-   * 
+   *
    * @param path
    *          the directory to configure for removal
    */
@@ -223,7 +223,7 @@ public abstract class AbstractTestSuite {
   /**
    * Generate a schema for the provided module using the provided schema
    * generator.
-   * 
+   *
    * @param module
    *          the Metaschema module to generate the schema for
    * @param schemaPath
@@ -253,6 +253,7 @@ public abstract class AbstractTestSuite {
 
   /**
    * The the options for writing generated content.
+   *
    * @return the options
    */
   protected OpenOption[] getWriteOpenOptions() {
@@ -389,7 +390,7 @@ public abstract class AbstractTestSuite {
 
   /**
    * Perform content conversion.
-   * 
+   *
    * @param resource
    *          the resource to convert
    * @param generationPath
@@ -515,7 +516,7 @@ public abstract class AbstractTestSuite {
 
   /**
    * Use the provided validator to validate the provided target.
-   * 
+   *
    * @param validator
    *          the content validator to use
    * @param target
