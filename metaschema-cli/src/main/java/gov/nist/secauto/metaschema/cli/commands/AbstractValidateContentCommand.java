@@ -97,6 +97,18 @@ public abstract class AbstractValidateContentCommand
           .longOpt("sarif-include-pass")
           .desc("include pass results in SARIF")
           .build());
+  @NonNull
+  private static final Option NO_SCHEMA_VALIDATION_OPTION = ObjectUtils.notNull(
+      Option.builder()
+          .longOpt("disable-schema-validation")
+          .desc("do not perform schema validation")
+          .build());
+  @NonNull
+  private static final Option NO_CONSTRAINT_VALIDATION_OPTION = ObjectUtils.notNull(
+      Option.builder()
+          .longOpt("disable-constraint-validation")
+          .desc("do not perform constraint validation")
+          .build());
 
   @Override
   public String getName() {
@@ -110,7 +122,9 @@ public abstract class AbstractValidateContentCommand
         AS_OPTION,
         CONSTRAINTS_OPTION,
         SARIF_OUTPUT_FILE_OPTION,
-        SARIF_INCLUDE_PASS_OPTION);
+        SARIF_INCLUDE_PASS_OPTION,
+        NO_SCHEMA_VALIDATION_OPTION,
+        NO_CONSTRAINT_VALIDATION_OPTION);
   }
 
   @Override
@@ -263,22 +277,25 @@ public abstract class AbstractValidateContentCommand
         configuration.enableFeature(ValidationFeature.VALIDATE_GENERATE_PASS_FINDINGS);
       }
 
-      IValidationResult validationResult;
+      IValidationResult validationResult = null;
       try {
-        // perform schema validation
-        validationResult = this.validateWithSchema(source, asFormat);
+        if (!cmdLine.hasOption(NO_SCHEMA_VALIDATION_OPTION)) {
+          // perform schema validation
+          validationResult = this.validateWithSchema(source, asFormat);
+        }
 
-        if (validationResult.isPassing()) {
+        if (!cmdLine.hasOption(NO_CONSTRAINT_VALIDATION_OPTION)
+            && (validationResult == null || validationResult.isPassing())) {
           // perform constraint validation
           IValidationResult constraintValidationResult = bindingContext.validateWithConstraints(source, configuration);
-          validationResult = AggregateValidationResult.aggregate(validationResult, constraintValidationResult);
+          validationResult = validationResult == null
+              ? constraintValidationResult
+              : AggregateValidationResult.aggregate(validationResult, constraintValidationResult);
         }
       } catch (FileNotFoundException ex) {
         return ExitCode.IO_ERROR.exitMessage(String.format("Resource not found at '%s'", source)).withThrowable(ex);
-
       } catch (UnknownHostException ex) {
         return ExitCode.IO_ERROR.exitMessage(String.format("Unknown host for '%s'.", source)).withThrowable(ex);
-
       } catch (IOException ex) {
         return ExitCode.IO_ERROR.exit().withThrowable(ex);
       } catch (MetapathException ex) {
@@ -293,17 +310,19 @@ public abstract class AbstractValidateContentCommand
 
         try {
           SarifValidationHandler sarifHandler = new SarifValidationHandler(source, version);
-          sarifHandler.addFindings(validationResult.getFindings());
+          if (validationResult != null) {
+            sarifHandler.addFindings(validationResult.getFindings());
+          }
           sarifHandler.write(sarifFile);
         } catch (IOException ex) {
           return ExitCode.IO_ERROR.exit().withThrowable(ex);
         }
-      } else if (!validationResult.getFindings().isEmpty()) {
+      } else if (validationResult != null && !validationResult.getFindings().isEmpty()) {
         LOGGER.info("Validation identified the following issues:", source);
         LoggingValidationHandler.instance().handleValidationResults(validationResult);
       }
 
-      if (validationResult.isPassing()) {
+      if (validationResult == null || validationResult.isPassing()) {
         if (LOGGER.isInfoEnabled()) {
           LOGGER.info("The file '{}' is valid.", source);
         }
@@ -311,7 +330,7 @@ public abstract class AbstractValidateContentCommand
         LOGGER.error("The file '{}' is invalid.", source);
       }
 
-      return (validationResult.isPassing() ? ExitCode.OK : ExitCode.FAIL).exit();
+      return (validationResult == null || validationResult.isPassing() ? ExitCode.OK : ExitCode.FAIL).exit();
     }
   }
 }

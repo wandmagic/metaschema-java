@@ -132,6 +132,35 @@ public class CLITest {
             },
             ExitCode.IO_ERROR, java.io.FileNotFoundException.class));
         add(Arguments.of(
+            new String[] { "validate-content",
+                "-m",
+                "src/test/resources/content/schema-validation-module.xml",
+                "src/test/resources/content/schema-validation-module-missing-required.xml",
+                "--as=xml"
+            },
+            // fail due to schema validation issue
+            ExitCode.FAIL, NO_EXCEPTION_CLASS));
+        add(Arguments.of(
+            new String[] { "validate-content",
+                "-m",
+                "src/test/resources/content/schema-validation-module.xml",
+                "src/test/resources/content/schema-validation-module-missing-required.xml",
+                "--as=xml",
+                "--disable-schema-validation"
+            },
+            // fail due to constraint validation issue
+            ExitCode.FAIL, NO_EXCEPTION_CLASS));
+        add(Arguments.of(
+            new String[] { "validate-content",
+                "-m",
+                "src/test/resources/content/schema-validation-module.xml",
+                "src/test/resources/content/schema-validation-module-missing-required.xml",
+                "--as=xml",
+                "--disable-schema-validation",
+                "--disable-constraint-validation"
+            },
+            ExitCode.OK, NO_EXCEPTION_CLASS));
+        add(Arguments.of(
             new String[] { "metapath", "list-functions" },
             ExitCode.OK, NO_EXCEPTION_CLASS));
       }
