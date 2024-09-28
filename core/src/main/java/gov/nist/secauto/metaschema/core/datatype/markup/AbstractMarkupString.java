@@ -12,6 +12,7 @@ import com.vladsch.flexmark.html2md.converter.FlexmarkHtmlConverter;
 import com.vladsch.flexmark.parser.Parser;
 import com.vladsch.flexmark.util.ast.Document;
 import com.vladsch.flexmark.util.ast.Node;
+import com.vladsch.flexmark.util.ast.TextCollectingVisitor;
 
 import gov.nist.secauto.metaschema.core.datatype.markup.flexmark.AstCollectingVisitor;
 import gov.nist.secauto.metaschema.core.datatype.markup.flexmark.FlexmarkFactory;
@@ -205,6 +206,11 @@ public abstract class AbstractMarkupString<TYPE extends AbstractMarkupString<TYP
   @Override
   public String toMarkdown(Formatter formatter) {
     return ObjectUtils.notNull(formatter.render(getDocument()));
+  }
+
+  @Override
+  public String toText() {
+    return new TextCollectingVisitor().collectAndGetText(document);
   }
 
   @Override
