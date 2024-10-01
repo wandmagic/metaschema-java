@@ -28,6 +28,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Map;
+import java.util.Set;
 
 import dev.harrel.jsonschema.Dialects;
 import dev.harrel.jsonschema.JsonNode;
@@ -49,6 +51,9 @@ class SarifValidationHandlerTest {
 
     Path sourceFile = Paths.get(".", "source.json").toAbsolutePath();
 
+    Set<String> helpUrls = Set.of("https://example.com/test");
+    Set<String> helpMarkdown = Set.of("**help text**");
+
     context.checking(new Expectations() {
       { // NOPMD - intentional
         allowing(versionInfo).getName();
@@ -64,6 +69,17 @@ class SarifValidationHandlerTest {
         will(returnValue("a formal name"));
         allowing(constraintA).getDescription();
         will(returnValue(MarkupLine.fromMarkdown("a description")));
+        allowing(constraintA).getProperties();
+        will(returnValue(
+            Map.ofEntries(
+                Map.entry(SarifValidationHandler.SARIF_HELP_URL_KEY, helpUrls),
+                Map.entry(SarifValidationHandler.SARIF_HELP_MARKDOWN_KEY, helpMarkdown))));
+        allowing(constraintA).getPropertyValues(SarifValidationHandler.SARIF_HELP_URL_KEY);
+        will(returnValue(helpUrls));
+        allowing(constraintA).getPropertyValues(SarifValidationHandler.SARIF_HELP_TEXT_KEY);
+        will(returnValue(Set.of()));
+        allowing(constraintA).getPropertyValues(SarifValidationHandler.SARIF_HELP_MARKDOWN_KEY);
+        will(returnValue(helpMarkdown));
 
         allowing(node).getLocation();
         will(returnValue(location));

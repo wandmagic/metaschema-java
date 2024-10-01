@@ -6,6 +6,8 @@
 package gov.nist.secauto.metaschema.modules.sarif;
 
 import gov.nist.secauto.metaschema.core.datatype.markup.MarkupLine;
+import gov.nist.secauto.metaschema.core.datatype.markup.MarkupMultiline;
+import gov.nist.secauto.metaschema.core.model.IAttributable;
 import gov.nist.secauto.metaschema.core.model.IResourceLocation;
 import gov.nist.secauto.metaschema.core.model.constraint.ConstraintValidationFinding;
 import gov.nist.secauto.metaschema.core.model.constraint.IConstraint;
@@ -46,6 +48,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -92,6 +95,18 @@ public final class SarifValidationHandler {
       return label;
     }
   }
+
+  @NonNull
+  public static final String SARIF_NS = "https://docs.oasis-open.org/sarif/sarif/v2.1.0";
+  @NonNull
+  public static final IAttributable.Key SARIF_HELP_URL_KEY
+      = IAttributable.key("help-url", SarifValidationHandler.SARIF_NS);
+  @NonNull
+  public static final IAttributable.Key SARIF_HELP_TEXT_KEY
+      = IAttributable.key("help-text", SarifValidationHandler.SARIF_NS);
+  @NonNull
+  public static final IAttributable.Key SARIF_HELP_MARKDOWN_KEY
+      = IAttributable.key("help-markdown", SarifValidationHandler.SARIF_NS);
 
   @NonNull
   private final URI source;
@@ -464,7 +479,6 @@ public final class SarifValidationHandler {
       retval.setId(getId());
       retval.setGuid(getGuid());
       return retval;
-
     }
 
     public String getId() {
@@ -513,6 +527,32 @@ public final class SarifValidationHandler {
         text.setMarkdown(description.toMarkdown());
         retval.setFullDescription(text);
       }
+
+      Set<String> helpUrls = constraint.getPropertyValues(SARIF_HELP_URL_KEY);
+      if (!helpUrls.isEmpty()) {
+        retval.setHelpUri(URI.create(helpUrls.stream().findFirst().get()));
+      }
+
+      Set<String> helpText = constraint.getPropertyValues(SARIF_HELP_TEXT_KEY);
+      Set<String> helpMarkdown = constraint.getPropertyValues(SARIF_HELP_MARKDOWN_KEY);
+      // if there is help text or markdown, produce a message
+      if (!helpText.isEmpty() || !helpMarkdown.isEmpty()) {
+        MultiformatMessageString help = new MultiformatMessageString();
+
+        MarkupMultiline markdown = helpMarkdown.stream().map(MarkupMultiline::fromMarkdown).findFirst().orElse(null);
+        if (markdown != null) {
+          // markdown is provided
+          help.setMarkdown(markdown.toMarkdown());
+        }
+
+        String text = helpText.isEmpty()
+            ? ObjectUtils.requireNonNull(markdown).toText() // if text is empty, markdown must be provided
+            : helpText.stream().findFirst().get(); // use the provided text
+        help.setText(text);
+
+        retval.setHelp(help);
+      }
+
       return retval;
     }
 
