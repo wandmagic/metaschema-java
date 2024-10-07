@@ -20,13 +20,12 @@ import java.util.stream.Collectors;
 import javax.xml.namespace.QName;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
+import nl.talsmasoftware.lazy4j.Lazy;
 
 public class StaticFunctionCall implements IExpression {
   @NonNull
-  private final QName name;
-  @NonNull
   private final List<IExpression> arguments;
-  private IFunction function;
+  private final Lazy<IFunction> function;
 
   /**
    * Construct a new function call expression.
@@ -37,8 +36,10 @@ public class StaticFunctionCall implements IExpression {
    *          the expressions used to provide arguments to the function call
    */
   public StaticFunctionCall(@NonNull QName name, @NonNull List<IExpression> arguments) {
-    this.name = Objects.requireNonNull(name, "name");
     this.arguments = Objects.requireNonNull(arguments, "arguments");
+    this.function = Lazy.lazy(() -> FunctionService.getInstance().getFunction(
+        Objects.requireNonNull(name, "name"),
+        arguments.size()));
   }
 
   /**
@@ -50,12 +51,7 @@ public class StaticFunctionCall implements IExpression {
    *           if the function was not found
    */
   public IFunction getFunction() {
-    synchronized (this) {
-      if (function == null) {
-        function = FunctionService.getInstance().getFunction(name, arguments.size());
-      }
-      return function;
-    }
+    return function.get();
   }
 
   @Override

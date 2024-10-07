@@ -135,9 +135,7 @@ public final class StaticContext {
    */
   @Nullable
   public URI getBaseUri() {
-    synchronized (this) {
-      return baseUri;
-    }
+    return baseUri;
   }
 
   /**
