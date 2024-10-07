@@ -19,8 +19,9 @@ import java.util.List;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
-public final class FnStartsWith {
-  private static final String NAME = "starts-with";
+public final class FnContains {
+  private static final String NAME = "contains";
+
   @NonNull
   static final IFunction SIGNATURE = IFunction.builder()
       .name(NAME)
@@ -39,7 +40,7 @@ public final class FnStartsWith {
           .build())
       .returnType(IBooleanItem.class)
       .returnOne()
-      .functionHandler(FnStartsWith::execute)
+      .functionHandler(FnContains::execute)
       .build();
 
   @SuppressWarnings("unused")
@@ -53,39 +54,39 @@ public final class FnStartsWith {
     IStringItem arg2 = FunctionUtils.asTypeOrNull(arguments.get(1).getFirstItem(true));
 
     return ISequence.of(IBooleanItem.valueOf(
-        fnStartsWith(
+        fnContains(
             arg1 == null ? "" : arg1.asString(),
             arg2 == null ? "" : arg2.asString())));
   }
 
   /**
    * Determine if the string provided in the first argument contains the string in
-   * the second argument as a leading substring.
+   * the second argument as a substring.
    * <p>
    * Based on the XPath 3.1 <a href=
-   * "https://www.w3.org/TR/xpath-functions-31/#func-starts-with">fn:starts-with</a>
+   * "https://www.w3.org/TR/xpath-functions-31/#func-contains">fn:contains</a>
    * function.
    *
    * @param arg1
    *          the string to examine
    * @param arg2
    *          the string to check as the leading substring
-   * @return {@code true} if {@code arg1} starts with {@code arg2}, or
-   *         {@code false} otherwise
+   * @return {@code true} if {@code arg1} contains {@code arg2}, or {@code false}
+   *         otherwise
    */
-  public static boolean fnStartsWith(@NonNull String arg1, @NonNull String arg2) {
+  public static boolean fnContains(@NonNull String arg1, @NonNull String arg2) {
     boolean retval;
     if (arg2.isEmpty()) {
       retval = true;
     } else if (arg1.isEmpty()) {
       retval = false;
     } else {
-      retval = arg1.startsWith(arg2);
+      retval = arg1.contains(arg2);
     }
     return retval;
   }
 
-  private FnStartsWith() {
+  private FnContains() {
     // disable construction
   }
 }

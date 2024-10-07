@@ -20,10 +20,11 @@ import java.util.List;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
-public class ArraySize {
+public final class ArraySize {
+  private static final String NAME = "size";
   @NonNull
   static final IFunction SIGNATURE = IFunction.builder()
-      .name("size")
+      .name(NAME)
       .namespace(MetapathConstants.NS_METAPATH_FUNCTIONS_ARRAY)
       .deterministic()
       .contextIndependent()
@@ -55,5 +56,9 @@ public class ArraySize {
     IArrayItem<?> array = FunctionUtils.asType(ObjectUtils.requireNonNull(arguments.get(0).getFirstItem(true)));
 
     return ISequence.of(IIntegerItem.valueOf(array.size()));
+  }
+
+  private ArraySize() {
+    // disable
   }
 }

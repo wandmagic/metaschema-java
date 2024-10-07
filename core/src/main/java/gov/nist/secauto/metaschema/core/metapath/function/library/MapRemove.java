@@ -27,9 +27,10 @@ import java.util.stream.Collectors;
 import edu.umd.cs.findbugs.annotations.NonNull;
 
 public final class MapRemove {
+  private static final String NAME = "remove";
   @NonNull
-  public static final IFunction SIGNATURE = IFunction.builder()
-      .name("remove")
+  static final IFunction SIGNATURE = IFunction.builder()
+      .name(NAME)
       .namespace(MetapathConstants.NS_METAPATH_FUNCTIONS_MAP)
       .deterministic()
       .contextIndependent()
