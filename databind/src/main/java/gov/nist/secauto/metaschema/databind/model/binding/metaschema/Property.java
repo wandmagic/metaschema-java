@@ -5,6 +5,7 @@
 
 package gov.nist.secauto.metaschema.databind.model.binding.metaschema;
 
+import gov.nist.secauto.metaschema.core.datatype.adapter.StringAdapter;
 import gov.nist.secauto.metaschema.core.datatype.adapter.TokenAdapter;
 import gov.nist.secauto.metaschema.core.datatype.adapter.UriAdapter;
 import gov.nist.secauto.metaschema.core.model.IBoundObject;
