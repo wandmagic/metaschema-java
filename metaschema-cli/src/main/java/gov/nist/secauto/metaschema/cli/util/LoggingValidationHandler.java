@@ -53,7 +53,8 @@ public final class LoggingValidationHandler {
    * Get a singleton instance of the logging validation handler.
    *
    * @param logExceptions
-   *          {@code true} if this instance will log exceptions or {@code false} otherwise
+   *          {@code true} if this instance will log exceptions or {@code false}
+   *          otherwise
    * @return the instance
    */
   @SuppressFBWarnings(value = "SING_SINGLETON_GETTER_NOT_SYNCHRONIZED",
