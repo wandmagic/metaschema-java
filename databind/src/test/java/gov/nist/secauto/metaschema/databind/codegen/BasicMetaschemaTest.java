@@ -223,7 +223,6 @@ class BasicMetaschemaTest
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   void codegenTest() throws MetaschemaException, IOException {
 
     List<IConstraintSet> constraints;

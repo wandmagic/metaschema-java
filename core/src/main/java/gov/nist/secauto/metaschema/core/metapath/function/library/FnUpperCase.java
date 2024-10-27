@@ -60,7 +60,6 @@ public final class FnUpperCase {
     return ISequence.of(arguments.get(0).isEmpty()
         ? IStringItem.valueOf("")
         : fnUpperCase(FunctionUtils.asType(ObjectUtils.notNull(arguments.get(0).getFirstItem(true)))));
-
   }
 
   /**

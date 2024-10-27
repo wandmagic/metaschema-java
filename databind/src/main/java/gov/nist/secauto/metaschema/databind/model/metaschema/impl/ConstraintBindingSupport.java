@@ -7,6 +7,7 @@ package gov.nist.secauto.metaschema.databind.model.metaschema.impl;
 
 import gov.nist.secauto.metaschema.core.datatype.IDataTypeAdapter;
 import gov.nist.secauto.metaschema.core.datatype.markup.MarkupLine;
+import gov.nist.secauto.metaschema.core.datatype.markup.MarkupMultiline;
 import gov.nist.secauto.metaschema.core.model.constraint.AbstractConstraintBuilder;
 import gov.nist.secauto.metaschema.core.model.constraint.AbstractKeyConstraintBuilder;
 import gov.nist.secauto.metaschema.core.model.constraint.IAllowedValuesConstraint;
@@ -52,11 +53,25 @@ import javax.xml.namespace.QName;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 
+/**
+ * Supports parsing constraints declared within a bound object.
+ */
+@SuppressWarnings("PMD.CouplingBetweenObjects")
 public final class ConstraintBindingSupport {
   private ConstraintBindingSupport() {
     // disable construction
   }
 
+  /**
+   * Parse a constraint set.
+   *
+   * @param constraintSet
+   *          the parsed constraint set
+   * @param constraints
+   *          the constraint definitions to parse
+   * @param source
+   *          the source of the constraints
+   */
   public static void parse(
       @NonNull IValueConstrained constraintSet,
       @NonNull IValueConstraintsBase constraints,
@@ -81,6 +96,16 @@ public final class ConstraintBindingSupport {
     }
   }
 
+  /**
+   * Parse a constraint set.
+   *
+   * @param constraintSet
+   *          the parsed constraint set
+   * @param constraints
+   *          the constraint definitions to parse
+   * @param source
+   *          the source of the constraints
+   */
   public static void parse(
       @NonNull IValueConstrained constraintSet,
       @NonNull IValueTargetedConstraintsBase constraints,
@@ -105,6 +130,16 @@ public final class ConstraintBindingSupport {
     }
   }
 
+  /**
+   * Parse a constraint set.
+   *
+   * @param constraintSet
+   *          the parsed constraint set
+   * @param constraints
+   *          the constraint definitions to parse
+   * @param source
+   *          the source of the constraints
+   */
   public static void parse(
       @NonNull IModelConstrained constraintSet,
       @NonNull IModelConstraintsBase constraints,
@@ -138,15 +173,35 @@ public final class ConstraintBindingSupport {
     }
   }
 
+  /**
+   * Parse the let clause in a constraint set.
+   *
+   * @param constraintSet
+   *          the parsed constraint set
+   * @param constraints
+   *          the constraint definitions to parse
+   * @param source
+   *          the source of the constraint
+   */
   public static void parseLet(
       @NonNull IValueConstrained constraintSet,
       @NonNull IValueConstraintsBase constraints,
       @NonNull ISource source) {
     // parse let expressions
     constraints.getLets().stream()
-        .map(letObj -> ILet.of(
-            ObjectUtils.requireNonNull(new QName(letObj.getVar())),
-            ObjectUtils.requireNonNull(letObj.getExpression()), source))
+        .map(letObj -> {
+          MarkupMultiline remarks = null;
+          Remarks remarkObj = letObj.getRemarks();
+          if (remarkObj != null) {
+            remarks = remarkObj.getRemark();
+          }
+
+          return ILet.of(
+              ObjectUtils.requireNonNull(new QName(letObj.getVar())),
+              ObjectUtils.requireNonNull(letObj.getExpression()),
+              source,
+              remarks);
+        })
         .forEachOrdered(constraintSet::addLetExpression);
   }
 
