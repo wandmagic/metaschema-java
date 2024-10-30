@@ -40,14 +40,16 @@ class FnEmptyTest
             "empty((1,2,3))"),
         Arguments.of(
             ISequence.of(bool(false)),
-            "empty(('hello','world'))"),
+            "empty(fn:remove((\"hello\", \"world\"), 1))"),
         Arguments.of(
             ISequence.of(bool(false)),
-            "empty((''))"));
-    // TODO: Add when we support map constructor syntax.
-    // Arguments.of(
-    // ISequence.of(bool(true)),
-    // "empty(map{})"));
+            "empty((''))"),
+        Arguments.of(
+            ISequence.of(bool(false)),
+            "empty([])"),
+        Arguments.of(
+            ISequence.of(bool(false)),
+            "empty(map{})"));
   }
 
   @ParameterizedTest

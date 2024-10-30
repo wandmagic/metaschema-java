@@ -498,8 +498,7 @@ public final class OperationFunctions { // NOPMD - intentional
    */
   @NonNull
   public static IBooleanItem opDateEqual(@NonNull IDateItem arg1, @NonNull IDateItem arg2) {
-    // TODO: avoid cast?
-    return opDateTimeEqual(IDateTimeItem.cast(arg1), IDateTimeItem.cast(arg2));
+    return IBooleanItem.valueOf(arg1.asZonedDateTime().equals(arg2.asZonedDateTime()));
   }
 
   /**
@@ -563,8 +562,7 @@ public final class OperationFunctions { // NOPMD - intentional
    */
   @NonNull
   public static IBooleanItem opDateGreaterThan(@NonNull IDateItem arg1, @NonNull IDateItem arg2) {
-    // TODO: avoid cast?
-    return opDateTimeGreaterThan(IDateTimeItem.cast(arg1), IDateTimeItem.cast(arg2));
+    return IBooleanItem.valueOf(arg1.asZonedDateTime().compareTo(arg2.asZonedDateTime()) > 0);
   }
 
   /**
@@ -656,7 +654,7 @@ public final class OperationFunctions { // NOPMD - intentional
   public static IBooleanItem opDateLessThan(
       @NonNull IDateItem arg1,
       @NonNull IDateItem arg2) {
-    return opDateTimeLessThan(IDateTimeItem.cast(arg1), IDateTimeItem.cast(arg2));
+    return IBooleanItem.valueOf(arg1.asZonedDateTime().compareTo(arg2.asZonedDateTime()) < 0);
   }
 
   /**

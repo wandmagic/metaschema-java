@@ -557,14 +557,12 @@ public class BuildCSTVisitor
 
   @Override
   protected IExpression handlePredicate(PredicateContext ctx) {
-    parsePredicate(ctx);
-    return null;
+    return parsePredicate(ctx);
   }
 
   @Override
   protected IExpression handleLookup(LookupContext ctx) {
-    // TODO Auto-generated method stub
-    return null;
+    throw new UnsupportedOperationException("needs to be implemented");
   }
 
   @Override

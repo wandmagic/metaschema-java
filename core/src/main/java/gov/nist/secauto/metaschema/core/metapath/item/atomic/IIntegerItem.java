@@ -13,7 +13,6 @@ import java.math.BigInteger;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
-// TODO: extends IDecimalItem instead
 public interface IIntegerItem extends IDecimalItem {
 
   @SuppressWarnings("null")
