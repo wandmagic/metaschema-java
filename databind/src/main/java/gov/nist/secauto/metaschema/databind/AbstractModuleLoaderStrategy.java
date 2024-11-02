@@ -95,7 +95,7 @@ public abstract class AbstractModuleLoaderStrategy implements IBindingContext.IM
   }
 
   @NonNull
-  protected abstract Class<? extends IBoundModule> handleUnboundModule(IModule key);
+  protected abstract Class<? extends IBoundModule> handleUnboundModule(@NonNull IModule key);
 
   /**
    * Get the Module instance for a given class annotated by the
@@ -106,6 +106,8 @@ public abstract class AbstractModuleLoaderStrategy implements IBindingContext.IM
    *
    * @param moduleClass
    *          the Module class
+   * @param bindingContext
+   *          the Metaschema binding context used to lookup binding information
    * @return the new Module instance
    */
   @NonNull

@@ -6,9 +6,9 @@
 package gov.nist.secauto.metaschema.cli.commands;
 
 import gov.nist.secauto.metaschema.cli.processor.CLIProcessor.CallingContext;
+import gov.nist.secauto.metaschema.cli.processor.command.CommandExecutionException;
 import gov.nist.secauto.metaschema.cli.processor.command.ICommandExecutor;
 import gov.nist.secauto.metaschema.core.model.IModule;
-import gov.nist.secauto.metaschema.core.model.MetaschemaException;
 import gov.nist.secauto.metaschema.core.model.constraint.IConstraintSet;
 import gov.nist.secauto.metaschema.core.model.util.JsonUtil;
 import gov.nist.secauto.metaschema.core.model.validation.JsonSchemaContentValidator;
@@ -38,7 +38,10 @@ import javax.xml.transform.stream.StreamSource;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import nl.talsmasoftware.lazy4j.Lazy;
 
-public class ValidateModuleCommand
+/**
+ * This command implementation supports validation a Metaschema module.
+ */
+class ValidateModuleCommand
     extends AbstractValidateContentCommand {
   @NonNull
   private static final String COMMAND = "validate";
@@ -55,14 +58,14 @@ public class ValidateModuleCommand
 
   @Override
   public ICommandExecutor newExecutor(CallingContext callingContext, CommandLine commandLine) {
-    return new ValidateModuleCommandExecutor(callingContext, commandLine);
+    return new CommandExecutor(callingContext, commandLine);
   }
 
-  private final class ValidateModuleCommandExecutor
+  private final class CommandExecutor
       extends AbstractValidationCommandExecutor {
     private final Lazy<ValidationProvider> validationProvider = Lazy.lazy(ValidationProvider::new);
 
-    private ValidateModuleCommandExecutor(
+    private CommandExecutor(
         @NonNull CallingContext callingContext,
         @NonNull CommandLine commandLine) {
       super(callingContext, commandLine);
@@ -70,7 +73,7 @@ public class ValidateModuleCommand
 
     @Override
     protected IBindingContext getBindingContext(Set<IConstraintSet> constraintSets)
-        throws MetaschemaException, IOException {
+        throws CommandExecutionException {
       return MetaschemaCommands.newBindingContextWithDynamicCompilation(constraintSets);
     }
 
@@ -90,16 +93,17 @@ public class ValidateModuleCommand
   }
 
   private static final class ValidationProvider implements ISchemaValidationProvider {
+    @SuppressWarnings("resource")
     @Override
     public XmlSchemaContentValidator getXmlSchemas(
         @NonNull URL targetResource,
         @NonNull IBindingContext bindingContext) throws IOException, SAXException {
       try (InputStream is = this.getClass().getResourceAsStream("/schema/xml/metaschema-model_schema.xsd")) {
-        List<Source> retval = new LinkedList<>();
-        retval.add(new StreamSource(
+        List<Source> sources = new LinkedList<>();
+        sources.add(new StreamSource(
             ObjectUtils.requireNonNull(is,
                 "Unable to load '/schema/xml/metaschema.xsd' on the classpath")));
-        return new XmlSchemaContentValidator(retval);
+        return new XmlSchemaContentValidator(sources);
       }
     }
 

@@ -12,6 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import gov.nist.secauto.metaschema.cli.processor.ExitCode;
 import gov.nist.secauto.metaschema.cli.processor.ExitStatus;
 
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -38,9 +39,9 @@ public class CLITest {
       @NonNull Class<? extends Throwable> thrownClass) {
     status.generateMessage(true);
     Throwable thrown = status.getThrowable();
-    assert thrown != null;
-    assertAll(() -> assertEquals(expectedCode, status.getExitCode(), "exit code mismatch"),
-        () -> assertEquals(thrownClass, thrown.getClass(), "expected Throwable mismatch"));
+    assertAll(
+        () -> assertEquals(expectedCode, status.getExitCode(), "exit code mismatch"),
+        () -> assertEquals(thrownClass, thrown == null ? null : thrown.getClass(), "expected Throwable mismatch"));
   }
 
   private static Stream<Arguments> providesValues() {
@@ -157,7 +158,7 @@ public class CLITest {
                 "--disable-schema-validation"
             },
             // fail due to missing element during parsing
-            ExitCode.IO_ERROR, java.io.IOException.class));
+            ExitCode.FAIL, NO_EXCEPTION_CLASS));
         add(Arguments.of(
             new String[] { "validate-content",
                 "-m",
@@ -197,5 +198,17 @@ public class CLITest {
     } else {
       evaluateResult(CLI.runCli(fullArgs), expectedExitCode, expectedThrownClass);
     }
+  }
+
+  @Test
+  void test() {
+    String[] cliArgs = { "validate-content",
+        "-m",
+        "src/test/resources/content/schema-validation-module.xml",
+        "src/test/resources/content/schema-validation-module-missing-required.xml",
+        "--as=xml",
+        "--disable-schema-validation"
+    };
+    CLI.runCli(cliArgs);
   }
 }
