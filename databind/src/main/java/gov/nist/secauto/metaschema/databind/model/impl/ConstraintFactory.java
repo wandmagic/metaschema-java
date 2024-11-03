@@ -10,6 +10,7 @@ import gov.nist.secauto.metaschema.core.datatype.IDataTypeAdapter;
 import gov.nist.secauto.metaschema.core.datatype.markup.MarkupLine;
 import gov.nist.secauto.metaschema.core.datatype.markup.MarkupMultiline;
 import gov.nist.secauto.metaschema.core.model.ISource;
+import gov.nist.secauto.metaschema.core.model.constraint.AbstractConfigurableMessageConstraintBuilder;
 import gov.nist.secauto.metaschema.core.model.constraint.AbstractConstraintBuilder;
 import gov.nist.secauto.metaschema.core.model.constraint.AbstractKeyConstraintBuilder;
 import gov.nist.secauto.metaschema.core.model.constraint.IAllowedValue;
@@ -105,6 +106,14 @@ final class ConstraintFactory {
     return builder;
   }
 
+  static <T extends AbstractConfigurableMessageConstraintBuilder<T, ?>> T applyMessage(@NonNull T builder,
+      @Nullable String message) {
+    if (message != null && !message.isBlank()) {
+      builder.message(message);
+    }
+    return builder;
+  }
+
   static <T extends AbstractConstraintBuilder<T, ?>> T applyRemarks(@NonNull T builder, @NonNull String remarks) {
     if (!remarks.isBlank()) {
       builder.remarks(MarkupMultiline.fromMarkdown(remarks));
@@ -181,6 +190,7 @@ final class ConstraintFactory {
         .level(constraint.level());
     applyTarget(builder, constraint.target());
     applyProperties(builder, constraint.properties());
+    applyMessage(builder, constraint.message());
     applyRemarks(builder, constraint.remarks());
 
     Pattern pattern = toPattern(constraint.pattern());
@@ -224,6 +234,7 @@ final class ConstraintFactory {
         .level(constraint.level());
     applyTarget(builder, constraint.target());
     applyProperties(builder, constraint.properties());
+    applyMessage(builder, constraint.message());
     applyRemarks(builder, constraint.remarks());
 
     applyKeyFields(builder, source, constraint.keyFields());
@@ -242,6 +253,7 @@ final class ConstraintFactory {
         .level(constraint.level());
     applyTarget(builder, constraint.target());
     applyProperties(builder, constraint.properties());
+    applyMessage(builder, constraint.message());
     applyRemarks(builder, constraint.remarks());
 
     applyKeyFields(builder, source, constraint.keyFields());
@@ -262,6 +274,7 @@ final class ConstraintFactory {
         .level(constraint.level());
     applyTarget(builder, constraint.target());
     applyProperties(builder, constraint.properties());
+    applyMessage(builder, constraint.message());
     applyRemarks(builder, constraint.remarks());
 
     applyKeyFields(builder, source, constraint.keyFields());
@@ -280,14 +293,10 @@ final class ConstraintFactory {
         .level(constraint.level());
     applyTarget(builder, constraint.target());
     applyProperties(builder, constraint.properties());
+    applyMessage(builder, constraint.message());
     applyRemarks(builder, constraint.remarks());
 
     builder.test(toMetapath(constraint.test()));
-
-    String message = constraint.message();
-    if (!message.isBlank()) {
-      builder.message(message);
-    }
 
     return builder.build();
   }
@@ -309,6 +318,7 @@ final class ConstraintFactory {
         .level(constraint.level());
     applyTarget(builder, constraint.target());
     applyProperties(builder, constraint.properties());
+    applyMessage(builder, constraint.message());
     applyRemarks(builder, constraint.remarks());
 
     Integer min = toCardinality(constraint.minOccurs());

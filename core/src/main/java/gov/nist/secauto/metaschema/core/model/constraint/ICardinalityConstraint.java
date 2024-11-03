@@ -16,7 +16,7 @@ import edu.umd.cs.findbugs.annotations.Nullable;
  * Represents a rule requiring a Metaschema assembly data instance to have
  * elements with a minimum and/or maximum occurrence.
  */
-public interface ICardinalityConstraint extends IConstraint {
+public interface ICardinalityConstraint extends IConfigurableMessageConstraint {
   /**
    * Retrieve the required minimum occurrence of the target instance. If
    * specified, this value must be less than or equal to the value of
@@ -54,8 +54,12 @@ public interface ICardinalityConstraint extends IConstraint {
     return new Builder();
   }
 
+  /**
+   * Provides a builder pattern for constructing a new
+   * {@link ICardinalityConstraint}.
+   */
   final class Builder
-      extends AbstractConstraintBuilder<Builder, ICardinalityConstraint> {
+      extends AbstractConfigurableMessageConstraintBuilder<Builder, ICardinalityConstraint> {
     private Integer minOccurs;
     private Integer maxOccurs;
 
@@ -121,6 +125,7 @@ public interface ICardinalityConstraint extends IConstraint {
           getProperties(),
           getMinOccurs(),
           getMaxOccurs(),
+          getMessage(),
           getRemarks());
     }
   }

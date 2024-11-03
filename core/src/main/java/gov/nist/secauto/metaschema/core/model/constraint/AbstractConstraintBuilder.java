@@ -22,10 +22,10 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 
 /**
- * The base class of all constraint builders.
- * <p>
  * Provides builder methods for the core data elements of an
  * {@link IConstraint}.
+ * <p>
+ * The base class of all constraint builders.
  *
  * @param <T>
  *          the Java type of the implementing builder

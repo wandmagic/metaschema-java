@@ -123,6 +123,14 @@ public final class AnnotationGenerator {
     }
   }
 
+  /**
+   * Build a value constraints annotation.
+   *
+   * @param builder
+   *          the annotation builder
+   * @param definition
+   *          the definition to get the value constraints for
+   */
   public static void buildValueConstraints(
       @NonNull AnnotationSpec.Builder builder,
       @NonNull IFlagDefinition definition) {
@@ -142,6 +150,14 @@ public final class AnnotationGenerator {
     }
   }
 
+  /**
+   * Build a value constraints annotation.
+   *
+   * @param builder
+   *          the annotation builder
+   * @param definition
+   *          the definition to get the value constraints for
+   */
   public static void buildValueConstraints(
       @NonNull AnnotationSpec.Builder builder,
       @NonNull IModelDefinition definition) {
@@ -167,6 +183,14 @@ public final class AnnotationGenerator {
     }
   }
 
+  /**
+   * Build an assembly constraints annotation.
+   *
+   * @param builder
+   *          the annotation builder
+   * @param definition
+   *          the definition to get the value constraints for
+   */
   public static void buildAssemblyConstraints(
       @NonNull AnnotationSpec.Builder builder,
       @NonNull IAssemblyDefinition definition) {
@@ -248,6 +272,11 @@ public final class AnnotationGenerator {
 
       buildKeyFields(constraintAnnotation, constraint.getKeyFields());
 
+      String message = constraint.getMessage();
+      if (message != null) {
+        constraintAnnotation.addMember("message", "$S", message);
+      }
+
       MarkupMultiline remarks = constraint.getRemarks();
       if (remarks != null) {
         constraintAnnotation.addMember("remarks", "$S", remarks.toMarkdown());
@@ -299,6 +328,11 @@ public final class AnnotationGenerator {
         constraintAnnotation.addMember("typeAdapter", "$T.class", dataType.getClass());
       }
 
+      String message = constraint.getMessage();
+      if (message != null) {
+        constraintAnnotation.addMember("message", "$S", message);
+      }
+
       MarkupMultiline remarks = constraint.getRemarks();
       if (remarks != null) {
         constraintAnnotation.addMember("remarks", "$S", remarks.toMarkdown());
@@ -342,6 +376,11 @@ public final class AnnotationGenerator {
 
       buildKeyFields(constraintAnnotation, constraint.getKeyFields());
 
+      String message = constraint.getMessage();
+      if (message != null) {
+        constraintAnnotation.addMember("message", "$S", message);
+      }
+
       MarkupMultiline remarks = constraint.getRemarks();
       if (remarks != null) {
         constraintAnnotation.addMember("remarks", "$S", remarks.toMarkdown());
@@ -360,6 +399,11 @@ public final class AnnotationGenerator {
       buildConstraint(IsUnique.class, constraintAnnotation, constraint);
 
       buildKeyFields(constraintAnnotation, constraint.getKeyFields());
+
+      String message = constraint.getMessage();
+      if (message != null) {
+        constraintAnnotation.addMember("message", "$S", message);
+      }
 
       MarkupMultiline remarks = constraint.getRemarks();
       if (remarks != null) {

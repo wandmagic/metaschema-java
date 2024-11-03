@@ -9,6 +9,7 @@ import gov.nist.secauto.metaschema.core.datatype.IDataTypeAdapter;
 import gov.nist.secauto.metaschema.core.datatype.markup.MarkupLine;
 import gov.nist.secauto.metaschema.core.datatype.markup.MarkupMultiline;
 import gov.nist.secauto.metaschema.core.model.ISource;
+import gov.nist.secauto.metaschema.core.model.constraint.AbstractConfigurableMessageConstraintBuilder;
 import gov.nist.secauto.metaschema.core.model.constraint.AbstractConstraintBuilder;
 import gov.nist.secauto.metaschema.core.model.constraint.AbstractKeyConstraintBuilder;
 import gov.nist.secauto.metaschema.core.model.constraint.IAllowedValuesConstraint;
@@ -24,25 +25,26 @@ import gov.nist.secauto.metaschema.core.model.constraint.IModelConstrained;
 import gov.nist.secauto.metaschema.core.model.constraint.IUniqueConstraint;
 import gov.nist.secauto.metaschema.core.model.constraint.IValueConstrained;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
-import gov.nist.secauto.metaschema.databind.model.binding.metaschema.ConstraintValueEnum;
-import gov.nist.secauto.metaschema.databind.model.binding.metaschema.FlagAllowedValues;
-import gov.nist.secauto.metaschema.databind.model.binding.metaschema.FlagExpect;
-import gov.nist.secauto.metaschema.databind.model.binding.metaschema.FlagIndexHasKey;
-import gov.nist.secauto.metaschema.databind.model.binding.metaschema.FlagMatches;
-import gov.nist.secauto.metaschema.databind.model.binding.metaschema.KeyConstraintField;
-import gov.nist.secauto.metaschema.databind.model.binding.metaschema.Property;
-import gov.nist.secauto.metaschema.databind.model.binding.metaschema.Remarks;
-import gov.nist.secauto.metaschema.databind.model.binding.metaschema.TargetedAllowedValuesConstraint;
-import gov.nist.secauto.metaschema.databind.model.binding.metaschema.TargetedExpectConstraint;
-import gov.nist.secauto.metaschema.databind.model.binding.metaschema.TargetedHasCardinalityConstraint;
-import gov.nist.secauto.metaschema.databind.model.binding.metaschema.TargetedIndexConstraint;
-import gov.nist.secauto.metaschema.databind.model.binding.metaschema.TargetedIndexHasKeyConstraint;
-import gov.nist.secauto.metaschema.databind.model.binding.metaschema.TargetedIsUniqueConstraint;
-import gov.nist.secauto.metaschema.databind.model.binding.metaschema.TargetedMatchesConstraint;
+import gov.nist.secauto.metaschema.databind.model.metaschema.IConfigurableMessageConstraintBase;
 import gov.nist.secauto.metaschema.databind.model.metaschema.IConstraintBase;
 import gov.nist.secauto.metaschema.databind.model.metaschema.IModelConstraintsBase;
 import gov.nist.secauto.metaschema.databind.model.metaschema.IValueConstraintsBase;
 import gov.nist.secauto.metaschema.databind.model.metaschema.IValueTargetedConstraintsBase;
+import gov.nist.secauto.metaschema.databind.model.metaschema.binding.ConstraintValueEnum;
+import gov.nist.secauto.metaschema.databind.model.metaschema.binding.FlagAllowedValues;
+import gov.nist.secauto.metaschema.databind.model.metaschema.binding.FlagExpect;
+import gov.nist.secauto.metaschema.databind.model.metaschema.binding.FlagIndexHasKey;
+import gov.nist.secauto.metaschema.databind.model.metaschema.binding.FlagMatches;
+import gov.nist.secauto.metaschema.databind.model.metaschema.binding.KeyConstraintField;
+import gov.nist.secauto.metaschema.databind.model.metaschema.binding.Property;
+import gov.nist.secauto.metaschema.databind.model.metaschema.binding.Remarks;
+import gov.nist.secauto.metaschema.databind.model.metaschema.binding.TargetedAllowedValuesConstraint;
+import gov.nist.secauto.metaschema.databind.model.metaschema.binding.TargetedExpectConstraint;
+import gov.nist.secauto.metaschema.databind.model.metaschema.binding.TargetedHasCardinalityConstraint;
+import gov.nist.secauto.metaschema.databind.model.metaschema.binding.TargetedIndexConstraint;
+import gov.nist.secauto.metaschema.databind.model.metaschema.binding.TargetedIndexHasKeyConstraint;
+import gov.nist.secauto.metaschema.databind.model.metaschema.binding.TargetedIsUniqueConstraint;
+import gov.nist.secauto.metaschema.databind.model.metaschema.binding.TargetedMatchesConstraint;
 
 import java.math.BigInteger;
 import java.util.List;
@@ -241,7 +243,7 @@ public final class ConstraintBindingSupport {
       @NonNull ISource source) {
     IExpectConstraint.Builder builder = IExpectConstraint.builder()
         .test(target(ObjectUtils.requireNonNull(obj.getTest())));
-    applyCommonValues(obj, null, source, builder);
+    applyConfigurableCommonValues(obj, null, source, builder);
 
     String message = obj.getMessage();
     if (message != null) {
@@ -257,12 +259,7 @@ public final class ConstraintBindingSupport {
       @NonNull ISource source) {
     IExpectConstraint.Builder builder = IExpectConstraint.builder()
         .test(target(ObjectUtils.requireNonNull(obj.getTest())));
-    applyCommonValues(obj, obj.getTarget(), source, builder);
-
-    String message = obj.getMessage();
-    if (message != null) {
-      builder.message(message);
-    }
+    applyConfigurableCommonValues(obj, obj.getTarget(), source, builder);
 
     return builder.build();
   }
@@ -290,7 +287,7 @@ public final class ConstraintBindingSupport {
       @NonNull FlagIndexHasKey obj,
       @NonNull ISource source) {
     IIndexHasKeyConstraint.Builder builder = IIndexHasKeyConstraint.builder(ObjectUtils.requireNonNull(obj.getName()));
-    applyCommonValues(obj, null, source, builder);
+    applyConfigurableCommonValues(obj, null, source, builder);
     handleKeyConstraints(ObjectUtils.requireNonNull(obj.getKeyFields()), builder, source);
     return builder.build();
   }
@@ -300,7 +297,7 @@ public final class ConstraintBindingSupport {
       @NonNull TargetedIndexHasKeyConstraint obj,
       @NonNull ISource source) {
     IIndexHasKeyConstraint.Builder builder = IIndexHasKeyConstraint.builder(ObjectUtils.requireNonNull(obj.getName()));
-    applyCommonValues(obj, obj.getTarget(), source, builder);
+    applyConfigurableCommonValues(obj, obj.getTarget(), source, builder);
     handleKeyConstraints(ObjectUtils.requireNonNull(obj.getKeyFields()), builder, source);
     return builder.build();
   }
@@ -310,7 +307,7 @@ public final class ConstraintBindingSupport {
       @NonNull FlagMatches obj,
       @NonNull ISource source) {
     IMatchesConstraint.Builder builder = IMatchesConstraint.builder();
-    applyCommonValues(obj, null, source, builder);
+    applyConfigurableCommonValues(obj, null, source, builder);
 
     Pattern regex = pattern(obj.getRegex());
     if (regex != null) {
@@ -331,7 +328,7 @@ public final class ConstraintBindingSupport {
       @NonNull TargetedMatchesConstraint obj,
       @NonNull ISource source) {
     IMatchesConstraint.Builder builder = IMatchesConstraint.builder();
-    applyCommonValues(obj, obj.getTarget(), source, builder);
+    applyConfigurableCommonValues(obj, obj.getTarget(), source, builder);
 
     Pattern regex = pattern(obj.getRegex());
     if (regex != null) {
@@ -352,7 +349,7 @@ public final class ConstraintBindingSupport {
       @NonNull TargetedIndexConstraint obj,
       @NonNull ISource source) {
     IIndexConstraint.Builder builder = IIndexConstraint.builder(ObjectUtils.requireNonNull(obj.getName()));
-    applyCommonValues(obj, obj.getTarget(), source, builder);
+    applyConfigurableCommonValues(obj, obj.getTarget(), source, builder);
     handleKeyConstraints(ObjectUtils.requireNonNull(obj.getKeyFields()), builder, source);
 
     return builder.build();
@@ -363,7 +360,7 @@ public final class ConstraintBindingSupport {
       @NonNull TargetedHasCardinalityConstraint obj,
       @NonNull ISource source) {
     ICardinalityConstraint.Builder builder = ICardinalityConstraint.builder();
-    applyCommonValues(obj, obj.getTarget(), source, builder);
+    applyConfigurableCommonValues(obj, obj.getTarget(), source, builder);
 
     BigInteger minOccurs = obj.getMinOccurs();
     if (minOccurs != null) {
@@ -383,10 +380,25 @@ public final class ConstraintBindingSupport {
       @NonNull TargetedIsUniqueConstraint obj,
       @NonNull ISource source) {
     IUniqueConstraint.Builder builder = IUniqueConstraint.builder();
-    applyCommonValues(obj, obj.getTarget(), source, builder);
+    applyConfigurableCommonValues(obj, obj.getTarget(), source, builder);
     handleKeyConstraints(ObjectUtils.requireNonNull(obj.getKeyFields()), builder, source);
 
     return builder.build();
+  }
+
+  @NonNull
+  private static <T extends AbstractConfigurableMessageConstraintBuilder<T, ?>> T applyConfigurableCommonValues(
+      @NonNull IConfigurableMessageConstraintBase constraint,
+      @Nullable String target,
+      @NonNull ISource source,
+      @NonNull T builder) {
+    applyCommonValues(constraint, target, source, builder);
+
+    String message = constraint.getMessage();
+    if (message != null) {
+      builder.message(message);
+    }
+    return builder;
   }
 
   @NonNull

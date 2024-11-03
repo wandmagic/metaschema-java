@@ -25,6 +25,9 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import nl.talsmasoftware.lazy4j.Lazy;
 
+/**
+ * The base class for all constraint implementations.
+ */
 public abstract class AbstractConstraint implements IConstraint { // NOPMD - intentional data class
   @Nullable
   private final String id;
@@ -145,4 +148,5 @@ public abstract class AbstractConstraint implements IConstraint { // NOPMD - int
       @NonNull DynamicContext dynamicContext) {
     return item.hasValue() ? getTargetMetapath().evaluate(item, dynamicContext) : ISequence.empty();
   }
+
 }
