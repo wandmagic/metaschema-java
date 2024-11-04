@@ -9,7 +9,7 @@
 
 	<groupId>dev.metaschema.java</groupId>
 	<artifactId>metaschema-framework</artifactId>
-	<version>2.0.0</version>
+	<version>2.0.1-SNAPSHOT</version>
 
 	<packaging>pom</packaging>
 	<name>Metaschema Framework Parent</name>
