@@ -80,7 +80,7 @@ jobs:
       if: (github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/heads/release/')) && github.repository_owner == 'metaschema-framework'
       run: |
         cd maven2
-        git pull -r --autostash
+        git pull -r -s ours --autostash
         git add -A
         git config user.name "$(git log -n 1 --pretty=format:%an)"
         git config user.email "$(git log -n 1 --pretty=format:%ae)"
