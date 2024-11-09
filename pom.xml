@@ -112,7 +112,7 @@
 		<repository>
             <id>central</id>
             <name>Maven Central Repository</name>
-            <url>https://repo.maven.apache.org/maven2</url>
+			<url>https://central.sonatype.com</url>
             <releases>
                 <enabled>true</enabled>
             </releases>
@@ -671,6 +671,7 @@
 					<configuration>
 						<excludeFilterFile>spotbugs-exclude.xml</excludeFilterFile>
 						<sarifOutput>true</sarifOutput>
+						<sarifOutputFilename>spotbugs.sarif</sarifOutputFilename>
 					</configuration>
 				</plugin>
 				<plugin>
@@ -747,9 +748,6 @@
 							<goals>
 								<goal>pmd</goal>
 							</goals>
-							<configuration>
-								<format>net.sourceforge.pmd.renderers.SarifRenderer</format>
-							</configuration>
 						</execution>
 					</executions>
 				</plugin>
