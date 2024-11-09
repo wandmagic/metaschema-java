@@ -215,7 +215,8 @@ public class CLIProcessor {
   }
 
   protected void showVersion() {
-    @SuppressWarnings("resource") PrintStream out = AnsiConsole.out(); // NOPMD - not owner
+    @SuppressWarnings("resource")
+    PrintStream out = AnsiConsole.out(); // NOPMD - not owner
     getVersionInfos().values().stream().forEach(info -> {
       out.println(ansi()
           .bold().a(info.getName()).boldOff()
@@ -253,7 +254,8 @@ public class CLIProcessor {
 
     @SuppressFBWarnings(value = "CT_CONSTRUCTOR_THROW", justification = "Use of final fields")
     public CallingContext(@NonNull List<String> args) {
-      @SuppressWarnings("PMD.LooseCoupling") LinkedList<ICommand> calledCommands = new LinkedList<>();
+      @SuppressWarnings("PMD.LooseCoupling")
+      LinkedList<ICommand> calledCommands = new LinkedList<>();
       List<Option> options = new LinkedList<>(OPTIONS);
       List<String> extraArgs = new LinkedList<>();
 
@@ -632,7 +634,8 @@ public class CLIProcessor {
       HelpFormatter formatter = new HelpFormatter();
       formatter.setLongOptSeparator("=");
 
-      @SuppressWarnings("resource") AnsiPrintStream out = AnsiConsole.out();
+      @SuppressWarnings("resource")
+      AnsiPrintStream out = AnsiConsole.out();
 
       try (PrintWriter writer = new PrintWriter( // NOPMD not owned
           AutoCloser.preventClose(out),
