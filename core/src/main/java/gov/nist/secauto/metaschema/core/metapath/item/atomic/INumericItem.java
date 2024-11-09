@@ -146,7 +146,8 @@ public interface INumericItem extends IAnyAtomicItem {
       BigInteger value = asInteger();
       BigInteger divisor = BigInteger.TEN.pow(0 - precision);
 
-      @NonNull BigInteger result;
+      @NonNull
+      BigInteger result;
       if (divisor.compareTo(value.abs()) > 0) {
         result = ObjectUtils.notNull(BigInteger.ZERO);
       } else {

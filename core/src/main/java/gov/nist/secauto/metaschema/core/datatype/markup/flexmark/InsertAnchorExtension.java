@@ -343,7 +343,8 @@ public class InsertAnchorExtension
     @Override
     @NonNull
     public BasedSequence[] getSegments() {
-      @NonNull BasedSequence[] retval = { getType(), getIdReference() };
+      @NonNull
+      BasedSequence[] retval = { getType(), getIdReference() };
       return retval;
     }
 

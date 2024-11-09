@@ -52,7 +52,8 @@ public abstract class AbstractPathExpression<RESULT_TYPE extends IItem>
     outerFocus.getValue();
 
     // check the current focus
-    @SuppressWarnings("unchecked") Stream<? extends INodeItem> nodeMatches
+    @SuppressWarnings("unchecked")
+    Stream<? extends INodeItem> nodeMatches
         = (Stream<? extends INodeItem>) expression.accept(dynamicContext, outerFocus).stream();
 
     Stream<? extends INodeItem> childMatches = outerFocus.stream()

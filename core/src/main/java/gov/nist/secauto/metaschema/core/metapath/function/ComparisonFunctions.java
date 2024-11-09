@@ -172,7 +172,8 @@ public final class ComparisonFunctions {
       @NonNull IAnyAtomicItem left,
       @NonNull Operator operator,
       @NonNull IAnyAtomicItem right) {
-    @NonNull IBooleanItem retval;
+    @NonNull
+    IBooleanItem retval;
     if (left instanceof IStringItem || right instanceof IStringItem) {
       retval = stringCompare(IStringItem.cast(left), operator, IStringItem.cast(right));
     } else if (left instanceof INumericItem && right instanceof INumericItem) {

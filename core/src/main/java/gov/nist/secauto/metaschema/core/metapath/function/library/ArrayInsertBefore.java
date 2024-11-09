@@ -72,7 +72,8 @@ public final class ArrayInsertBefore {
     IArrayItem<T> array = FunctionUtils.asType(ObjectUtils.requireNonNull(
         arguments.get(0).getFirstItem(true)));
     IIntegerItem position = FunctionUtils.asType(ObjectUtils.requireNonNull(arguments.get(1).getFirstItem(true)));
-    @SuppressWarnings("unchecked") T member = (T) ObjectUtils.requireNonNull(arguments.get(2)).toCollectionValue();
+    @SuppressWarnings("unchecked")
+    T member = (T) ObjectUtils.requireNonNull(arguments.get(2)).toCollectionValue();
 
     return ISequence.of(insertBefore(array, position, member));
   }

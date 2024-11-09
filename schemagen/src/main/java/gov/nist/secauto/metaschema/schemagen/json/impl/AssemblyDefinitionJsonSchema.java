@@ -179,7 +179,8 @@ public class AssemblyDefinitionJsonSchema
           // iterate over the old array of choices and append new choice
           for (PropertyCollection oldInstanceProperties : retval) {
             @SuppressWarnings("null")
-            @NonNull PropertyCollection newInstanceProperties = oldInstanceProperties.copy();
+            @NonNull
+            PropertyCollection newInstanceProperties = oldInstanceProperties.copy();
 
             // add the choice
             choiceInstances.get(optionInstance)

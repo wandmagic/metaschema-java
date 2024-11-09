@@ -64,7 +64,8 @@ public abstract class AbstractRelativePathExpression
   }
 
   @Override
-  public final @NonNull Class<INodeItem> getBaseResultType() {
+  public final @NonNull
+  Class<INodeItem> getBaseResultType() {
     return INodeItem.class;
   }
 

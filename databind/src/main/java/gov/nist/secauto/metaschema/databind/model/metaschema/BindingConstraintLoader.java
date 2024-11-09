@@ -100,7 +100,8 @@ public class BindingConstraintLoader
       // now check if this constraint set imports other constraint sets
       List<MetaschemaModuleConstraints.Import> imports = CollectionUtil.listOrEmpty(obj.getImports());
 
-      @NonNull Set<IConstraintSet> importedConstraints;
+      @NonNull
+      Set<IConstraintSet> importedConstraints;
       if (imports.isEmpty()) {
         importedConstraints = CollectionUtil.emptySet();
       } else {

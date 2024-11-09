@@ -51,7 +51,8 @@ class SingletonCollectionInfo<ITEM>
       throws BindingException {
     IBoundInstanceModel<ITEM> instance = getInstance();
 
-    @SuppressWarnings("unchecked") ITEM value = (ITEM) instance.getValue(fromObject);
+    @SuppressWarnings("unchecked")
+    ITEM value = (ITEM) instance.getValue(fromObject);
 
     return value == null ? null : instance.deepCopyItem(ObjectUtils.requireNonNull(value), toObject);
   }

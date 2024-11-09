@@ -68,7 +68,8 @@ public class PredicateExpression implements IExpression {
   }
 
   @Override
-  public @NonNull ISequence<? extends IItem> accept(@NonNull DynamicContext dynamicContext,
+  public @NonNull
+  ISequence<? extends IItem> accept(@NonNull DynamicContext dynamicContext,
       @NonNull ISequence<?> focus) {
 
     ISequence<?> retval = getBase().accept(dynamicContext, focus);
@@ -83,7 +84,8 @@ public class PredicateExpression implements IExpression {
             return Map.entry(BigInteger.valueOf(index.incrementAndGet()), item);
           }).filter(entry -> {
             @SuppressWarnings("null")
-            @NonNull IItem item = entry.getValue();
+            @NonNull
+            IItem item = entry.getValue();
 
             // return false if any predicate evaluates to false
             return !predicates.stream()

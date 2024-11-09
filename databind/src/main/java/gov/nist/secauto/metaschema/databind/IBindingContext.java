@@ -826,7 +826,8 @@ public interface IBindingContext {
       switch (asFormat) {
       case JSON: {
         JSONObject json;
-        try (@SuppressWarnings("resource") InputStream is
+        try (@SuppressWarnings("resource")
+        InputStream is
             = new BufferedInputStream(ObjectUtils.notNull(targetResource.openStream()))) {
           json = new JSONObject(new JSONTokener(is));
         }

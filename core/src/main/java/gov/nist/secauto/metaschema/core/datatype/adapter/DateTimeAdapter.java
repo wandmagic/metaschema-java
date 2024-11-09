@@ -74,11 +74,13 @@ public class DateTimeAdapter
     String retval;
     if (value.hasTimeZone()) {
       @SuppressWarnings("null")
-      @NonNull String formatted = DateFormats.DATE_TIME_WITH_TZ.format(value.getValue());
+      @NonNull
+      String formatted = DateFormats.DATE_TIME_WITH_TZ.format(value.getValue());
       retval = formatted;
     } else {
       @SuppressWarnings("null")
-      @NonNull String formatted = DateFormats.DATE_TIME_WITHOUT_TZ.format(value.getValue());
+      @NonNull
+      String formatted = DateFormats.DATE_TIME_WITHOUT_TZ.format(value.getValue());
       retval = formatted;
     }
     return retval;

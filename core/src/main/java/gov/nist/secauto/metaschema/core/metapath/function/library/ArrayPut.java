@@ -73,7 +73,8 @@ public final class ArrayPut {
     IArrayItem<T> array = FunctionUtils.asType(ObjectUtils.requireNonNull(
         arguments.get(0).getFirstItem(true)));
     IIntegerItem position = FunctionUtils.asType(ObjectUtils.requireNonNull(arguments.get(1).getFirstItem(true)));
-    @SuppressWarnings("unchecked") T member = (T) arguments.get(2).toCollectionValue();
+    @SuppressWarnings("unchecked")
+    T member = (T) arguments.get(2).toCollectionValue();
 
     return put(array, position, member).asSequence();
   }

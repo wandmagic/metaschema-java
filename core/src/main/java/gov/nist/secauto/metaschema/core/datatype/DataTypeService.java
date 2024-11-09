@@ -90,7 +90,8 @@ public final class DataTypeService {
             },
             ConcurrentHashMap::new));
 
-    @SuppressWarnings({ "unchecked", "null" }) Map<Class<? extends IDataTypeAdapter<?>>,
+    @SuppressWarnings({ "unchecked", "null" })
+    Map<Class<? extends IDataTypeAdapter<?>>,
         IDataTypeAdapter<?>> typeByClass = dataTypes.stream()
             .collect(CustomCollectors.toMap(
                 dataType -> (Class<? extends IDataTypeAdapter<?>>) dataType.getClass(),

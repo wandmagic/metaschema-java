@@ -105,7 +105,8 @@ public final class TypeSystem {
 
   @NonNull
   private static Stream<Class<? extends IItem>> getItemInterfaces(@NonNull Class<?> clazz) {
-    @SuppressWarnings("unchecked") Stream<Class<? extends IItem>> retval = IItem.class.isAssignableFrom(clazz)
+    @SuppressWarnings("unchecked")
+    Stream<Class<? extends IItem>> retval = IItem.class.isAssignableFrom(clazz)
         ? Stream.of((Class<? extends IItem>) clazz)
         : Stream.empty();
 

@@ -33,12 +33,15 @@ class PredicateExpressionTest
     Mockery context = getContext();
 
     @SuppressWarnings("null")
-    @NonNull IExpression stepExpr = context.mock(IExpression.class);
+    @NonNull
+    IExpression stepExpr = context.mock(IExpression.class);
     ISequence<?> stepResult = context.mock(ISequence.class, "stepResult");
     @SuppressWarnings("null")
-    @NonNull IAssemblyNodeItem item = context.mock(IAssemblyNodeItem.class);
+    @NonNull
+    IAssemblyNodeItem item = context.mock(IAssemblyNodeItem.class);
     @SuppressWarnings({ "unchecked", "null" })
-    @NonNull List<IExpression> predicates = context.mock(List.class, "predicates");
+    @NonNull
+    List<IExpression> predicates = context.mock(List.class, "predicates");
 
     context.checking(new Expectations() {
       { // NOPMD - intentional
@@ -74,12 +77,15 @@ class PredicateExpressionTest
     Mockery context = getContext();
 
     @SuppressWarnings("null")
-    @NonNull IExpression stepExpr = context.mock(IExpression.class);
+    @NonNull
+    IExpression stepExpr = context.mock(IExpression.class);
     ISequence<?> stepResult = context.mock(ISequence.class, "stepResult");
     @SuppressWarnings("null")
-    @NonNull IAssemblyNodeItem item = context.mock(IAssemblyNodeItem.class);
+    @NonNull
+    IAssemblyNodeItem item = context.mock(IAssemblyNodeItem.class);
     @SuppressWarnings({ "unchecked", "null" })
-    @NonNull List<IExpression> predicates = context.mock(List.class, "predicates");
+    @NonNull
+    List<IExpression> predicates = context.mock(List.class, "predicates");
 
     context.checking(new Expectations() {
       { // NOPMD - intentional

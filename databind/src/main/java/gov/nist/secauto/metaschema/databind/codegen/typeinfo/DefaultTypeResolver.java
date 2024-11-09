@@ -240,7 +240,8 @@ class DefaultTypeResolver implements ITypeResolver {
       @NonNull String packageOrTypeName,
       @NonNull String suggestedClassName,
       @NonNull IModelDefinition definition) {
-    @NonNull String retval = suggestedClassName;
+    @NonNull
+    String retval = suggestedClassName;
     boolean clash = false;
     classNameLock.lock();
     try {

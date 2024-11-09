@@ -425,7 +425,8 @@ public class MetaschemaJsonReader
         ? bodyHandler
         : new JsonKeyBodyHandler(jsonKey, bodyHandler);
 
-    @SuppressWarnings("resource") JsonLocation location = getReader().currentLocation();
+    @SuppressWarnings("resource")
+    JsonLocation location = getReader().currentLocation();
 
     // construct the item
     IBoundObject item = definition.newInstance(
@@ -504,7 +505,8 @@ public class MetaschemaJsonReader
         IBoundObject parent,
         IJsonProblemHandler problemHandler)
         throws IOException {
-      @SuppressWarnings("resource") JsonParser parser = getReader();
+      @SuppressWarnings("resource")
+      JsonParser parser = getReader();
       JsonUtil.assertCurrent(parser, JsonToken.FIELD_NAME);
 
       // the field will be the JSON key
@@ -550,7 +552,8 @@ public class MetaschemaJsonReader
         IBoundObject parent,
         IJsonProblemHandler problemHandler)
         throws IOException {
-      @SuppressWarnings("resource") JsonParser parser = getReader();
+      @SuppressWarnings("resource")
+      JsonParser parser = getReader();
 
       // advance past the start object
       JsonUtil.assertAndAdvance(parser, JsonToken.START_OBJECT);
@@ -753,7 +756,8 @@ public class MetaschemaJsonReader
 
       IBoundInstanceModel<?> instance = getCollectionInfo().getInstance();
 
-      @SuppressWarnings("PMD.UseConcurrentHashMap") Map<String, ITEM> items = new LinkedHashMap<>();
+      @SuppressWarnings("PMD.UseConcurrentHashMap")
+      Map<String, ITEM> items = new LinkedHashMap<>();
 
       // A map value is always wrapped in a START_OBJECT, since fields are used for
       // the keys

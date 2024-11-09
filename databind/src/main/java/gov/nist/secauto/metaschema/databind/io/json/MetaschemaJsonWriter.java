@@ -74,7 +74,8 @@ public class MetaschemaJsonWriter implements IJsonWritingContext, IItemWriteHand
   private <T> void writeInstance(
       @NonNull IBoundProperty<T> instance,
       @NonNull IBoundObject parentItem) throws IOException {
-    @SuppressWarnings("unchecked") T value = (T) instance.getValue(parentItem);
+    @SuppressWarnings("unchecked")
+    T value = (T) instance.getValue(parentItem);
     if (value != null && !value.equals(instance.getResolvedDefaultValue())) {
       generator.writeFieldName(instance.getJsonName());
       instance.writeItem(value, this);

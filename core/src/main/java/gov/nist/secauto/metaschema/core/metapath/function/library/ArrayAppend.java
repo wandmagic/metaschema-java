@@ -62,7 +62,8 @@ public final class ArrayAppend {
       IItem focus) {
     IArrayItem<T> array = FunctionUtils.asType(ObjectUtils.requireNonNull(
         arguments.get(0).getFirstItem(true)));
-    @SuppressWarnings("unchecked") T appendage = (T) arguments.get(1).toCollectionValue();
+    @SuppressWarnings("unchecked")
+    T appendage = (T) arguments.get(1).toCollectionValue();
 
     return ISequence.of(append(array, appendage));
   }

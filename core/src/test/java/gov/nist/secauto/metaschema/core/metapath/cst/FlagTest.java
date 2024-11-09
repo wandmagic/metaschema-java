@@ -34,7 +34,8 @@ class FlagTest
     Mockery context = getContext();
 
     @SuppressWarnings("null")
-    @NonNull IModelNodeItem<?, ?> focusItem = context.mock(IModelNodeItem.class);
+    @NonNull
+    IModelNodeItem<?, ?> focusItem = context.mock(IModelNodeItem.class);
 
     IFlagInstance instance = context.mock(IFlagInstance.class);
     IFlagNodeItem flagNode = context.mock(IFlagNodeItem.class);

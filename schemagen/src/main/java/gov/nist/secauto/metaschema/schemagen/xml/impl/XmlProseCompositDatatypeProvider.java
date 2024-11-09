@@ -26,7 +26,8 @@ public class XmlProseCompositDatatypeProvider
   }
 
   @Override
-  public @NonNull Set<String> generateDatatypes(Set<String> requiredTypes,
+  @NonNull
+  public Set<String> generateDatatypes(Set<String> requiredTypes,
       @NonNull XMLStreamWriter2 writer) throws XMLStreamException {
     Set<String> result = super.generateDatatypes(requiredTypes, writer);
 
@@ -38,5 +39,4 @@ public class XmlProseCompositDatatypeProvider
     }
     return result;
   }
-
 }

@@ -36,7 +36,8 @@ public class StringAdapter
   }
 
   @Override
-  public @NonNull IStringItem newItem(@NonNull Object value) {
+  @NonNull
+  public IStringItem newItem(@NonNull Object value) {
     String item = asString(value);
     return IStringItem.valueOf(item);
   }

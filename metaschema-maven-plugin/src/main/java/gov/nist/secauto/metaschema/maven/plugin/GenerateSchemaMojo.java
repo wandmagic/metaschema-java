@@ -214,7 +214,8 @@ public class GenerateSchemaMojo
       @NonNull IConfiguration<SchemaGenerationFeature<?>> schemaGenerationConfig,
       @NonNull Path schemaPath,
       @NonNull ISchemaGenerator generator) throws IOException {
-    try (@SuppressWarnings("resource") Writer writer = ObjectUtils.notNull(Files.newBufferedWriter(
+    try (@SuppressWarnings("resource")
+    Writer writer = ObjectUtils.notNull(Files.newBufferedWriter(
         schemaPath,
         StandardCharsets.UTF_8,
         StandardOpenOption.CREATE,

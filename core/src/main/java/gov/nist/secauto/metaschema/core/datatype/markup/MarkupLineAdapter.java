@@ -57,7 +57,8 @@ public class MarkupLineAdapter
 
   @Override
   public MarkupLine parse(JsonParser parser) throws IOException {
-    @SuppressWarnings("null") MarkupLine retval = parse(parser.getValueAsString());
+    @SuppressWarnings("null")
+    MarkupLine retval = parse(parser.getValueAsString());
     // skip past value
     parser.nextToken();
     return retval;

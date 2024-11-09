@@ -77,7 +77,8 @@ public class HtmlQuoteTagExtension
   static class QTagNodeRenderer implements NodeRenderer {
 
     @Override
-    public @Nullable Set<NodeRenderingHandler<?>> getNodeRenderingHandlers() {
+    public @Nullable
+    Set<NodeRenderingHandler<?>> getNodeRenderingHandlers() {
       return Collections.singleton(
           new NodeRenderingHandler<>(DoubleQuoteNode.class, this::render));
     }

@@ -34,7 +34,8 @@ public class EmailAddressAdapter
   }
 
   @Override
-  public @NonNull Class<IEmailAddressItem> getItemClass() {
+  @NonNull
+  public Class<IEmailAddressItem> getItemClass() {
     return IEmailAddressItem.class;
   }
 

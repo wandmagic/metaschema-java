@@ -35,7 +35,8 @@ public class IntegerAdapter
   }
 
   @Override
-  public @NonNull Class<IIntegerItem> getItemClass() {
+  @NonNull
+  public Class<IIntegerItem> getItemClass() {
     return IIntegerItem.class;
   }
 

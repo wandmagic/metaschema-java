@@ -186,7 +186,8 @@ public abstract class AbstractCSTVisitorBase
       // skip operator, since we know what it is
       ParseTree tree = ctx.getChild(idx + 1);
       @SuppressWarnings({ "unchecked", "null" })
-      @NonNull NODE node = (NODE) tree.accept(this);
+      @NonNull
+      NODE node = (NODE) tree.accept(this);
       return node;
     }, supplier);
   }
@@ -238,7 +239,8 @@ public abstract class AbstractCSTVisitorBase
 
     ParseTree leftTree = context.getChild(0);
     @SuppressWarnings({ "unchecked", "null" })
-    @NonNull EXPRESSION leftResult = (EXPRESSION) leftTree.accept(this);
+    @NonNull
+    EXPRESSION leftResult = (EXPRESSION) leftTree.accept(this);
 
     IExpression retval;
     if (numChildren == 1) {

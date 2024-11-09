@@ -24,10 +24,14 @@ import edu.umd.cs.findbugs.annotations.Nullable;
 
 public final class DocumentationGenerator {
 
-  private final @Nullable String formalName;
-  private final @Nullable MarkupLine description;
-  private final @NonNull List<MarkupMultiline> remarks;
-  private final @NonNull IModelElement modelElement;
+  @Nullable
+  private final String formalName;
+  @Nullable
+  private final MarkupLine description;
+  @NonNull
+  private final List<MarkupMultiline> remarks;
+  @NonNull
+  private final IModelElement modelElement;
 
   private DocumentationGenerator(@NonNull IDefinition definition) {
     this.formalName = definition.getEffectiveFormalName();

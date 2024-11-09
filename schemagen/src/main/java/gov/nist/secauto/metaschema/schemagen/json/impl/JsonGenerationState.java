@@ -173,7 +173,8 @@ public class JsonGenerationState
   }
 
   public ObjectNode generateDefinitions() {
-    @NonNull Map<IKey, IDefinitionJsonSchema<?>> gatheredDefinitions = new HashMap<>();
+    @NonNull
+    Map<IKey, IDefinitionJsonSchema<?>> gatheredDefinitions = new HashMap<>();
 
     getMetaschemaIndex().getDefinitions().stream()
         .filter(DefinitionEntry::isRoot)

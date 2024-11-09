@@ -48,7 +48,8 @@ public interface INamed {
   // from INamedModelElement
   @NonNull
   default String getEffectiveName() {
-    @Nullable String useName = getUseName();
+    @Nullable
+    String useName = getUseName();
     return useName == null ? getName() : useName;
   }
 
@@ -126,7 +127,8 @@ public interface INamed {
   // from INamedModelElement
   @Nullable
   default Integer getEffectiveIndex() {
-    @Nullable Integer useIndex = getUseIndex();
+    @Nullable
+    Integer useIndex = getUseIndex();
     return useIndex == null ? getIndex() : useIndex;
   }
 }

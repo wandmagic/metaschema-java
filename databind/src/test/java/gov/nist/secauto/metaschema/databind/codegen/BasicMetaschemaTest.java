@@ -101,7 +101,8 @@ class BasicMetaschemaTest
             assertEquals("complex-field1", reflectMethod(field1, "getId"));
             assertEquals("test-string", reflectMethod(field1, "getValue"));
 
-            @SuppressWarnings("unchecked") List<Object> field2s
+            @SuppressWarnings("unchecked")
+            List<Object> field2s
                 = (List<Object>) ReflectionUtils.invokeMethod(obj.getClass().getMethod("getComplexFields2"),
                     obj);
             assertNotNull(field2s);
@@ -110,7 +111,8 @@ class BasicMetaschemaTest
             assertEquals("complex-field2-1", reflectMethod(field2, "getId"));
             assertEquals("test-string2", reflectMethod(field2, "getValue"));
 
-            @SuppressWarnings("unchecked") List<Object> field3s
+            @SuppressWarnings("unchecked")
+            List<Object> field3s
                 = (List<Object>) ReflectionUtils.invokeMethod(obj.getClass().getMethod("getComplexFields3"),
                     obj);
             assertEquals(2, field3s.size());
@@ -126,7 +128,8 @@ class BasicMetaschemaTest
             });
 
             assertAll("ComplexFields4", () -> {
-              @SuppressWarnings("unchecked") Map<String, Object> collection
+              @SuppressWarnings("unchecked")
+              Map<String, Object> collection
                   = (Map<String, Object>) ReflectionUtils.invokeMethod(obj.getClass().getMethod("getComplexFields4"),
                       obj);
               assertNotNull(collection, "ComplexFields4 collection is null");

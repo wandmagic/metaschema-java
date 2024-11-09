@@ -31,7 +31,8 @@ public class HostnameAdapter
   }
 
   @Override
-  public @NonNull Class<IHostnameItem> getItemClass() {
+  public @NonNull
+  Class<IHostnameItem> getItemClass() {
     return IHostnameItem.class;
   }
 

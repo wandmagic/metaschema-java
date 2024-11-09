@@ -106,7 +106,8 @@ public final class MapMerge {
     private final CustomCollectors.DuplicateHandler<IMapKey, ICollectionValue> duplicateHander;
 
     static {
-      @SuppressWarnings("PMD.UseConcurrentHashMap") Map<String, Duplicates> map = new HashMap<>();
+      @SuppressWarnings("PMD.UseConcurrentHashMap")
+      Map<String, Duplicates> map = new HashMap<>();
       for (Duplicates value : values()) {
         map.put(value.getName(), value);
       }

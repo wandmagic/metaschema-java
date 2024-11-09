@@ -63,7 +63,8 @@ public class HtmlCodeRenderExtension
     }
 
     @Override
-    public @Nullable Set<NodeRenderingHandler<?>> getNodeRenderingHandlers() {
+    @Nullable
+    public Set<NodeRenderingHandler<?>> getNodeRenderingHandlers() {
       return Collections.singleton(
           new NodeRenderingHandler<>(Code.class, this::render));
     }

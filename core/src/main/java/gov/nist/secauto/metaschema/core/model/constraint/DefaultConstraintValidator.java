@@ -779,7 +779,8 @@ public class DefaultConstraintValidator
       @NonNull IDefinitionNodeItem<?, ?> node) {
     // constraint.getAllowedValues().containsKey(value)
 
-    @Nullable ValueStatus valueStatus = valueMap.get(targetItem);
+    @Nullable
+    ValueStatus valueStatus = valueMap.get(targetItem);
     if (valueStatus == null) {
       valueStatus = new ValueStatus(targetItem);
       valueMap.put(targetItem, valueStatus);

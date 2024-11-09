@@ -90,11 +90,13 @@ public class DateAdapter
     String retval;
     if (value.hasTimeZone()) {
       @SuppressWarnings("null")
-      @NonNull String formatted = DateFormats.DATE_WITH_TZ.format(value.getValue());
+      @NonNull
+      String formatted = DateFormats.DATE_WITH_TZ.format(value.getValue());
       retval = formatted;
     } else {
       @SuppressWarnings("null")
-      @NonNull String formatted = DateFormats.DATE_WITHOUT_TZ.format(value.getValue());
+      @NonNull
+      String formatted = DateFormats.DATE_WITHOUT_TZ.format(value.getValue());
       retval = formatted;
     }
     return retval;
@@ -112,7 +114,8 @@ public class DateAdapter
   }
 
   @Override
-  protected @NonNull IDateItem castInternal(@NonNull IAnyAtomicItem item) {
+  @NonNull
+  protected IDateItem castInternal(@NonNull IAnyAtomicItem item) {
     IDateItem retval;
     if (item instanceof IDateTimeItem) {
       ZonedDateTime value = ((IDateTimeItem) item).asZonedDateTime();
@@ -125,5 +128,4 @@ public class DateAdapter
     }
     return retval;
   }
-
 }

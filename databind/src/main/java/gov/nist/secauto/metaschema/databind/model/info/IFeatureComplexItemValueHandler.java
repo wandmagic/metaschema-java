@@ -81,11 +81,13 @@ public interface IFeatureComplexItemValueHandler extends IItemValueHandler<IBoun
     try {
       CLASS retval;
       if (supplier != null) {
-        @SuppressWarnings("unchecked") Constructor<CLASS> constructor
+        @SuppressWarnings("unchecked")
+        Constructor<CLASS> constructor
             = (Constructor<CLASS>) clazz.getDeclaredConstructor(IMetaschemaData.class);
         retval = constructor.newInstance(supplier.get());
       } else {
-        @SuppressWarnings("unchecked") Constructor<CLASS> constructor
+        @SuppressWarnings("unchecked")
+        Constructor<CLASS> constructor
             = (Constructor<CLASS>) clazz.getDeclaredConstructor();
         retval = constructor.newInstance();
       }

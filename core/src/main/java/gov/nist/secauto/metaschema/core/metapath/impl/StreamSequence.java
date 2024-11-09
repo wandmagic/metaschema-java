@@ -72,7 +72,8 @@ public class StreamSequence<ITEM extends IItem>
 
   @Override
   public Stream<ITEM> stream() {
-    @NonNull Stream<ITEM> retval;
+    @NonNull
+    Stream<ITEM> retval;
     // Ensure thread safety and prevent multiple consumptions of the stream
     instanceLock.lock();
     try {

@@ -182,7 +182,8 @@ public abstract class AbstractNodeItemFactory implements INodeItemFactory, INode
       @NonNull IAssemblyNodeItem parent,
       int position,
       @NonNull Object value) {
-    @NonNull IModelNodeItem<?, ?> item;
+    @NonNull
+    IModelNodeItem<?, ?> item;
     if (instance instanceof IAssemblyInstance) {
       item = newAssemblyNodeItem((IAssemblyInstance) instance, parent, position, value);
     } else if (instance instanceof IFieldInstance) {
@@ -208,7 +209,8 @@ public abstract class AbstractNodeItemFactory implements INodeItemFactory, INode
   protected IModelNodeItem<?, ?> newModelItem(
       @NonNull INamedModelInstance instance,
       @NonNull IAssemblyNodeItem parent) {
-    @NonNull IModelNodeItem<?, ?> item;
+    @NonNull
+    IModelNodeItem<?, ?> item;
     if (instance instanceof IAssemblyInstance) {
       item = newAssemblyNodeItem((IAssemblyInstance) instance, parent);
     } else if (instance instanceof IFieldInstance) {

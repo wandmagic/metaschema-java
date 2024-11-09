@@ -58,12 +58,14 @@ public final class ExpressionUtils {
       @NonNull List<Class<?>> expressionClasses) {
     Class<? extends RESULT_TYPE> retval;
     if (expressionClasses.size() == 1) {
-      @SuppressWarnings("unchecked") Class<? extends RESULT_TYPE> result
+      @SuppressWarnings("unchecked")
+      Class<? extends RESULT_TYPE> result
           = (Class<? extends RESULT_TYPE>) expressionClasses.iterator().next();
       assert result != null;
       retval = result;
     } else {
-      @SuppressWarnings("unchecked") Class<? extends RESULT_TYPE> first
+      @SuppressWarnings("unchecked")
+      Class<? extends RESULT_TYPE> first
           = (Class<? extends RESULT_TYPE>) expressionClasses.iterator().next();
       assert first != null;
       if (baseType.equals(first)) {
@@ -75,7 +77,8 @@ public final class ExpressionUtils {
             baseType,
             first,
             ObjectUtils.notNull(expressionClasses.subList(1, expressionClasses.size())));
-        @SuppressWarnings("unchecked") Class<? extends RESULT_TYPE> newBase
+        @SuppressWarnings("unchecked")
+        Class<? extends RESULT_TYPE> newBase
             = (Class<? extends RESULT_TYPE>) leastCommon;
         if (newBase != null) {
           retval = newBase;

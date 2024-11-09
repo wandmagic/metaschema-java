@@ -43,7 +43,8 @@ abstract class AbstractNamedModelInstanceTypeInfo<INSTANCE extends INamedModelIn
   }
 
   @Override
-  public @NonNull String getBaseName() {
+  public @NonNull
+  String getBaseName() {
     INSTANCE modelInstance = getInstance();
     String retval;
     if (modelInstance.getMaxOccurs() == -1 || modelInstance.getMaxOccurs() > 1) {

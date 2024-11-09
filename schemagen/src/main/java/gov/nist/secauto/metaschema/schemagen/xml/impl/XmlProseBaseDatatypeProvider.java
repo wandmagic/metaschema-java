@@ -34,7 +34,8 @@ public class XmlProseBaseDatatypeProvider
   }
 
   @Override
-  protected @NonNull Map<String, IDatatypeContent> handleResults(@NonNull List<Element> items) {
+  @NonNull
+  protected Map<String, IDatatypeContent> handleResults(@NonNull List<Element> items) {
     return CollectionUtil.singletonMap(
         DATATYPE_NAME,
         new JDom2DatatypeContent(
