@@ -38,7 +38,7 @@ This project uses a typical GitHub fork and pull request [workflow](https://guid
 This repository consists of the following directories and files pertaining to the project:
 
 - [.github](.github): Contains GitHub issue and pull request templates for the project.
-[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md): This file contains a code of conduct for all project contributors.
+- [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md): This file contains a code of conduct for all project contributors.
 - [CONTRIBUTING.md](CONTRIBUTING.md): This file is for potential contributors to the project. It provides basic information on the project, describes the main ways people can make contributions, explains how to report issues, and lists pointers to additional sources of information. It also has instructions on establishing a development environment for contributing to the project and using GitHub project cards to track development sprints.
 - [LICENSE.md](LICENSE.md): This file contains license information for the files in this GitHub repository.
 - [USERS.md](USERS.md): This file explains which types of users are most likely to benefit from use of this project and its artifacts.
@@ -71,11 +71,11 @@ Note: One or more pull requests must be submitted addressing all user story goal
 
 ## Communications mechanisms
 
-You can contact the maintainers of this project at [maintainers@metaschema.dev](mailto:maintainers@metaschema.dev) if you are interested in contributing to the development of this project or exchanging ideas. 
+You can contact the maintainers of this project at [maintainers@metaschema.dev](mailto:maintainers@metaschema.dev) if you are interested in contributing to the development of this project or exchanging ideas.
 
 ## Developer information
 
-### Core Metaschema functions 
+### Core Metaschema functions
 
 The Metaschema [specification](https://pages.nist.gov/metaschema/specification/syntax/metapath/) and [this conformant library](https://github.com/metaschema-framework/metaschema-java) library implement the Metapath functions required by the specification. See the library's [registry class with an inventory listing of the functions](https://github.com/metaschema-framework/metaschema-java/blob/main/core/src/main/java/gov/nist/secauto/metaschema/core/metapath/function/library/DefaultFunctionLibrary.java) supported in the most current release.
 
