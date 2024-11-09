@@ -19,16 +19,13 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.net.URI;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 
-public class GenerationTest {
+public class GenerationTest
+    extends AbstractMetaschemaTest {
 
   @Test
   void testOscalBindingModuleLoader() throws MetaschemaException, IOException {
-    IBindingContext bindingContext = IBindingContext.builder()
-        .compilePath(ObjectUtils.notNull(Files.createTempDirectory(Paths.get("target"), "modules-")))
-        .build();
+    IBindingContext bindingContext = newBindingContext();
 
     IBindingModuleLoader loader = bindingContext.newModuleLoader();
     loader.allowEntityResolution();

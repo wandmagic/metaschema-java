@@ -13,7 +13,6 @@ import gov.nist.secauto.metaschema.core.model.IModule;
 import gov.nist.secauto.metaschema.core.model.MetaschemaException;
 import gov.nist.secauto.metaschema.core.model.validation.IContentValidator;
 import gov.nist.secauto.metaschema.core.model.validation.XmlSchemaContentValidator;
-import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 import gov.nist.secauto.metaschema.databind.IBindingContext;
 import gov.nist.secauto.metaschema.databind.io.Format;
 import gov.nist.secauto.metaschema.databind.model.metaschema.IBindingModuleLoader;
@@ -42,7 +41,6 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -95,9 +93,7 @@ class XmlSuiteTest
   @DisplayName("XML Schema Generation")
   @TestFactory
   Stream<? extends DynamicNode> generateTests() throws IOException {
-    IBindingContext bindingContext = IBindingContext.builder()
-        .compilePath(ObjectUtils.notNull(Files.createTempDirectory(Paths.get("target"), "modules-")))
-        .build();
+    IBindingContext bindingContext = newBindingContext();
     return testFactory(bindingContext);
   }
 
@@ -157,9 +153,7 @@ class XmlSuiteTest
 
   @Test
   void testLiboscalJavaIssue181() throws IOException, MetaschemaException, XMLStreamException, JDOMException {
-    IBindingContext bindingContext = IBindingContext.builder()
-        .compilePath(ObjectUtils.notNull(Files.createTempDirectory(Paths.get("target"), "modules-")))
-        .build();
+    IBindingContext bindingContext = newBindingContext();
 
     IBindingModuleLoader loader = bindingContext.newModuleLoader();
     loader.allowEntityResolution();

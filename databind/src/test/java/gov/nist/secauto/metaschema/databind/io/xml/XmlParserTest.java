@@ -62,7 +62,7 @@ class XmlParserTest
 
     MetaschemaXmlReader parser = new MetaschemaXmlReader(eventReader);
 
-    IBindingContext bindingContext = getBindingContext();
+    IBindingContext bindingContext = newBindingContext();
 
     IBoundDefinitionModelAssembly assembly
         = ObjectUtils.requireNonNull(
@@ -92,7 +92,7 @@ class XmlParserTest
     assert factory instanceof WstxInputFactory;
     XMLEventReader2 eventReader = (XMLEventReader2) factory.createXMLEventReader(new StringReader(xml));
 
-    IBindingContext bindingContext = getBindingContext();
+    IBindingContext bindingContext = newBindingContext();
     IBoundDefinitionModelAssembly assembly
         = ObjectUtils
             .requireNonNull(
@@ -136,7 +136,7 @@ class XmlParserTest
 
     MetaschemaXmlReader parser = new MetaschemaXmlReader(eventReader);
 
-    IBindingContext bindingContext = getBindingContext();
+    IBindingContext bindingContext = newBindingContext();
 
     IBoundDefinitionModelAssembly assembly
         = ObjectUtils.requireNonNull(

@@ -31,7 +31,6 @@ import org.junit.platform.commons.util.ReflectionUtils;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Iterator;
 import java.util.List;
@@ -184,7 +183,7 @@ class BasicMetaschemaTest
 
   @Test
   void testExistsWithVariable() throws IOException, URISyntaxException, MetaschemaException {
-    IBindingContext bindingContext = getBindingContext();
+    IBindingContext bindingContext = newBindingContext();
 
     IBindingMetaschemaModule module = bindingContext.loadMetaschema(
         new URL("https://raw.githubusercontent.com/usnistgov/OSCAL/main/src/metaschema/oscal_complete_metaschema.xml"));
@@ -235,10 +234,7 @@ class BasicMetaschemaTest
           Paths.get("../core/metaschema/schema/metaschema/metaschema-module-constraints.xml")));
     }
 
-    IBindingContext bindingContext = IBindingContext.builder()
-        .compilePath(ObjectUtils.notNull(Files.createTempDirectory(Paths.get("target"), "modules-")))
-        .constraintSet(constraints)
-        .build();
+    IBindingContext bindingContext = newBindingContext(constraints);
 
     IBindingMetaschemaModule module = bindingContext.loadMetaschema(ObjectUtils.notNull(
         Paths.get("../core/metaschema/schema/metaschema/metaschema-module-metaschema.xml")));

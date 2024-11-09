@@ -13,21 +13,20 @@ import gov.nist.secauto.metaschema.core.metapath.item.node.IDocumentNodeItem;
 import gov.nist.secauto.metaschema.core.model.MetaschemaException;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 import gov.nist.secauto.metaschema.databind.IBindingContext;
+import gov.nist.secauto.metaschema.databind.codegen.AbstractMetaschemaTest;
 
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Paths;
 
-class DefaultBoundLoaderTest {
+class DefaultBoundLoaderTest
+    extends AbstractMetaschemaTest {
 
   @Test
   void testIssue187() throws IOException, MetaschemaException {
 
-    IBindingContext bindingContext = IBindingContext.builder()
-        .compilePath(ObjectUtils.notNull(Files.createTempDirectory(Paths.get("target"), "modules-")))
-        .build();
+    IBindingContext bindingContext = newBindingContext();
 
     bindingContext.loadMetaschema(ObjectUtils.notNull(
         Paths.get("src/test/resources/content/issue187-metaschema.xml")));

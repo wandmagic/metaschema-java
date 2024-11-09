@@ -33,7 +33,7 @@ public class AbstractBoundModelTestSupport
 
   @NonNull
   protected IBoundDefinitionModelAssembly getRootAssemblyClassBinding() throws IOException {
-    return ObjectUtils.requireNonNull((IBoundDefinitionModelAssembly) getBindingContext()
+    return ObjectUtils.requireNonNull((IBoundDefinitionModelAssembly) newBindingContext()
         .getBoundDefinitionForClass(RootBoundAssembly.class));
   }
 

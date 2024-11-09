@@ -89,14 +89,14 @@ class MetaschemaModuleMetaschemaTest
 
   @Test
   void testModuleLoader() throws MetaschemaException, IOException {
-    IBindingModuleLoader loader = getBindingContext().newModuleLoader();
+    IBindingModuleLoader loader = newBindingContext().newModuleLoader();
     IBindingMetaschemaModule module = loader.load(METASCHEMA_FILE);
     assertNotNull(module);
   }
 
   @Test
   void testOscalBindingModuleLoader() throws MetaschemaException, IOException {
-    IBindingModuleLoader loader = getBindingContext().newModuleLoader();
+    IBindingModuleLoader loader = newBindingContext().newModuleLoader();
     loader.allowEntityResolution();
     IBindingMetaschemaModule module = loader.load(ObjectUtils.notNull(URI.create(
         "https://raw.githubusercontent.com/usnistgov/OSCAL/refs/tags/v1.1.2/src/metaschema/oscal_complete_metaschema.xml")));

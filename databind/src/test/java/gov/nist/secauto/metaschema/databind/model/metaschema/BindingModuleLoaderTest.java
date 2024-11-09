@@ -19,7 +19,7 @@ class BindingModuleLoaderTest
 
   @Test
   void test() throws MetaschemaException, IOException {
-    IBindingModuleLoader loader = getBindingContext().newModuleLoader();
+    IBindingModuleLoader loader = newBindingContext().newModuleLoader();
     loader.allowEntityResolution();
 
     loader.load(ObjectUtils.notNull(

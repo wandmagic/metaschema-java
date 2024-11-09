@@ -11,7 +11,6 @@ import gov.nist.secauto.metaschema.core.model.IModule;
 import gov.nist.secauto.metaschema.core.model.MetaschemaException;
 import gov.nist.secauto.metaschema.core.model.validation.IContentValidator;
 import gov.nist.secauto.metaschema.core.model.validation.JsonSchemaContentValidator;
-import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 import gov.nist.secauto.metaschema.databind.IBindingContext;
 import gov.nist.secauto.metaschema.databind.io.Format;
 import gov.nist.secauto.metaschema.databind.model.metaschema.IBindingModuleLoader;
@@ -31,7 +30,6 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -65,9 +63,8 @@ class JsonSuiteTest
   @DisplayName("JSON Schema Generation")
   @TestFactory
   Stream<DynamicNode> generateTests() throws IOException {
-    IBindingContext bindingContext = IBindingContext.builder()
-        .compilePath(ObjectUtils.notNull(Files.createTempDirectory(Paths.get("target"), "modules-")))
-        .build();
+    IBindingContext bindingContext = newBindingContext();
+
     return testFactory(bindingContext);
   }
 
@@ -116,9 +113,8 @@ class JsonSuiteTest
   @Disabled
   @Test
   void testOscalComplete() throws IOException, MetaschemaException { // NOPMD - delegated to doTest
-    IBindingContext bindingContext = IBindingContext.builder()
-        .compilePath(ObjectUtils.notNull(Files.createTempDirectory(Paths.get("target"), "modules-")))
-        .build();
+    IBindingContext bindingContext = newBindingContext();
+
     IBindingModuleLoader loader = bindingContext.newModuleLoader();
     loader.allowEntityResolution();
 
@@ -140,9 +136,8 @@ class JsonSuiteTest
   @Disabled
   @Test
   void testTestMetaschema() throws IOException, MetaschemaException { // NOPMD - delegated to doTest
-    IBindingContext bindingContext = IBindingContext.builder()
-        .compilePath(ObjectUtils.notNull(Files.createTempDirectory(Paths.get("target"), "modules-")))
-        .build();
+    IBindingContext bindingContext = newBindingContext();
+
     IBindingModuleLoader loader = bindingContext.newModuleLoader();
     loader.allowEntityResolution();
 

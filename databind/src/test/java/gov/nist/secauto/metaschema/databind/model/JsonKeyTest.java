@@ -21,7 +21,7 @@ class JsonKeyTest
     extends AbstractMetaschemaTest {
   @Test
   void testJsonKey() throws IOException, MetaschemaException {
-    IBindingContext bindingContext = getBindingContext();
+    IBindingContext bindingContext = newBindingContext();
 
     bindingContext.newModuleLoader().load(ObjectUtils.requireNonNull(
         Paths.get("src/test/resources/metaschema/json-key/metaschema.xml")));

@@ -12,9 +12,11 @@ import gov.nist.secauto.metaschema.core.configuration.IConfiguration;
 import gov.nist.secauto.metaschema.core.configuration.IMutableConfiguration;
 import gov.nist.secauto.metaschema.core.model.IModule;
 import gov.nist.secauto.metaschema.core.model.MetaschemaException;
+import gov.nist.secauto.metaschema.core.model.constraint.IConstraintSet;
 import gov.nist.secauto.metaschema.core.model.validation.JsonSchemaContentValidator;
 import gov.nist.secauto.metaschema.core.model.validation.XmlSchemaContentValidator;
 import gov.nist.secauto.metaschema.core.model.xml.ModuleLoader;
+import gov.nist.secauto.metaschema.core.util.CollectionUtil;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 import gov.nist.secauto.metaschema.databind.IBindingContext;
 import gov.nist.secauto.metaschema.databind.io.Format;
@@ -35,6 +37,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.BiFunction;
@@ -138,6 +141,23 @@ public abstract class AbstractSchemaGeneratorTestSuite
     JSON_CONTENT_VALIDATOR_PROVIDER = jsonContentValidatorProvider;
   }
 
+  @NonNull
+  protected static IBindingContext newBindingContext() throws IOException {
+    return newBindingContext(CollectionUtil.emptyList());
+  }
+
+  @NonNull
+  protected static IBindingContext newBindingContext(@NonNull Collection<IConstraintSet> constraints)
+      throws IOException {
+    Path generationDir = Paths.get("target/generated-modules");
+    Files.createDirectories(generationDir);
+
+    return IBindingContext.builder()
+        .compilePath(ObjectUtils.notNull(Files.createTempDirectory(generationDir, "modules-")))
+        .constraintSet(constraints)
+        .build();
+  }
+
   @Override
   protected URI getTestSuiteURI() {
     return ObjectUtils
@@ -171,9 +191,7 @@ public abstract class AbstractSchemaGeneratorTestSuite
     Path testSuite = Paths.get("../core/metaschema/test-suite/schema-generation/");
     Path collectionPath = testSuite.resolve(collectionName);
 
-    IBindingContext bindingContext = IBindingContext.builder()
-        .compilePath(ObjectUtils.notNull(Files.createTempDirectory(Paths.get("target"), "modules-")))
-        .build();
+    IBindingContext bindingContext = newBindingContext();
 
     // load the metaschema module
     IBindingModuleLoader loader = bindingContext.newModuleLoader();

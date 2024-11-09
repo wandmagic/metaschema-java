@@ -17,16 +17,13 @@ import gov.nist.secauto.metaschema.databind.io.IBoundLoader;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Paths;
 
 class JsonParserTest
     extends AbstractMetaschemaTest {
   @Test
   void testIssue308Regression() throws IOException, MetaschemaException {
-    IBindingContext bindingContext = IBindingContext.builder()
-        .compilePath(ObjectUtils.notNull(Files.createTempDirectory(Paths.get("target"), "modules-")))
-        .build();
+    IBindingContext bindingContext = newBindingContext();
 
     bindingContext.loadMetaschema(ObjectUtils.notNull(
         Paths.get("src/test/resources/metaschema/308-choice-regression/metaschema.xml")));
