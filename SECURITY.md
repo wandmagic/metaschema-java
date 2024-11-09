@@ -14,5 +14,5 @@ The following versions of the code in this repository are supported.
 
 | Version   | Supported          |
 | --------- | ------------------ |
-| `1.x.x`   | :white_check_mark: |
-| < `1.0.0` | :x:                |
+| `2.x.x`   | :white_check_mark: |
+| < `2.0.0` | :x:                |
