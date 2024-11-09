@@ -108,7 +108,7 @@
 							<excludeRoot>target/generated-sources/xmlbeans</excludeRoot>
 						</excludeRoots>
 						<excludes>
-                            <exclude>gov/nist/secauto/metaschema/databind/model/binding/metaschema/*.java</exclude>
+                            <exclude>gov/nist/secauto/metaschema/databind/model/metaschema/binding/*.java</exclude>
                         </excludes>
 					</configuration>
 				</plugin>
@@ -116,7 +116,7 @@
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-checkstyle-plugin</artifactId>
 					<configuration>
-						<excludes>**/gov/nist/secauto/metaschema/databind/model/binding/metaschema/*.java,**/gov/nist/secauto/metaschema/databind/model/test/*.java</excludes>
+						<excludes>**/gov/nist/secauto/metaschema/databind/model/metaschema/binding/*.java,**/gov/nist/secauto/metaschema/databind/model/test/*.java</excludes>
 					</configuration>
 				</plugin>
 				<plugin>

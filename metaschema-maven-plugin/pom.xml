@@ -28,6 +28,10 @@
 	  <tag>v2.0.0</tag>
     </scm>
 
+	<prerequisites>
+		<maven>${mojo.maven.version}</maven>
+	</prerequisites>
+
     <dependencies>
         <dependency>
 			<groupId>${project.groupId}</groupId>

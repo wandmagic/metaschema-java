@@ -142,7 +142,10 @@ public abstract class AbstractMetaschemaMojo
   /**
    * Location to generate Java source files in.
    */
-  @Parameter(defaultValue = "${project.build.directory}/generated-sources/metaschema", required = true)
+  @Parameter(
+      defaultValue = "${project.build.directory}/generated-sources/metaschema",
+      required = true,
+      property = "outputDirectory")
   private File outputDirectory;
 
   /**

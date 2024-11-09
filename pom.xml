@@ -16,10 +16,6 @@
 	<description>A common build root for all Java projects related to the Metaschema framework.</description>
 	<url>${site.url}</url>
 
-	<prerequisites>
-		<maven>${mojo.maven.version}</maven>
-	</prerequisites>
-
 	<properties>
 		<!-- site configuration -->
 		<site.url>https://metaschema-java.metaschema.dev</site.url>
@@ -546,6 +542,11 @@
 		<pluginManagement>
 			<plugins>
 				<plugin>
+					<groupId>${project.groupId}</groupId>
+					<artifactId>metaschema-maven-plugin</artifactId>
+					<version>${project.version}</version>
+				</plugin>
+				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-toolchains-plugin</artifactId>
 					<version>${plugin.maven-toolchains.version}</version>
@@ -565,6 +566,25 @@
 						</toolchains>
 					</configuration>
 				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-enforcer-plugin</artifactId>
+					<executions>
+					  <execution>
+						<id>enforce-maven</id>
+						<goals>
+						  <goal>enforce</goal>
+						</goals>
+						<configuration>
+						  <rules>
+							<requireMavenVersion>
+							  <version>[${mojo.maven.version},)</version>
+							</requireMavenVersion>
+						  </rules>    
+						</configuration>
+					  </execution>
+					</executions>
+				  </plugin>
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-compiler-plugin</artifactId>
