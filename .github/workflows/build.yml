@@ -30,6 +30,7 @@ env:
   MAVEN_VERSION: 3.9.8
   JAVA_DISTRO: 'temurin'
   JAVA_VERSION_FILE: .java-version
+  COMMIT_MAVEN_ARTIFACTS: ${{ (github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/heads/release/')) && github.repository_owner == 'metaschema-framework' }}
 jobs:
   build-code:
     name: Code
@@ -44,7 +45,7 @@ jobs:
         submodules: recursive
         filter: tree:0
     - name: Checkout maven2 branch
-      if: (github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/heads/release/')) && github.repository_owner == 'metaschema-framework'
+      if: env.COMMIT_MAVEN_ARTIFACTS == 'true'
       uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
       with:
         path: maven2
@@ -77,7 +78,7 @@ jobs:
       run: |
         mvn -B -e -Prelease -Psnapshots -DaltDeploymentRepository=repo-snapshot::file://${GITHUB_WORKSPACE}/maven2/ -DaltSnapshotDeploymentRepository=repo-snapshot::file://${GITHUB_WORKSPACE}/maven2/ -DrepositoryId=repo-snapshot deploy
     - name: Deploy Artifacts
-      if: (github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/heads/release/')) && github.repository_owner == 'metaschema-framework'
+      if: env.COMMIT_MAVEN_ARTIFACTS == 'true'
       run: |
         MVN_COORDS=$(echo '${project.groupId}:${project.artifactId}:${project.version}' | mvn -N -q -DforceStdout help:evaluate)
         cd maven2
