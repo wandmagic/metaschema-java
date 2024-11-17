@@ -14,9 +14,9 @@ import com.vladsch.flexmark.util.data.DataSet;
 import com.vladsch.flexmark.util.data.MutableDataSet;
 import com.vladsch.flexmark.util.misc.Extension;
 
-import gov.nist.secauto.metaschema.core.datatype.markup.flexmark.FlexmarkConfiguration;
 import gov.nist.secauto.metaschema.core.datatype.markup.flexmark.FlexmarkFactory;
-import gov.nist.secauto.metaschema.core.datatype.markup.flexmark.SuppressPTagExtension;
+import gov.nist.secauto.metaschema.core.datatype.markup.flexmark.impl.FlexmarkConfiguration;
+import gov.nist.secauto.metaschema.core.datatype.markup.flexmark.impl.SuppressPTagExtension;
 
 import java.util.Collection;
 import java.util.LinkedList;
@@ -24,6 +24,11 @@ import java.util.List;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
+/**
+ * Supports a data value which is a single line of markup.
+ * <p>
+ * This markup can be presented as XHTML or Markdown.
+ */
 public final class MarkupLine
     extends AbstractMarkupString<MarkupLine> {
 
@@ -43,7 +48,7 @@ public final class MarkupLine
     options.set(Parser.LIST_BLOCK_PARSER, false);
     options.set(HtmlRenderer.SUPPRESS_HTML_BLOCKS, true);
 
-    Collection<Extension> currentExtensions = Parser.EXTENSIONS.get(FlexmarkConfiguration.FLEXMARK_CONFIG);
+    Collection<Extension> currentExtensions = Parser.EXTENSIONS.get(FlexmarkConfiguration.instance());
     List<Extension> extensions = new LinkedList<>(currentExtensions);
     extensions.add(SuppressPTagExtension.newInstance());
     Parser.EXTENSIONS.set(options, extensions);

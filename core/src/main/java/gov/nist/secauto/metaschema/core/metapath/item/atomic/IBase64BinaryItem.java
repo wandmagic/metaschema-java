@@ -6,14 +6,16 @@
 package gov.nist.secauto.metaschema.core.metapath.item.atomic;
 
 import gov.nist.secauto.metaschema.core.datatype.adapter.MetaschemaDataTypeProvider;
+import gov.nist.secauto.metaschema.core.metapath.InvalidTypeMetapathException;
 import gov.nist.secauto.metaschema.core.metapath.function.InvalidValueForCastFunctionException;
+import gov.nist.secauto.metaschema.core.metapath.item.atomic.impl.Base64BinaryItemImpl;
 
 import java.nio.ByteBuffer;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
- * A Metapath atomic item containing a Base64 encoded data value.
+ * An atomic Metapath item containing a Base64 encoded data value.
  */
 public interface IBase64BinaryItem extends IAnyAtomicItem {
 
@@ -24,10 +26,21 @@ public interface IBase64BinaryItem extends IAnyAtomicItem {
    * @param value
    *          a string representing base64 encoded data
    * @return the new item
+   * @throws InvalidTypeMetapathException
+   *           if the provided string is not a valid Base64 character sequence
    */
   @NonNull
   static IBase64BinaryItem valueOf(@NonNull String value) {
-    return cast(IStringItem.valueOf(value));
+    try {
+      return valueOf(MetaschemaDataTypeProvider.BASE64.parse(value));
+    } catch (IllegalArgumentException ex) {
+      throw new InvalidTypeMetapathException(
+          null,
+          String.format("The value starting with '%s' is not a valid Base64 character sequence. %s",
+              value.substring(0, Math.min(value.length(), 200)),
+              ex.getLocalizedMessage()),
+          ex);
+    }
   }
 
   /**
@@ -55,7 +68,14 @@ public interface IBase64BinaryItem extends IAnyAtomicItem {
    */
   @NonNull
   static IBase64BinaryItem cast(@NonNull IAnyAtomicItem item) {
-    return MetaschemaDataTypeProvider.BASE64.cast(item);
+    try {
+      return item instanceof IBase64BinaryItem
+          ? (IBase64BinaryItem) item
+          : valueOf(item.asString());
+    } catch (IllegalStateException | InvalidTypeMetapathException ex) {
+      // asString can throw IllegalStateException exception
+      throw new InvalidValueForCastFunctionException(ex);
+    }
   }
 
   @Override

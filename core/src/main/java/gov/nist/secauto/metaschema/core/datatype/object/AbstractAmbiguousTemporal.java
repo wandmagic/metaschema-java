@@ -12,6 +12,9 @@ import java.time.ZonedDateTime;
 import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
+ * Implementations of this class represent a temporal value which may not have a
+ * timezone making it ambiguous as a point/window in time.
+ * <p>
  * Metaschema has a need to represent dates and times that allow for an
  * ambiguous time zone. This is due to some models not requiring a time zone as
  * part of a date/time. An ambiguous dateTime allows a time zone to be inferred,
@@ -22,7 +25,9 @@ import edu.umd.cs.findbugs.annotations.NonNull;
  * written back out in such cases.
  *
  * @param <TYPE>
- *          the bound object type
+ *          the bound object type that extends this class, used for proper type
+ *          inheritance in implementing classes like {@code AmbiguousDate} or
+ *          {@code AmbiguousDateTime}
  */
 public abstract class AbstractAmbiguousTemporal<TYPE extends AbstractAmbiguousTemporal<TYPE>>
     extends AbstractCustomJavaDataType<TYPE, ZonedDateTime> {
@@ -52,4 +57,10 @@ public abstract class AbstractAmbiguousTemporal<TYPE extends AbstractAmbiguousTe
   public boolean hasTimeZone() {
     return timeZone;
   }
+
+  @Override
+  public String toString() {
+    return getValue().toString() + (hasTimeZone() ? "" : "(abiguous)");
+  }
+
 }

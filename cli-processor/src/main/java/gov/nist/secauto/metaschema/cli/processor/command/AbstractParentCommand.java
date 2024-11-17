@@ -8,6 +8,7 @@ package gov.nist.secauto.metaschema.cli.processor.command;
 import gov.nist.secauto.metaschema.cli.processor.CLIProcessor.CallingContext;
 import gov.nist.secauto.metaschema.cli.processor.ExitCode;
 import gov.nist.secauto.metaschema.cli.processor.ExitStatus;
+import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 
 import org.apache.commons.cli.CommandLine;
 
@@ -19,17 +20,30 @@ import java.util.stream.Collectors;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
+/**
+ * A base class for a command that supports hierarchical command structure with
+ * child commands. This class provides the foundation for implementing complex
+ * CLI commands that can have multiple levels of sub-commands.
+ * <p>
+ * This class is thread-safe and supports concurrent access to command handlers.
+ */
 public abstract class AbstractParentCommand implements ICommand {
   @NonNull
   private final Map<String, ICommand> commandToSubcommandHandlerMap;
-  private final boolean subCommandRequired;
 
-  @SuppressWarnings("null")
-  protected AbstractParentCommand(boolean subCommandRequired) {
-    this.commandToSubcommandHandlerMap = Collections.synchronizedMap(new LinkedHashMap<>());
-    this.subCommandRequired = subCommandRequired;
+  /**
+   * Construct a new parent command.
+   */
+  protected AbstractParentCommand() {
+    this.commandToSubcommandHandlerMap = ObjectUtils.notNull(Collections.synchronizedMap(new LinkedHashMap<>()));
   }
 
+  /**
+   * Add a child command.
+   *
+   * @param handler
+   *          the command handler for the child command
+   */
   protected final void addCommandHandler(ICommand handler) {
     String commandName = handler.getName();
     this.commandToSubcommandHandlerMap.put(commandName, handler);
@@ -40,15 +54,14 @@ public abstract class AbstractParentCommand implements ICommand {
     return commandToSubcommandHandlerMap.get(name);
   }
 
-  @SuppressWarnings("null")
   @Override
   public Collection<ICommand> getSubCommands() {
-    return Collections.unmodifiableCollection(commandToSubcommandHandlerMap.values());
+    return ObjectUtils.notNull(Collections.unmodifiableCollection(commandToSubcommandHandlerMap.values()));
   }
 
   @Override
   public boolean isSubCommandRequired() {
-    return subCommandRequired;
+    return true;
   }
 
   @Override
@@ -57,9 +70,9 @@ public abstract class AbstractParentCommand implements ICommand {
   }
 
   @NonNull
-  protected ExitStatus executeCommand(
+  private ExitStatus executeCommand(
       @NonNull CallingContext callingContext,
-      @NonNull CommandLine commandLine) {
+      @SuppressWarnings("unused") @NonNull CommandLine commandLine) {
     callingContext.showHelp();
     ExitStatus status;
     if (isSubCommandRequired()) {

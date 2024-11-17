@@ -15,6 +15,11 @@ import javax.xml.namespace.QName;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
+/**
+ * Support for the Metaschema <a href=
+ * "https://pages.nist.gov/metaschema/specification/datatypes/#hostname">hostname</a>
+ * data type.
+ */
 public class HostnameAdapter
     extends AbstractStringAdapter<IHostnameItem> {
   @NonNull

@@ -36,6 +36,10 @@ import java.util.Set;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 
+/**
+ * Adds support for the use of "q" tags in HTML to replace quotation marks.
+ * These are translated to double quotes in Markdown.
+ */
 public class HtmlQuoteTagExtension
     implements Parser.ParserExtension, HtmlRenderer.HtmlRendererExtension,
     FlexmarkHtmlConverter.HtmlConverterExtension {
@@ -77,8 +81,8 @@ public class HtmlQuoteTagExtension
   static class QTagNodeRenderer implements NodeRenderer {
 
     @Override
-    public @Nullable
-    Set<NodeRenderingHandler<?>> getNodeRenderingHandlers() {
+    @Nullable
+    public Set<NodeRenderingHandler<?>> getNodeRenderingHandlers() {
       return Collections.singleton(
           new NodeRenderingHandler<>(DoubleQuoteNode.class, this::render));
     }
@@ -139,7 +143,9 @@ public class HtmlQuoteTagExtension
       return Collections.singleton(new HtmlNodeRendererHandler<>("q", Element.class, this::renderMarkdown));
     }
 
-    protected void renderMarkdown(Element element, HtmlNodeConverterContext context,
+    protected void renderMarkdown(
+        Element element,
+        HtmlNodeConverterContext context,
         @SuppressWarnings("unused") HtmlMarkdownWriter out) {
       context.wrapTextNodes(element, "\"", element.nextElementSibling() != null);
     }
@@ -154,7 +160,10 @@ public class HtmlQuoteTagExtension
 
   }
 
-  public static class DoubleQuoteNode
+  /**
+   * A Flexmark node implementation representing a quotation mark.
+   */
+  public static final class DoubleQuoteNode
       extends TypographicQuotes {
 
     /**
@@ -163,7 +172,6 @@ public class HtmlQuoteTagExtension
      * @param node
      *          the typographic information pertaining to a double quote
      */
-    @SuppressWarnings("PMD.ConstructorCallsOverridableMethod")
     public DoubleQuoteNode(TypographicQuotes node) {
       super(node.getOpeningMarker(), node.getText(), node.getClosingMarker());
       setTypographicOpening(node.getTypographicOpening());

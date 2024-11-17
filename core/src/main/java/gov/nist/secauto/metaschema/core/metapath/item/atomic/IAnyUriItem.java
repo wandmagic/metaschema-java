@@ -6,13 +6,18 @@
 package gov.nist.secauto.metaschema.core.metapath.item.atomic;
 
 import gov.nist.secauto.metaschema.core.datatype.adapter.MetaschemaDataTypeProvider;
+import gov.nist.secauto.metaschema.core.metapath.InvalidTypeMetapathException;
 import gov.nist.secauto.metaschema.core.metapath.function.InvalidValueForCastFunctionException;
+import gov.nist.secauto.metaschema.core.metapath.item.atomic.impl.AnyUriItemImpl;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 
 import java.net.URI;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
+/**
+ * An atomic Metapath item containing a URI data value.
+ */
 public interface IAnyUriItem extends IAnyAtomicItem {
   /**
    * Construct a new URI item using the provided string {@code value}.
@@ -20,16 +25,32 @@ public interface IAnyUriItem extends IAnyAtomicItem {
    * @param value
    *          a string representing a URI
    * @return the new item
-   * @throws IllegalArgumentException
+   * @throws InvalidTypeMetapathException
    *           if the given string violates RFC2396
    */
   @NonNull
   static IAnyUriItem valueOf(@NonNull String value) {
-    return valueOf(ObjectUtils.notNull(URI.create(value)));
+    try {
+      return valueOf(MetaschemaDataTypeProvider.URI.parse(value));
+    } catch (IllegalArgumentException ex) {
+      throw new InvalidTypeMetapathException(
+          null,
+          String.format("Invalid URI value '%s'. %s",
+              value,
+              ex.getLocalizedMessage()),
+          ex);
+    }
   }
 
   /**
    * Construct a new URI item using the provided URI {@code value}.
+   * <p>
+   * Example usage:
+   *
+   * <pre>
+   * URI uri = URI.create("http://example.com");
+   * IAnyUriItem item = IAnyUriItem.valueOf(uri);
+   * </pre>
    *
    * @param value
    *          a URI
@@ -59,7 +80,19 @@ public interface IAnyUriItem extends IAnyAtomicItem {
    */
   @NonNull
   static IAnyUriItem cast(@NonNull IAnyAtomicItem item) {
-    return MetaschemaDataTypeProvider.URI.cast(item);
+    try {
+      return item instanceof IAnyUriItem
+          ? (IAnyUriItem) item
+          : valueOf(item.asString());
+    } catch (IllegalStateException | InvalidTypeMetapathException ex) {
+      // asString can throw IllegalStateException exception
+      throw new InvalidValueForCastFunctionException(ex);
+    }
+  }
+
+  @Override
+  default IAnyUriItem castAsType(IAnyAtomicItem item) {
+    return cast(item);
   }
 
   /**
@@ -100,11 +133,6 @@ public interface IAnyUriItem extends IAnyAtomicItem {
   @NonNull
   default IAnyUriItem resolve(@NonNull IAnyUriItem other) {
     return valueOf(ObjectUtils.notNull(asUri().resolve(other.asUri())));
-  }
-
-  @Override
-  default IAnyUriItem castAsType(IAnyAtomicItem item) {
-    return cast(item);
   }
 
   @Override

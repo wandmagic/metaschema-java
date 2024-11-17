@@ -5,7 +5,7 @@
 
 package gov.nist.secauto.metaschema.core.metapath.item.atomic;
 
-import gov.nist.secauto.metaschema.core.datatype.adapter.MetaschemaDataTypeProvider;
+import gov.nist.secauto.metaschema.core.metapath.InvalidTypeMetapathException;
 import gov.nist.secauto.metaschema.core.metapath.function.ArithmeticFunctionException;
 import gov.nist.secauto.metaschema.core.metapath.function.FunctionUtils;
 import gov.nist.secauto.metaschema.core.metapath.function.InvalidValueForCastFunctionException;
@@ -18,6 +18,15 @@ import java.math.RoundingMode;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
+/**
+ * Represents an atomic Metapath item containing a numeric data value, which can
+ * be either an integer or decimal. This interface provides operations for
+ * numeric type conversion, comparison, and mathematical operations commonly
+ * used in Metapath expressions.
+ *
+ * @see IIntegerItem
+ * @see IDecimalItem
+ */
 public interface INumericItem extends IAnyAtomicItem {
 
   /**
@@ -32,7 +41,14 @@ public interface INumericItem extends IAnyAtomicItem {
    */
   @NonNull
   static INumericItem cast(@NonNull IAnyAtomicItem item) {
-    return MetaschemaDataTypeProvider.DECIMAL.cast(item);
+    try {
+      return item instanceof INumericItem
+          ? (INumericItem) item
+          : IDecimalItem.valueOf(item.asString());
+    } catch (IllegalStateException | InvalidTypeMetapathException ex) {
+      // asString can throw IllegalStateException exception
+      throw new InvalidValueForCastFunctionException(ex);
+    }
   }
 
   /**
@@ -110,7 +126,6 @@ public interface INumericItem extends IAnyAtomicItem {
    *          (negative value} or after (positive value) the decimal point.
    * @return the rounded value
    */
-  @SuppressWarnings("PMD.CognitiveComplexity") // ok
   @NonNull
   default INumericItem round(@NonNull IIntegerItem precisionItem) {
     int precision;
@@ -120,44 +135,51 @@ public interface INumericItem extends IAnyAtomicItem {
       throw new ArithmeticFunctionException(ArithmeticFunctionException.OVERFLOW_UNDERFLOW_ERROR,
           "Numeric operation overflow/underflow.", ex);
     }
+    return precision >= 0
+        ? roundWithPositivePrecision(precision)
+        : roundWithNegativePrecision(precision);
+  }
+
+  @NonNull
+  private INumericItem roundWithPositivePrecision(int precision) {
     INumericItem retval;
-    if (precision >= 0) {
-      // round to precision decimal places
-      if (this instanceof IIntegerItem) {
-        retval = this;
-      } else {
-        // IDecimalItem
-        BigDecimal value = asDecimal();
-        if (value.signum() == -1) {
-          retval = IDecimalItem.valueOf(
-              ObjectUtils.notNull(
-                  value.round(new MathContext(precision + value.precision() - value.scale(), RoundingMode.HALF_DOWN))));
-        } else {
-          retval = IDecimalItem.valueOf(
-              ObjectUtils.notNull(
-                  value.round(new MathContext(precision + value.precision() - value.scale(), RoundingMode.HALF_UP))));
-        }
-
-        // cast result to original type
-        retval = castAsType(retval);
-      }
+    if (this instanceof IIntegerItem) {
+      retval = this;
     } else {
-      // round to a power of 10
-      BigInteger value = asInteger();
-      BigInteger divisor = BigInteger.TEN.pow(0 - precision);
+      BigDecimal value = asDecimal();
+      BigDecimal rounded = value.signum() == -1
+          ? value.round(new MathContext(precision + value.precision() - value.scale(), RoundingMode.HALF_DOWN))
+          : value.round(new MathContext(precision + value.precision() - value.scale(), RoundingMode.HALF_UP));
+      retval = castAsType(IDecimalItem.valueOf(ObjectUtils.notNull(rounded)));
+    }
+    return retval;
+  }
 
-      @NonNull
-      BigInteger result;
-      if (divisor.compareTo(value.abs()) > 0) {
-        result = ObjectUtils.notNull(BigInteger.ZERO);
-      } else {
-        BigInteger remainder = value.mod(divisor);
-        BigInteger lessRemainder = value.subtract(remainder);
-        BigInteger halfDivisor = divisor.divide(BigInteger.TWO);
-        result = ObjectUtils.notNull(
-            remainder.compareTo(halfDivisor) >= 0 ? lessRemainder.add(divisor) : lessRemainder);
-      }
-      retval = IIntegerItem.valueOf(result);
+  /**
+   * Rounds a number to the specified negative precision by: 1. Computing the
+   * divisor (10^|precision|) 2. If the absolute value is less than the divisor,
+   * returns 0 3. Otherwise, rounds to the nearest multiple of the divisor
+   *
+   * @param precision
+   *          the negative precision to round to
+   * @return the rounded value
+   */
+  @NonNull
+  private INumericItem roundWithNegativePrecision(int precision) {
+    BigInteger value = asInteger();
+    BigInteger divisor = BigInteger.TEN.pow(0 - precision);
+
+    INumericItem retval;
+    if (divisor.compareTo(value.abs()) > 0) {
+      retval = IIntegerItem.ZERO;
+    } else {
+      BigInteger remainder = value.mod(divisor);
+      BigInteger lessRemainder = value.subtract(remainder);
+      BigInteger halfDivisor = divisor.divide(BigInteger.TWO);
+      BigInteger roundedValue = remainder.compareTo(halfDivisor) >= 0
+          ? lessRemainder.add(divisor)
+          : lessRemainder;
+      retval = IIntegerItem.valueOf(ObjectUtils.notNull(roundedValue));
     }
     return retval;
   }

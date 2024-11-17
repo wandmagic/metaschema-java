@@ -147,10 +147,10 @@ public final class ComparisonFunctions {
       retval = IDecimalItem.cast(other);
     } else if (item instanceof IDayTimeDurationItem) {
       retval = IDayTimeDurationItem.cast(other);
-    } else if (item instanceof IDayTimeDurationItem) {
+    } else if (item instanceof IYearMonthDurationItem) {
       retval = IYearMonthDurationItem.cast(other);
     } else {
-      retval = item.getJavaTypeAdapter().cast(other);
+      retval = item.castAsType(other);
     }
     return retval;
   }

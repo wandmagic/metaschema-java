@@ -20,6 +20,11 @@ import javax.xml.namespace.QName;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
+/**
+ * Support for the Metaschema <a href=
+ * "https://pages.nist.gov/metaschema/specification/datatypes/#base64">base64</a>
+ * data type.
+ */
 public class Base64Adapter
     extends AbstractDataTypeAdapter<ByteBuffer, IBase64BinaryItem> {
   @NonNull
@@ -43,30 +48,39 @@ public class Base64Adapter
     return JsonFormatTypes.STRING;
   }
 
-  @SuppressWarnings("null")
   @Override
   public ByteBuffer parse(String value) {
     Base64.Decoder decoder = Base64.getDecoder();
     byte[] result = decoder.decode(value);
-    return ByteBuffer.wrap(result);
+    return ObjectUtils.notNull(ByteBuffer.wrap(result));
   }
 
   @Override
   public ByteBuffer copy(Object obj) {
     ByteBuffer buffer = (ByteBuffer) obj;
-    final ByteBuffer clone
-        = buffer.isDirect() ? ByteBuffer.allocateDirect(buffer.capacity()) : ByteBuffer.allocate(buffer.capacity());
-    final ByteBuffer readOnlyCopy = buffer.asReadOnlyBuffer();
+    ByteBuffer clone = buffer.isDirect()
+        ? ByteBuffer.allocateDirect(buffer.capacity())
+        : ByteBuffer.allocate(buffer.capacity());
+    ByteBuffer readOnlyCopy = buffer.asReadOnlyBuffer();
     readOnlyCopy.flip();
     clone.put(readOnlyCopy);
     return clone;
   }
 
-  @SuppressWarnings("null")
   @Override
   public String asString(Object value) {
+    ByteBuffer buffer = (ByteBuffer) value;
+    byte[] array;
+    if (buffer.hasArray()) {
+      array = buffer.array();
+    } else {
+      // Handle direct buffers
+      array = new byte[buffer.remaining()];
+      buffer.get(array);
+    }
+
     Base64.Encoder encoder = Base64.getEncoder();
-    return encoder.encodeToString(((ByteBuffer) value).array());
+    return ObjectUtils.notNull(encoder.encodeToString(array));
   }
 
   @Override

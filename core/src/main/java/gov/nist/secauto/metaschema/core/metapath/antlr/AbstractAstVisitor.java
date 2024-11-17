@@ -79,8 +79,19 @@ import java.util.function.Function;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
-public abstract class AbstractAstVisitor<R> // NOPMD
+/**
+ * This abstract class supports processing an ANTLR-based abstract syntax tree
+ * by walking the tree using a visitor pattern.
+ *
+ * @param <R>
+ *          the Java type of the result produced through visitation
+ */
+@SuppressWarnings({ "PMD.ExcessivePublicCount", "PMD.CyclomaticComplexity" })
+public abstract class AbstractAstVisitor<R>
     extends Metapath10BaseVisitor<R> {
+  private static final String ERR_NO_DELEGATION
+      = "This method should never be called directly as it is handled by the parent expression.";
+  private static final String ERR_SINGLE_CHILD = "A single child expression was expected.";
 
   /**
    * This dispatch method will call the node handler on a leaf node or if multiple
@@ -125,7 +136,7 @@ public abstract class AbstractAstVisitor<R> // NOPMD
     if (ctx.getChildCount() == 1) {
       return ctx.getChild(0).accept(this);
     }
-    throw new IllegalStateException("a single child expression was expected");
+    throw new IllegalStateException(ERR_SINGLE_CHILD);
   }
 
   // ============================================================
@@ -150,7 +161,7 @@ public abstract class AbstractAstVisitor<R> // NOPMD
   @Override
   public R visitExpr(ExprContext ctx) {
     assert ctx != null;
-    return handle(ctx, (context) -> handleExpr(ctx));
+    return handle(ctx, this::handleExpr);
   }
 
   @Override
@@ -185,7 +196,7 @@ public abstract class AbstractAstVisitor<R> // NOPMD
   @Override
   public R visitLiteral(LiteralContext ctx) {
     assert ctx != null;
-    return handle(ctx, (context) -> handleStringLiteral(ctx));
+    return handle(ctx, this::handleStringLiteral);
   }
 
   /**
@@ -200,7 +211,7 @@ public abstract class AbstractAstVisitor<R> // NOPMD
   @Override
   public R visitNumericliteral(NumericliteralContext ctx) {
     assert ctx != null;
-    return handle(ctx, (context) -> handleNumericLiteral(ctx));
+    return handle(ctx, this::handleNumericLiteral);
   }
 
   // ==================================================================
@@ -266,7 +277,7 @@ public abstract class AbstractAstVisitor<R> // NOPMD
   @Override
   public R visitContextitemexpr(ContextitemexprContext ctx) {
     assert ctx != null;
-    return handle(ctx, (context) -> handleContextitemexpr(ctx));
+    return handle(ctx, this::handleContextitemexpr);
   }
 
   // =========================================================================
@@ -285,19 +296,19 @@ public abstract class AbstractAstVisitor<R> // NOPMD
   @Override
   public R visitFunctioncall(FunctioncallContext ctx) {
     assert ctx != null;
-    return handle(ctx, (context) -> handleFunctioncall(ctx));
+    return handle(ctx, this::handleFunctioncall);
   }
 
   @Override
   public R visitArgumentlist(ArgumentlistContext ctx) {
     // should never be called, since this is handled by the parent expression
-    throw new IllegalStateException();
+    throw new IllegalStateException(ERR_NO_DELEGATION);
   }
 
   @Override
   public R visitArgument(ArgumentContext ctx) {
     // should never be called, since this is handled by the parent expression
-    throw new IllegalStateException();
+    throw new IllegalStateException(ERR_NO_DELEGATION);
   }
 
   // =======================================================================
@@ -326,7 +337,7 @@ public abstract class AbstractAstVisitor<R> // NOPMD
   @Override
   public R visitPostfixexpr(PostfixexprContext ctx) {
     assert ctx != null;
-    return handle(ctx, (context) -> handlePostfixexpr(ctx));
+    return handle(ctx, this::handlePostfixexpr);
   }
 
   /**
@@ -375,7 +386,7 @@ public abstract class AbstractAstVisitor<R> // NOPMD
   @Override
   public R visitPathexpr(PathexprContext ctx) {
     assert ctx != null;
-    return handle(ctx, (context) -> handlePathexpr(ctx));
+    return handle(ctx, this::handlePathexpr);
   }
 
   // ============================================================
@@ -395,7 +406,7 @@ public abstract class AbstractAstVisitor<R> // NOPMD
   @Override
   public R visitRelativepathexpr(RelativepathexprContext ctx) {
     assert ctx != null;
-    return handle(ctx, (context) -> handleRelativepathexpr(ctx));
+    return handle(ctx, this::handleRelativepathexpr);
   }
 
   // ================================================
@@ -421,7 +432,7 @@ public abstract class AbstractAstVisitor<R> // NOPMD
   public R visitForwardstep(ForwardstepContext ctx) {
     assert ctx != null;
     // this will either call the handler or forward for AbbrevforwardstepContext
-    return handle(ctx, (context) -> handleForwardstep(ctx));
+    return handle(ctx, this::handleForwardstep);
   }
 
   /**
@@ -437,7 +448,7 @@ public abstract class AbstractAstVisitor<R> // NOPMD
   public R visitReversestep(ReversestepContext ctx) {
     assert ctx != null;
     // this will either call the handler or forward for AbbrevreversestepContext
-    return handle(ctx, (context) -> handleReversestep(ctx));
+    return handle(ctx, this::handleReversestep);
   }
 
   // ======================================================================
@@ -456,13 +467,13 @@ public abstract class AbstractAstVisitor<R> // NOPMD
   @Override
   public R visitAxisstep(AxisstepContext ctx) {
     assert ctx != null;
-    return handle(ctx, (context) -> handleAxisstep(ctx));
+    return handle(ctx, this::handleAxisstep);
   }
 
   @Override
   public R visitPredicatelist(PredicatelistContext ctx) {
     // should never be called, since this is handled by the parent expression
-    throw new IllegalStateException();
+    throw new IllegalStateException(ERR_NO_DELEGATION);
   }
 
   // ===========================================
@@ -472,13 +483,13 @@ public abstract class AbstractAstVisitor<R> // NOPMD
   @Override
   public R visitForwardaxis(ForwardaxisContext ctx) {
     // should never be called, since this is handled by handleForwardstep
-    throw new IllegalStateException();
+    throw new IllegalStateException(ERR_NO_DELEGATION);
   }
 
   @Override
   public R visitReverseaxis(ReverseaxisContext ctx) {
     // should never be called, since this is handled by handleReversestep
-    throw new IllegalStateException();
+    throw new IllegalStateException(ERR_NO_DELEGATION);
   }
 
   // =======================================================
@@ -488,19 +499,19 @@ public abstract class AbstractAstVisitor<R> // NOPMD
   @Override
   public R visitNodetest(NodetestContext ctx) {
     // should never be called, since this is handled by the calling context
-    throw new IllegalStateException();
+    throw new IllegalStateException(ERR_NO_DELEGATION);
   }
 
   @Override
   public R visitNametest(NametestContext ctx) {
     // should never be called, since this is handled by the calling context
-    throw new IllegalStateException();
+    throw new IllegalStateException(ERR_NO_DELEGATION);
   }
 
   @Override
   public R visitEqname(EqnameContext ctx) {
     // should never be called, since this is handled by the calling context
-    throw new IllegalStateException();
+    throw new IllegalStateException(ERR_NO_DELEGATION);
   }
 
   /**
@@ -569,7 +580,7 @@ public abstract class AbstractAstVisitor<R> // NOPMD
   @Override
   public R visitRangeexpr(RangeexprContext ctx) {
     assert ctx != null;
-    return handle(ctx, (context) -> handleRangeexpr(ctx));
+    return handle(ctx, this::handleRangeexpr);
   }
 
   // ========================================================================
@@ -588,7 +599,7 @@ public abstract class AbstractAstVisitor<R> // NOPMD
   @Override
   public R visitUnionexpr(UnionexprContext ctx) {
     assert ctx != null;
-    return handle(ctx, (context) -> handleUnionexpr(ctx));
+    return handle(ctx, this::handleUnionexpr);
   }
 
   /**
@@ -603,7 +614,7 @@ public abstract class AbstractAstVisitor<R> // NOPMD
   @Override
   public R visitIntersectexceptexpr(IntersectexceptexprContext ctx) {
     assert ctx != null;
-    return handle(ctx, (context) -> handleIntersectexceptexpr(ctx));
+    return handle(ctx, this::handleIntersectexceptexpr);
   }
 
   // ======================================================================
@@ -622,7 +633,7 @@ public abstract class AbstractAstVisitor<R> // NOPMD
   @Override
   public R visitAdditiveexpr(AdditiveexprContext ctx) {
     assert ctx != null;
-    return handle(ctx, (context) -> handleAdditiveexpr(ctx));
+    return handle(ctx, this::handleAdditiveexpr);
   }
 
   /**
@@ -637,7 +648,7 @@ public abstract class AbstractAstVisitor<R> // NOPMD
   @Override
   public R visitMultiplicativeexpr(MultiplicativeexprContext ctx) {
     assert ctx != null;
-    return handle(ctx, (context) -> handleMultiplicativeexpr(ctx));
+    return handle(ctx, this::handleMultiplicativeexpr);
   }
 
   /**
@@ -652,7 +663,7 @@ public abstract class AbstractAstVisitor<R> // NOPMD
   @Override
   public R visitUnaryexpr(UnaryexprContext ctx) {
     assert ctx != null;
-    return handle(ctx, (context) -> handleUnaryexpr(ctx));
+    return handle(ctx, this::handleUnaryexpr);
   }
 
   @Override
@@ -678,7 +689,7 @@ public abstract class AbstractAstVisitor<R> // NOPMD
   @Override
   public R visitStringconcatexpr(StringconcatexprContext ctx) {
     assert ctx != null;
-    return handle(ctx, (context) -> handleStringconcatexpr(ctx));
+    return handle(ctx, this::handleStringconcatexpr);
   }
 
   // =======================================================================
@@ -697,19 +708,19 @@ public abstract class AbstractAstVisitor<R> // NOPMD
   @Override
   public R visitComparisonexpr(ComparisonexprContext ctx) {
     assert ctx != null;
-    return handle(ctx, (context) -> handleComparisonexpr(ctx));
+    return handle(ctx, this::handleComparisonexpr);
   }
 
   @Override
   public R visitValuecomp(ValuecompContext ctx) {
     // should never be called, since this is handled by the parent expression
-    throw new IllegalStateException();
+    throw new IllegalStateException(ERR_NO_DELEGATION);
   }
 
   @Override
   public R visitGeneralcomp(GeneralcompContext ctx) {
     // should never be called, since this is handled by the parent expression
-    throw new IllegalStateException();
+    throw new IllegalStateException(ERR_NO_DELEGATION);
   }
 
   // ============================================================================
@@ -728,7 +739,7 @@ public abstract class AbstractAstVisitor<R> // NOPMD
   @Override
   public R visitOrexpr(OrexprContext ctx) {
     assert ctx != null;
-    return handle(ctx, (context) -> handleOrexpr(ctx));
+    return handle(ctx, this::handleOrexpr);
   }
 
   /**
@@ -743,7 +754,7 @@ public abstract class AbstractAstVisitor<R> // NOPMD
   @Override
   public R visitAndexpr(AndexprContext ctx) {
     assert ctx != null;
-    return handle(ctx, (context) -> handleAndexpr(ctx));
+    return handle(ctx, this::handleAndexpr);
   }
 
   // ====================================================================
@@ -762,19 +773,19 @@ public abstract class AbstractAstVisitor<R> // NOPMD
   @Override
   public R visitForexpr(ForexprContext ctx) {
     assert ctx != null;
-    return handle(ctx, (context) -> handleForexpr(ctx));
+    return handle(ctx, this::handleForexpr);
   }
 
   @Override
   public R visitSimpleforclause(SimpleforclauseContext ctx) {
     // should never be called, since this is handled by the parent expression
-    throw new IllegalStateException();
+    throw new IllegalStateException(ERR_NO_DELEGATION);
   }
 
   @Override
   public R visitSimpleforbinding(SimpleforbindingContext ctx) {
     // should never be called, since this is handled by the parent expression
-    throw new IllegalStateException();
+    throw new IllegalStateException(ERR_NO_DELEGATION);
   }
 
   // ====================================================================
@@ -799,13 +810,13 @@ public abstract class AbstractAstVisitor<R> // NOPMD
   @Override
   public R visitSimpleletclause(SimpleletclauseContext ctx) {
     // should never be called, since this is handled by the parent expression
-    throw new IllegalStateException();
+    throw new IllegalStateException(ERR_NO_DELEGATION);
   }
 
   @Override
   public R visitSimpleletbinding(SimpleletbindingContext ctx) {
     // should never be called, since this is handled by the parent expression
-    throw new IllegalStateException();
+    throw new IllegalStateException(ERR_NO_DELEGATION);
   }
 
   // ======================================================================
@@ -830,7 +841,7 @@ public abstract class AbstractAstVisitor<R> // NOPMD
   @Override
   public R visitMapconstructorentry(MapconstructorentryContext ctx) {
     // should never be called, since this is handled by the parent expression
-    throw new IllegalStateException();
+    throw new IllegalStateException(ERR_NO_DELEGATION);
   }
 
   @Override
@@ -888,7 +899,7 @@ public abstract class AbstractAstVisitor<R> // NOPMD
   @Override
   public R visitKeyspecifier(KeyspecifierContext ctx) {
     // should never be called, since this is handled by the parent expression
-    throw new IllegalStateException();
+    throw new IllegalStateException(ERR_NO_DELEGATION);
   }
 
   /**
@@ -922,7 +933,7 @@ public abstract class AbstractAstVisitor<R> // NOPMD
   @Override
   public R visitIfexpr(IfexprContext ctx) {
     assert ctx != null;
-    return handle(ctx, (context) -> handleIfexpr(ctx));
+    return handle(ctx, this::handleIfexpr);
   }
 
   /*
@@ -966,7 +977,7 @@ public abstract class AbstractAstVisitor<R> // NOPMD
   @Override
   public R visitSimplemapexpr(SimplemapexprContext ctx) {
     assert ctx != null;
-    return handle(ctx, (context) -> handleSimplemapexpr(ctx));
+    return handle(ctx, this::handleSimplemapexpr);
   }
 
   /*
@@ -987,12 +998,12 @@ public abstract class AbstractAstVisitor<R> // NOPMD
   @Override
   public R visitArrowexpr(ArrowexprContext ctx) {
     assert ctx != null;
-    return handle(ctx, (context) -> handleArrowexpr(ctx));
+    return handle(ctx, this::handleArrowexpr);
   }
 
   @Override
   public R visitArrowfunctionspecifier(ArrowfunctionspecifierContext ctx) {
     // should never be called, since this is handled by the parent expression
-    throw new IllegalStateException();
+    throw new IllegalStateException(ERR_NO_DELEGATION);
   }
 }

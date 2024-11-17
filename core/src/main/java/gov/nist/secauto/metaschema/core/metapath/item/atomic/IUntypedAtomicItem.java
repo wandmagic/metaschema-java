@@ -5,6 +5,9 @@
 
 package gov.nist.secauto.metaschema.core.metapath.item.atomic;
 
+/**
+ * An atomic Metapath item containing an untyped atomic data value.
+ */
 public interface IUntypedAtomicItem extends IAnyAtomicItem {
   // this interface has no additional methods
 }

@@ -49,48 +49,69 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
+/**
+ * Processes command line arguments and dispatches called commands.
+ * <p>
+ * This implementation make significant use of the command pattern to support a
+ * delegation chain of commands based on implementations of {@link ICommand}.
+ */
+@SuppressWarnings("PMD.CouplingBetweenObjects")
 public class CLIProcessor {
   private static final Logger LOGGER = LogManager.getLogger(CLIProcessor.class);
 
-  @SuppressWarnings("null")
+  /**
+   * This option indicates if the help should be shown.
+   */
   @NonNull
-  public static final Option HELP_OPTION = Option.builder("h")
+  public static final Option HELP_OPTION = ObjectUtils.notNull(Option.builder("h")
       .longOpt("help")
       .desc("display this help message")
-      .build();
-  @SuppressWarnings("null")
+      .build());
+  /**
+   * This option indicates if colorized output should be disabled.
+   */
   @NonNull
-  public static final Option NO_COLOR_OPTION = Option.builder()
+  public static final Option NO_COLOR_OPTION = ObjectUtils.notNull(Option.builder()
       .longOpt("no-color")
       .desc("do not colorize output")
-      .build();
-  @SuppressWarnings("null")
+      .build());
+  /**
+   * This option indicates if non-errors should be suppressed.
+   */
   @NonNull
-  public static final Option QUIET_OPTION = Option.builder("q")
+  public static final Option QUIET_OPTION = ObjectUtils.notNull(Option.builder("q")
       .longOpt("quiet")
       .desc("minimize output to include only errors")
-      .build();
-  @SuppressWarnings("null")
+      .build());
+  /**
+   * This option indicates if a strack trace should be shown for an error
+   * {@link ExitStatus}.
+   */
   @NonNull
-  public static final Option SHOW_STACK_TRACE_OPTION = Option.builder()
+  public static final Option SHOW_STACK_TRACE_OPTION = ObjectUtils.notNull(Option.builder()
       .longOpt("show-stack-trace")
       .desc("display the stack trace associated with an error")
-      .build();
-  @SuppressWarnings("null")
+      .build());
+  /**
+   * This option indicates if the version information should be shown.
+   */
   @NonNull
-  public static final Option VERSION_OPTION = Option.builder()
+  public static final Option VERSION_OPTION = ObjectUtils.notNull(Option.builder()
       .longOpt("version")
       .desc("display the application version")
-      .build();
-  @SuppressWarnings("null")
+      .build());
+
   @NonNull
-  public static final List<Option> OPTIONS = List.of(
+  private static final List<Option> OPTIONS = ObjectUtils.notNull(List.of(
       HELP_OPTION,
       NO_COLOR_OPTION,
       QUIET_OPTION,
       SHOW_STACK_TRACE_OPTION,
-      VERSION_OPTION);
+      VERSION_OPTION));
 
+  /**
+   * Used to identify the version info for the command.
+   */
   public static final String COMMAND_VERSION = "http://csrc.nist.gov/ns/metaschema-java/cli/command-version";
 
   @NonNull
@@ -100,6 +121,12 @@ public class CLIProcessor {
   @NonNull
   private final Map<String, IVersionInfo> versionInfos;
 
+  /**
+   * The main entry point for command execution.
+   *
+   * @param args
+   *          the command line arguments to process
+   */
   public static void main(String... args) {
     System.setProperty("java.util.logging.manager", "org.apache.logging.log4j.jul.LogManager");
     CLIProcessor processor = new CLIProcessor("metaschema-cli");
@@ -111,11 +138,28 @@ public class CLIProcessor {
     System.exit(processor.process(args).getExitCode().getStatusCode());
   }
 
-  @SuppressWarnings("null")
-  public CLIProcessor(@NonNull String exec) {
-    this(exec, Map.of());
+  /**
+   * The main entry point for CLI processing.
+   * <p>
+   * This uses the build-in version information.
+   *
+   * @param args
+   *          the command line arguments
+   */
+  public CLIProcessor(@NonNull String args) {
+    this(args, CollectionUtil.singletonMap(COMMAND_VERSION, new ProcessorVersion()));
   }
 
+  /**
+   * The main entry point for CLI processing.
+   * <p>
+   * This uses the provided version information.
+   *
+   * @param exec
+   *          the command name
+   * @param versionInfos
+   *          the version info to display when the version option is provided
+   */
   public CLIProcessor(@NonNull String exec, @NonNull Map<String, IVersionInfo> versionInfos) {
     this.exec = exec;
     this.versionInfos = versionInfos;
@@ -142,6 +186,12 @@ public class CLIProcessor {
     return versionInfos;
   }
 
+  /**
+   * Register a new command handler.
+   *
+   * @param handler
+   *          the command handler to register
+   */
   public void addCommandHandler(@NonNull ICommand handler) {
     commands.add(handler);
   }
@@ -186,11 +236,21 @@ public class CLIProcessor {
     return status;
   }
 
+  /**
+   * Get the root-level commands.
+   *
+   * @return the list of commands
+   */
   @NonNull
   protected final List<ICommand> getTopLevelCommands() {
     return CollectionUtil.unmodifiableList(commands);
   }
 
+  /**
+   * Get the root-level commands, mapped from name to command.
+   *
+   * @return the map of command names to command
+   */
   @NonNull
   protected final Map<String, ICommand> getTopLevelCommandsByName() {
     return ObjectUtils.notNull(getTopLevelCommands()
@@ -203,6 +263,9 @@ public class CLIProcessor {
     AnsiConsole.systemUninstall();
   }
 
+  /**
+   * Configure the logger to only report errors.
+   */
   public static void handleQuiet() {
     LoggerContext ctx = (LoggerContext) LogManager.getContext(false); // NOPMD not closable here
     Configuration config = ctx.getConfiguration();
@@ -214,6 +277,9 @@ public class CLIProcessor {
     }
   }
 
+  /**
+   * Output version information.
+   */
   protected void showVersion() {
     @SuppressWarnings("resource")
     PrintStream out = AnsiConsole.out(); // NOPMD - not owner
@@ -235,14 +301,12 @@ public class CLIProcessor {
     out.flush();
   }
 
-  // @SuppressWarnings("null")
-  // @NonNull
-  // public String[] getArgArray() {
-  // return Stream.concat(options.stream(), extraArgs.stream()).toArray(size ->
-  // new String[size]);
-  // }
-
-  public class CallingContext {
+  /**
+   * Records information about the command line options and called command
+   * hierarchy.
+   */
+  @SuppressWarnings("PMD.GodClass")
+  public final class CallingContext {
     @NonNull
     private final List<Option> options;
     @NonNull
@@ -253,7 +317,7 @@ public class CLIProcessor {
     private final List<String> extraArgs;
 
     @SuppressFBWarnings(value = "CT_CONSTRUCTOR_THROW", justification = "Use of final fields")
-    public CallingContext(@NonNull List<String> args) {
+    private CallingContext(@NonNull List<String> args) {
       @SuppressWarnings("PMD.LooseCoupling")
       LinkedList<ICommand> calledCommands = new LinkedList<>();
       List<Option> options = new LinkedList<>(OPTIONS);
@@ -286,18 +350,33 @@ public class CLIProcessor {
       this.extraArgs = CollectionUtil.unmodifiableList(extraArgs);
     }
 
+    /**
+     * Get the command line processor instance that generated this calling context.
+     *
+     * @return the instance
+     */
     @NonNull
     public CLIProcessor getCLIProcessor() {
       return CLIProcessor.this;
     }
 
+    /**
+     * Get the command that was triggered by the CLI arguments.
+     *
+     * @return the command or {@code null} if no command was triggered
+     */
     @Nullable
     public ICommand getTargetCommand() {
       return targetCommand;
     }
 
+    /**
+     * Get the options that are in scope for the current command context.
+     *
+     * @return the list of options
+     */
     @NonNull
-    protected List<Option> getOptionsList() {
+    private List<Option> getOptionsList() {
       return options;
     }
 
@@ -306,12 +385,22 @@ public class CLIProcessor {
       return calledCommands;
     }
 
+    /**
+     * Get any left over arguments that were not consumed by CLI options.
+     *
+     * @return the list of remaining arguments, which may be empty
+     */
     @NonNull
-    protected List<String> getExtraArgs() {
+    private List<String> getExtraArgs() {
       return extraArgs;
     }
 
-    protected Options toOptions() {
+    /**
+     * Get the collections of in scope options as an options group.
+     *
+     * @return the options group
+     */
+    private Options toOptions() {
       Options retval = new Options();
       for (Option option : getOptionsList()) {
         retval.addOption(option);
@@ -319,9 +408,23 @@ public class CLIProcessor {
       return retval;
     }
 
-    @SuppressWarnings("PMD.OnlyOneReturn") // readability
+    /**
+     * Process the command identified by the CLI arguments.
+     *
+     * @return the result of processing the command
+     */
+    @SuppressWarnings({
+        "PMD.OnlyOneReturn",
+        "PMD.NPathComplexity",
+        "PMD.CyclomaticComplexity"
+    })
     @NonNull
     public ExitStatus processCommand() {
+      // TODO: Consider refactoring as follows to reduce complexity:
+      // - Extract the parsing logic for each phase into separate methods (e.g.,
+      // parsePhaseOneOptions, parsePhaseTwoOptions).
+      // - Encapsulate error handling into dedicated methods.
+      // - Separate command execution logic into its own method if possible.
       CommandLineParser parser = new DefaultParser();
 
       // this uses a three phase approach where:
@@ -363,35 +466,11 @@ public class CLIProcessor {
 
       ICommand targetCommand = getTargetCommand();
       if (targetCommand != null) {
-        if (targetCommand.isSubCommandRequired()) {
+        try {
+          targetCommand.validateExtraArguments(this, cmdLine);
+        } catch (InvalidArgumentException ex) {
           return handleError(
-              ExitCode.INVALID_ARGUMENTS
-                  .exitMessage("Please choose a valid sub-command."),
-              cmdLine,
-              true);
-        }
-
-        List<ExtraArgument> extraArguments = targetCommand.getExtraArguments();
-        int maxArguments = extraArguments.size();
-
-        List<String> actualArgs = cmdLine.getArgList();
-        int actualArgsSize = actualArgs.size();
-        if (actualArgs.size() > maxArguments) {
-          return handleError(
-              ExitCode.INVALID_ARGUMENTS
-                  .exitMessage("The provided extra arguments exceed the number of allowed arguments."),
-              cmdLine,
-              true);
-        }
-
-        List<ExtraArgument> requiredExtraArguments = targetCommand.getExtraArguments().stream()
-            .filter(ExtraArgument::isRequired)
-            .collect(Collectors.toUnmodifiableList());
-
-        if (actualArgsSize < requiredExtraArguments.size()) {
-          return handleError(
-              ExitCode.INVALID_ARGUMENTS
-                  .exitMessage("Please provide the required extra arguments."),
+              ExitCode.INVALID_ARGUMENTS.exitMessage(ex.getLocalizedMessage()),
               cmdLine,
               true);
         }
@@ -418,12 +497,19 @@ public class CLIProcessor {
       return invokeCommand(cmdLine);
     }
 
+    /**
+     * Directly execute the logic associated with the command.
+     *
+     * @param cmdLine
+     *          the command line information
+     * @return the result of executing the command
+     */
     @SuppressWarnings({
         "PMD.OnlyOneReturn", // readability
         "PMD.AvoidCatchingGenericException" // needed here
     })
     @NonNull
-    protected ExitStatus invokeCommand(@NonNull CommandLine cmdLine) {
+    private ExitStatus invokeCommand(@NonNull CommandLine cmdLine) {
       ExitStatus retval;
       try {
         ICommand targetCommand = getTargetCommand();
@@ -458,6 +544,17 @@ public class CLIProcessor {
       return retval;
     }
 
+    /**
+     * Handle an error that occurred while executing the command.
+     *
+     * @param exitStatus
+     *          the execution result
+     * @param cmdLine
+     *          the command line information
+     * @param showHelp
+     *          if {@code true} show the help information
+     * @return the resulting exit status
+     */
     @NonNull
     public ExitStatus handleError(
         @NonNull ExitStatus exitStatus,
@@ -470,6 +567,14 @@ public class CLIProcessor {
       return exitStatus;
     }
 
+    /**
+     * Generate the help message and exit status for an invalid command using the
+     * provided message.
+     *
+     * @param message
+     *          the error message
+     * @return the resulting exit status
+     */
     @NonNull
     public ExitStatus handleInvalidCommand(
         @NonNull String message) {
@@ -486,7 +591,7 @@ public class CLIProcessor {
      * @return the header or {@code null}
      */
     @Nullable
-    protected String buildHelpHeader() {
+    private String buildHelpHeader() {
       // TODO: build a suitable header
       return null;
     }
@@ -548,7 +653,7 @@ public class CLIProcessor {
      *
      * @return the CLI syntax to display in help output
      */
-    protected String buildHelpCliSyntax() {
+    private String buildHelpCliSyntax() {
 
       StringBuilder builder = new StringBuilder(64);
       builder.append(getExec());
@@ -565,20 +670,7 @@ public class CLIProcessor {
       if (targetCommand == null) {
         builder.append(" <command>");
       } else {
-        Collection<ICommand> subCommands = targetCommand.getSubCommands();
-
-        if (!subCommands.isEmpty()) {
-          builder.append(' ');
-          if (!targetCommand.isSubCommandRequired()) {
-            builder.append('[');
-          }
-
-          builder.append("<command>");
-
-          if (!targetCommand.isSubCommandRequired()) {
-            builder.append(']');
-          }
-        }
+        builder.append(getSubCommands(targetCommand));
       }
 
       // output required options
@@ -601,29 +693,56 @@ public class CLIProcessor {
       // output extra arguments
       if (targetCommand != null) {
         // handle extra arguments
-        for (ExtraArgument argument : targetCommand.getExtraArguments()) {
-          builder.append(' ');
-          if (!argument.isRequired()) {
-            builder.append('[');
-          }
-
-          builder.append('<')
-              .append(argument.getName())
-              .append('>');
-
-          if (argument.getNumber() > 1) {
-            builder.append("...");
-          }
-
-          if (!argument.isRequired()) {
-            builder.append(']');
-          }
-        }
+        builder.append(getExtraArguments(targetCommand));
       }
 
       String retval = builder.toString();
       assert retval != null;
       return retval;
+    }
+
+    @NonNull
+    private CharSequence getSubCommands(ICommand targetCommand) {
+      Collection<ICommand> subCommands = targetCommand.getSubCommands();
+
+      StringBuilder builder = new StringBuilder();
+      if (!subCommands.isEmpty()) {
+        builder.append(' ');
+        if (!targetCommand.isSubCommandRequired()) {
+          builder.append('[');
+        }
+
+        builder.append("<command>");
+
+        if (!targetCommand.isSubCommandRequired()) {
+          builder.append(']');
+        }
+      }
+      return builder;
+    }
+
+    @NonNull
+    private CharSequence getExtraArguments(@NonNull ICommand targetCommand) {
+      StringBuilder builder = new StringBuilder();
+      for (ExtraArgument argument : targetCommand.getExtraArguments()) {
+        builder.append(' ');
+        if (!argument.isRequired()) {
+          builder.append('[');
+        }
+
+        builder.append('<')
+            .append(argument.getName())
+            .append('>');
+
+        if (argument.getNumber() > 1) {
+          builder.append("...");
+        }
+
+        if (!argument.isRequired()) {
+          builder.append(']');
+        }
+      }
+      return builder;
     }
 
     /**

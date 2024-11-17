@@ -5,21 +5,39 @@
 
 package gov.nist.secauto.metaschema.core.metapath.item.atomic;
 
+import gov.nist.secauto.metaschema.core.datatype.adapter.MetaschemaDataTypeProvider;
+import gov.nist.secauto.metaschema.core.metapath.InvalidTypeMetapathException;
 import gov.nist.secauto.metaschema.core.metapath.function.InvalidValueForCastFunctionException;
+import gov.nist.secauto.metaschema.core.metapath.item.atomic.impl.StringItemImpl;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
+/**
+ * An atomic Metapath item containing a text data value.
+ */
 public interface IStringItem extends IAnyAtomicItem {
   /**
    * Construct a new item using the provided string {@code value}.
    *
    * @param value
-   *          a string value
+   *          a string value that must conform to Metaschema string validation
+   *          rules
    * @return the new item
+   * @throws InvalidTypeMetapathException
+   *           if the value fails string validation
    */
   @NonNull
   static IStringItem valueOf(@NonNull String value) {
-    return new StringItemImpl(value);
+    try {
+      return new StringItemImpl(MetaschemaDataTypeProvider.STRING.parse(value));
+    } catch (IllegalArgumentException ex) {
+      throw new InvalidTypeMetapathException(
+          null,
+          String.format("Invalid string value '%s'. %s",
+              value,
+              ex.getLocalizedMessage()),
+          ex);
+    }
   }
 
   /**
@@ -35,9 +53,12 @@ public interface IStringItem extends IAnyAtomicItem {
   @NonNull
   static IStringItem cast(@NonNull IAnyAtomicItem item) {
     try {
-      return item.asStringItem();
+      return item instanceof IStringItem
+          ? (IStringItem) item
+          : valueOf(item.asString());
     } catch (IllegalStateException ex) {
-      throw new InvalidValueForCastFunctionException(ex.getLocalizedMessage(), ex);
+      // asString can throw IllegalStateException exception
+      throw new InvalidValueForCastFunctionException(ex);
     }
   }
 
