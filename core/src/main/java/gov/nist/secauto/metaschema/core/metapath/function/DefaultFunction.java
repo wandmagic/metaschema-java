@@ -10,7 +10,6 @@ import gov.nist.secauto.metaschema.core.metapath.DynamicMetapathException;
 import gov.nist.secauto.metaschema.core.metapath.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.MetapathException;
 import gov.nist.secauto.metaschema.core.metapath.StaticContext;
-import gov.nist.secauto.metaschema.core.metapath.function.library.FnData;
 import gov.nist.secauto.metaschema.core.metapath.item.IItem;
 import gov.nist.secauto.metaschema.core.metapath.item.IItemVisitor;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IAnyAtomicItem;
@@ -177,7 +176,7 @@ public class DefaultFunction
     Stream<? extends IItem> stream = sequence.safeStream();
 
     if (IAnyAtomicItem.class.isAssignableFrom(requiredSequenceTypeClass)) {
-      Stream<? extends IAnyAtomicItem> atomicStream = stream.flatMap(FnData::atomize);
+      Stream<? extends IAnyAtomicItem> atomicStream = stream.flatMap(IItem::atomize);
 
       // if (IUntypedAtomicItem.class.isInstance(item)) { // NOPMD
       // // TODO: apply cast to atomic type

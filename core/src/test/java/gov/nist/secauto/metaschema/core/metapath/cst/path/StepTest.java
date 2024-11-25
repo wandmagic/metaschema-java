@@ -9,7 +9,6 @@ import gov.nist.secauto.metaschema.core.metapath.DynamicContext;
 import gov.nist.secauto.metaschema.core.metapath.ExpressionTestBase;
 import gov.nist.secauto.metaschema.core.metapath.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.MetapathExpression;
-import gov.nist.secauto.metaschema.core.metapath.function.library.FnData;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IStringItem;
 import gov.nist.secauto.metaschema.core.metapath.item.node.IDocumentNodeItem;
 import gov.nist.secauto.metaschema.core.metapath.item.node.IFlagNodeItem;
@@ -316,7 +315,7 @@ class StepTest
 
     Assertions.assertThat(actual.getValue())
         .hasOnlyElementsOfType(IFlagNodeItem.class)
-        .map(flag -> FnData.fnDataItem(ObjectUtils.requireNonNull(flag)).asString())
+        .map(flag -> ObjectUtils.requireNonNull(flag).toAtomicItem().asString())
         .containsExactly("flag-2-b-v1", "flag-2-b-v2", "flag-2-b-v3");
   }
 

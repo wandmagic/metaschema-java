@@ -12,7 +12,6 @@ import gov.nist.secauto.metaschema.core.metapath.cst.IExpression;
 import gov.nist.secauto.metaschema.core.metapath.function.library.ArrayGet;
 import gov.nist.secauto.metaschema.core.metapath.function.library.MapGet;
 import gov.nist.secauto.metaschema.core.metapath.item.IItem;
-import gov.nist.secauto.metaschema.core.metapath.item.atomic.IAnyAtomicItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IIntegerItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IStringItem;
 import gov.nist.secauto.metaschema.core.metapath.item.function.ArrayException;
@@ -235,9 +234,9 @@ public abstract class AbstractKeySpecifier implements IKeySpecifier {
         IArrayItem<?> targetItem,
         DynamicContext dynamicContext,
         ISequence<?> focus) {
-      ISequence<IAnyAtomicItem> keys = getKeyExpression().accept(dynamicContext, focus).atomize();
-
-      return ObjectUtils.notNull(keys.stream()
+      return ObjectUtils.notNull(getKeyExpression()
+          .accept(dynamicContext, focus)
+          .atomize()
           .flatMap(key -> {
             if (key instanceof IIntegerItem) {
               int index = ((IIntegerItem) key).asInteger().intValueExact();
@@ -265,11 +264,9 @@ public abstract class AbstractKeySpecifier implements IKeySpecifier {
         IMapItem<?> targetItem,
         DynamicContext dynamicContext,
         ISequence<?> focus) {
-      ISequence<? extends IAnyAtomicItem> keys = ObjectUtils.requireNonNull(getKeyExpression()
+      return ObjectUtils.notNull(getKeyExpression()
           .accept(dynamicContext, focus)
-          .atomize());
-
-      return ObjectUtils.notNull(keys.stream()
+          .atomize()
           .flatMap(key -> {
             assert key != null;
             return Stream.ofNullable(MapGet.get(targetItem, key));

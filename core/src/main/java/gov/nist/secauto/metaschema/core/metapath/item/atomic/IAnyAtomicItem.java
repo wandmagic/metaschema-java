@@ -13,6 +13,9 @@ import gov.nist.secauto.metaschema.core.metapath.item.function.IMapItem;
 import gov.nist.secauto.metaschema.core.metapath.item.function.IMapKey;
 import gov.nist.secauto.metaschema.core.metapath.type.IAtomicOrUnionType;
 import gov.nist.secauto.metaschema.core.metapath.type.IItemType;
+import gov.nist.secauto.metaschema.core.util.ObjectUtils;
+
+import java.util.stream.Stream;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
@@ -59,6 +62,11 @@ public interface IAnyAtomicItem extends IAtomicValuedItem, IPrintable {
   @Override
   @NonNull
   String asString();
+
+  @Override
+  default Stream<IAnyAtomicItem> atomize() {
+    return ObjectUtils.notNull(Stream.of(this));
+  }
 
   /**
    * Get the atomic item value as a map key for use with an {@link IMapItem}.

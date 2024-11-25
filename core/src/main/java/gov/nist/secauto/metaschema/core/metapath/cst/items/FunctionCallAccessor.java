@@ -74,8 +74,7 @@ public class FunctionCallAccessor implements IExpression {
   public ISequence<? extends IItem> accept(DynamicContext dynamicContext, ISequence<?> focus) {
     ISequence<?> target = getBase().accept(dynamicContext, focus);
     IItem collection = target.getFirstItem(true);
-    IAnyAtomicItem key = getArgument().accept(dynamicContext, focus)
-        .atomize()
+    IAnyAtomicItem key = ISequence.of(getArgument().accept(dynamicContext, focus).atomize())
         .getFirstItem(false);
     if (key == null) {
       throw new StaticMetapathException(StaticMetapathException.NO_FUNCTION_MATCH,

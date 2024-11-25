@@ -129,7 +129,7 @@ public interface IAtomicOrUnionType<I extends IAnyAtomicItem> extends IItemType 
    */
   @Nullable
   default I cast(@NonNull ISequence<?> sequence) {
-    IAnyAtomicItem item = sequence.atomize().getFirstItem(true);
+    IAnyAtomicItem item = ISequence.of(sequence.atomize()).getFirstItem(true);
     return item == null ? null : cast(item);
   }
 

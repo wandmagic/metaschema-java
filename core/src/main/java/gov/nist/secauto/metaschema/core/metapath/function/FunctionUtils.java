@@ -6,7 +6,6 @@
 package gov.nist.secauto.metaschema.core.metapath.function;
 
 import gov.nist.secauto.metaschema.core.metapath.ISequence;
-import gov.nist.secauto.metaschema.core.metapath.function.library.FnData;
 import gov.nist.secauto.metaschema.core.metapath.item.IItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IAnyAtomicItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IDecimalItem;
@@ -126,7 +125,7 @@ public final class FunctionUtils {
   @NonNull
   public static INumericItem toNumeric(@NonNull IItem item) {
     // atomize
-    IAnyAtomicItem atomicItem = ISequence.getFirstItem(FnData.atomize(item), true);
+    IAnyAtomicItem atomicItem = ISequence.getFirstItem(item.atomize(), true);
     if (atomicItem == null) {
       throw new InvalidTypeMetapathException(item, "Unable to cast null item");
     }

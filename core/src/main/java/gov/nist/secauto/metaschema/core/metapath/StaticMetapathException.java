@@ -31,9 +31,15 @@ public class StaticMetapathException
    * an AttributeName in an <a href=
    * "https://www.w3.org/TR/xpath-31/#doc-xpath31-AttributeTest">AttributeTest</a>.
    */
-  // FIXME: Check for use in all calls to the static or dyanmic context to lookup
-  // a name
   public static final int NOT_DEFINED = 8;
+  /**
+   * <a href= "https://www.w3.org/TR/xpath-31/#ERRXPST0010">err:MPST0010</a>: An
+   * implementation that does not support the namespace axis must raise a
+   * <a href="https://www.w3.org/TR/xpath-31/#dt-static-error">static error</a> if
+   * it encounters a reference to the namespace axis and XPath 1.0 compatibility
+   * mode is false.
+   */
+  public static final int AXIS_NAMESPACE_UNSUPPORTED = 10;
 
   /**
    * <a href= "https://www.w3.org/TR/xpath-31/#ERRXPST0017">err:MPST0017</a>: It
@@ -103,6 +109,12 @@ public class StaticMetapathException
    * known namespaces</a>.
    */
   public static final int PREFIX_NOT_EXPANDABLE = 81;
+
+  /**
+   * <a href= "https://www.w3.org/TR/xpath-31/#ERRXQST0134">err:MPST0134</a>: The
+   * namespace axis is not supported.
+   */
+  public static final int AXIS_NAMESPACE_UNSUPPORTED_IN_TEST = 134;
 
   /**
    * the serial version UID.

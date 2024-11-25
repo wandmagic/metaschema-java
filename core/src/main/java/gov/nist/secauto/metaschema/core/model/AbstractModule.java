@@ -54,6 +54,8 @@ public abstract class AbstractModule<
   private final List<? extends M> importedModules;
   @NonNull
   private final Lazy<Exports> exports;
+  @NonNull
+  private final Lazy<IEnhancedQName> qname;
 
   /**
    * Construct a new Metaschema module object.
@@ -66,6 +68,12 @@ public abstract class AbstractModule<
     this.importedModules
         = CollectionUtil.unmodifiableList(ObjectUtils.requireNonNull(importedModules, "importedModules"));
     this.exports = ObjectUtils.notNull(Lazy.lazy(() -> new Exports(importedModules)));
+    this.qname = ObjectUtils.notNull(Lazy.lazy(() -> IEnhancedQName.of(getXmlNamespace(), getShortName())));
+  }
+
+  @Override
+  public IEnhancedQName getQName() {
+    return ObjectUtils.notNull(qname.get());
   }
 
   @Override

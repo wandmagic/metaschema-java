@@ -63,7 +63,7 @@ public class MetapathExpression {
      * The result is expected to be a {@link String} value.
      */
     STRING(String.class, sequence -> {
-      IAnyAtomicItem item = sequence.atomize().getFirstItem(true);
+      IAnyAtomicItem item = ISequence.of(sequence.atomize()).getFirstItem(true);
       return item == null ? "" : item.asString();
     }),
     /**

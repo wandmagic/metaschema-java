@@ -53,8 +53,7 @@ public class MapConstructor implements IExpression {
         ObjectUtils.notNull(getChildren().stream()
             .map(item -> {
               IExpression keyExpression = item.getKeyExpression();
-              IAnyAtomicItem key = keyExpression.accept(dynamicContext, focus)
-                  .atomize()
+              IAnyAtomicItem key = ISequence.of(keyExpression.accept(dynamicContext, focus).atomize())
                   .getFirstItem(true);
               if (key == null) {
                 throw new InvalidTypeMetapathException(null, String.format(

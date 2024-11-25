@@ -1147,7 +1147,8 @@ public class BuildCSTVisitor
 
   @Override
   protected IExpression handleArrowexpr(Metapath10.ArrowexprContext context) {
-    // TODO: handle additional syntax for varef and parenthesized
+    // FIXME: handle additional syntax for varef and parenthesized
+
     return handleGroupedNAiry(context, 0, 3, (ctx, idx, left) -> {
       // the next child is "=>"
       assert "=>".equals(ctx.getChild(idx).getText());

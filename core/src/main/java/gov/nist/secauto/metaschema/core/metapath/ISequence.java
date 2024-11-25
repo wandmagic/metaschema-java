@@ -5,7 +5,6 @@
 
 package gov.nist.secauto.metaschema.core.metapath;
 
-import gov.nist.secauto.metaschema.core.metapath.function.library.FnData;
 import gov.nist.secauto.metaschema.core.metapath.impl.AbstractSequence;
 import gov.nist.secauto.metaschema.core.metapath.impl.SequenceN;
 import gov.nist.secauto.metaschema.core.metapath.impl.SingletonSequence;
@@ -158,10 +157,10 @@ public interface ISequence<ITEM extends IItem> extends List<ITEM>, IPrintable, I
    *          the sequence of items to atomize
    * @return the atomized result
    */
+  @Override
   @NonNull
-  default ISequence<IAnyAtomicItem> atomize() {
-    return of(ObjectUtils.notNull(stream()
-        .flatMap(FnData::atomize)));
+  default Stream<IAnyAtomicItem> atomize() {
+    return ObjectUtils.notNull(stream().flatMap(IItem::atomize));
   }
 
   /**

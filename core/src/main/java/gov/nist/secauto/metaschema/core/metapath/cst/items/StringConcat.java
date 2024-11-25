@@ -51,6 +51,6 @@ public class StringConcat
   public ISequence<?> accept(DynamicContext dynamicContext, ISequence<?> focus) {
     return ISequence.of(FnConcat.concat(ObjectUtils.notNull(getChildren().stream()
         .map(child -> child.accept(dynamicContext, focus))
-        .flatMap(result -> ObjectUtils.notNull(result).atomize().stream()))));
+        .flatMap(result -> ObjectUtils.notNull(result).atomize()))));
   }
 }

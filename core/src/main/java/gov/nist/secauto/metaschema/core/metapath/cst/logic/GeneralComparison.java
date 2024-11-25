@@ -47,8 +47,8 @@ public class GeneralComparison
 
   @Override
   public ISequence<? extends IBooleanItem> accept(DynamicContext dynamicContext, ISequence<?> focus) {
-    ISequence<? extends IAnyAtomicItem> leftItems = getLeft().accept(dynamicContext, focus).atomize();
-    ISequence<? extends IAnyAtomicItem> rightItems = getRight().accept(dynamicContext, focus).atomize();
+    ISequence<? extends IAnyAtomicItem> leftItems = ISequence.of(getLeft().accept(dynamicContext, focus).atomize());
+    ISequence<? extends IAnyAtomicItem> rightItems = ISequence.of(getRight().accept(dynamicContext, focus).atomize());
     return ISequence.of(ComparisonFunctions.generalCompairison(leftItems, getOperator(), rightItems));
   }
 }

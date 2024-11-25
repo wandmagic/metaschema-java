@@ -9,7 +9,6 @@ import gov.nist.secauto.metaschema.core.metapath.DynamicContext;
 import gov.nist.secauto.metaschema.core.metapath.MetapathException;
 import gov.nist.secauto.metaschema.core.metapath.MetapathExpression;
 import gov.nist.secauto.metaschema.core.metapath.MetapathExpression.ResultType;
-import gov.nist.secauto.metaschema.core.metapath.function.library.FnData;
 import gov.nist.secauto.metaschema.core.metapath.item.IItem;
 import gov.nist.secauto.metaschema.core.metapath.item.node.INodeItem;
 import gov.nist.secauto.metaschema.core.metapath.type.InvalidTypeMetapathException;
@@ -173,7 +172,7 @@ public interface IIndex {
 
     String keyValue = null;
     if (keyItem != null) {
-      keyValue = FnData.fnDataItem(keyItem).asString();
+      keyValue = keyItem.toAtomicItem().asString();
       assert keyValue != null;
       Pattern pattern = keyField.getPattern();
       if (pattern != null) {

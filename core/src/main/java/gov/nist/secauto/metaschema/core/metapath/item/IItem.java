@@ -8,7 +8,10 @@ package gov.nist.secauto.metaschema.core.metapath.item;
 import gov.nist.secauto.metaschema.core.datatype.IDataTypeAdapter;
 import gov.nist.secauto.metaschema.core.metapath.ICollectionValue;
 import gov.nist.secauto.metaschema.core.metapath.ISequence;
+import gov.nist.secauto.metaschema.core.metapath.function.InvalidTypeFunctionException;
+import gov.nist.secauto.metaschema.core.metapath.item.atomic.IAnyAtomicItem;
 import gov.nist.secauto.metaschema.core.metapath.type.IItemType;
+import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 
 import java.util.stream.Stream;
 
@@ -57,6 +60,37 @@ public interface IItem extends ICollectionValue {
   @Override
   default ISequence<?> toSequence() {
     return ISequence.of(this);
+  }
+
+  /**
+   * Get the atomic value for the item. This may be the same item if the item is
+   * an instance of {@link IAnyAtomicItem}.
+   * <p>
+   * An implementation of
+   * <a href="https://www.w3.org/TR/xpath-31/#id-atomization">item
+   * atomization</a>.
+   *
+   * @return the atomic value or {@code null} if the item has no available value
+   * @throws InvalidTypeFunctionException
+   *           with code
+   *           {@link InvalidTypeFunctionException#NODE_HAS_NO_TYPED_VALUE} if the
+   *           item does not have a typed value
+   */
+  // FIXME: get rid of the possible null result and throw
+  // InvalidTypeFunctionException#NODE_HAS_NO_TYPED_VALUE
+  IAnyAtomicItem toAtomicItem();
+
+  /**
+   * {@inheritDoc}
+   *
+   * @throws InvalidTypeFunctionException
+   *           with code
+   *           {@link InvalidTypeFunctionException#NODE_HAS_NO_TYPED_VALUE} if the
+   *           item does not have a typed value
+   */
+  @Override
+  default Stream<IAnyAtomicItem> atomize() {
+    return ObjectUtils.notNull(Stream.of(this.toAtomicItem()));
   }
 
   @SuppressWarnings("null")

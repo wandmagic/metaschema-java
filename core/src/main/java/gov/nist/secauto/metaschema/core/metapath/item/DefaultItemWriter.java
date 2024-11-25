@@ -8,7 +8,6 @@ package gov.nist.secauto.metaschema.core.metapath.item;
 import gov.nist.secauto.metaschema.core.metapath.ICollectionValue;
 import gov.nist.secauto.metaschema.core.metapath.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.function.IFunction;
-import gov.nist.secauto.metaschema.core.metapath.function.library.FnData;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IAnyAtomicItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IAtomicValuedItem;
 import gov.nist.secauto.metaschema.core.metapath.item.function.IArrayItem;
@@ -110,7 +109,7 @@ public class DefaultItemWriter implements IItemWriter {
 
     if (node instanceof IAtomicValuedItem) {
       writer.append('<');
-      writer.append(FnData.fnDataItem(node).asString());
+      writer.append(node.toAtomicItem().asString());
       writer.append('>');
     }
   }

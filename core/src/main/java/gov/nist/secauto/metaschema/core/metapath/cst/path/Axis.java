@@ -7,6 +7,7 @@ package gov.nist.secauto.metaschema.core.metapath.cst.path;
 
 import gov.nist.secauto.metaschema.core.metapath.DynamicContext;
 import gov.nist.secauto.metaschema.core.metapath.ISequence;
+import gov.nist.secauto.metaschema.core.metapath.StaticMetapathException;
 import gov.nist.secauto.metaschema.core.metapath.cst.IExpression;
 import gov.nist.secauto.metaschema.core.metapath.cst.IExpressionVisitor;
 import gov.nist.secauto.metaschema.core.metapath.item.ItemUtils;
@@ -20,7 +21,6 @@ import java.util.stream.Stream;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
-// FIXME: check for https://www.w3.org/TR/xpath-31/#ERRXQST0134 or err:XPST0010
 @SuppressWarnings("PMD.ShortClassName") // intentional
 public enum Axis implements IExpression {
   SELF(Stream::of),
@@ -34,7 +34,12 @@ public enum Axis implements IExpression {
   FOLLOWING_SIBLING(INodeItem::followingSibling),
   PRECEDING_SIBLING(INodeItem::precedingSibling),
   FOLLOWING(INodeItem::following),
-  PRECEDING(INodeItem::preceding);
+  PRECEDING(INodeItem::preceding),
+  NAMESPACE(focus -> {
+    throw new StaticMetapathException(
+        StaticMetapathException.AXIS_NAMESPACE_UNSUPPORTED,
+        "The 'namespace' axis is not supported");
+  });
 
   @NonNull
   private final Function<INodeItem, Stream<? extends INodeItem>> action;

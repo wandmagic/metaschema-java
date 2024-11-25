@@ -6,6 +6,7 @@
 package gov.nist.secauto.metaschema.core.metapath;
 
 import gov.nist.secauto.metaschema.core.metapath.item.IItem;
+import gov.nist.secauto.metaschema.core.metapath.item.atomic.IAnyAtomicItem;
 import gov.nist.secauto.metaschema.core.metapath.item.function.IArrayItem;
 import gov.nist.secauto.metaschema.core.metapath.item.function.IMapItem;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
@@ -73,6 +74,17 @@ public interface ICollectionValue {
         ? ObjectUtils.notNull(Stream.of((IItem) value))
         : value.toSequence().stream();
   }
+
+  /**
+   * Produce a stream of atomic items based on the atomic value of these items.
+   * <p>
+   * Supports <a href="https://www.w3.org/TR/xpath-31/#id-atomization">item
+   * atomization</a>.
+   *
+   * @return a stream of atomized atomic items.
+   */
+  @NonNull
+  Stream<IAnyAtomicItem> atomize();
 
   /**
    * Get the stream of items for the collection value.

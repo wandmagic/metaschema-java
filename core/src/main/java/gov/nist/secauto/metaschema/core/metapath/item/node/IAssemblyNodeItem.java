@@ -2,6 +2,8 @@
 package gov.nist.secauto.metaschema.core.metapath.item.node;
 
 import gov.nist.secauto.metaschema.core.metapath.format.IPathFormatter;
+import gov.nist.secauto.metaschema.core.metapath.function.InvalidTypeFunctionException;
+import gov.nist.secauto.metaschema.core.metapath.item.atomic.IAnyAtomicItem;
 import gov.nist.secauto.metaschema.core.metapath.type.IItemType;
 import gov.nist.secauto.metaschema.core.model.IAssemblyDefinition;
 import gov.nist.secauto.metaschema.core.model.IAssemblyInstance;
@@ -40,6 +42,11 @@ public interface IAssemblyNodeItem extends IModelNodeItem<IAssemblyDefinition, I
   @Override
   default String format(@NonNull IPathFormatter formatter) {
     return formatter.formatAssembly(this);
+  }
+
+  @Override
+  default IAnyAtomicItem toAtomicItem() {
+    throw new InvalidTypeFunctionException(InvalidTypeFunctionException.DATA_ITEM_IS_FUNCTION, this);
   }
 
   @Override

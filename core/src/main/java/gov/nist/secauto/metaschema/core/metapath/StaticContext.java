@@ -188,7 +188,6 @@ public final class StaticContext {
    * @return the namespace string bound to the prefix, or {@code null} if no
    *         namespace is bound to the prefix
    */
-  // FIXME: check for https://www.w3.org/TR/xpath-31/#ERRXPST0081
   @Nullable
   public String lookupNamespaceForPrefix(@NonNull String prefix) {
     String result = lookupNamespaceURIForPrefix(prefix);
@@ -633,7 +632,6 @@ public final class StaticContext {
      * @see StaticContext#lookupNamespaceForPrefix(String)
      * @see StaticContext#getWellKnownNamespacesMap()
      */
-    // FIXME: check for https://www.w3.org/TR/xpath-31/#ERRXPST0070 for "meta"
     @NonNull
     public Builder namespace(@NonNull String prefix, @NonNull URI uri) {
       return namespace(prefix, ObjectUtils.notNull(uri.toASCIIString()));
@@ -648,12 +646,17 @@ public final class StaticContext {
      *          the namespace URI
      * @return this builder
      * @throws IllegalArgumentException
-     *           if the provided URI is invalid
+     *           if the provided prefix or URI is invalid
      * @see StaticContext#lookupNamespaceForPrefix(String)
      * @see StaticContext#getWellKnownNamespacesMap()
      */
     @NonNull
     public Builder namespace(@NonNull String prefix, @NonNull String uri) {
+      if (MetapathConstants.PREFIX_METAPATH.equals(prefix)) {
+        // check for https://www.w3.org/TR/xpath-31/#ERRXPST0070 for "meta"
+        throw new IllegalArgumentException(
+            "Redefining the prefix '" + MetapathConstants.PREFIX_METAPATH + "' is not allowed.");
+      }
       this.namespaces.put(prefix, uri);
       NamespaceCache.instance().indexOf(uri);
       return this;

@@ -11,16 +11,12 @@ import gov.nist.secauto.metaschema.core.metapath.MetapathConstants;
 import gov.nist.secauto.metaschema.core.metapath.function.FunctionUtils;
 import gov.nist.secauto.metaschema.core.metapath.function.IArgument;
 import gov.nist.secauto.metaschema.core.metapath.function.IFunction;
-import gov.nist.secauto.metaschema.core.metapath.function.InvalidTypeFunctionException;
 import gov.nist.secauto.metaschema.core.metapath.item.IItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IAnyAtomicItem;
-import gov.nist.secauto.metaschema.core.metapath.item.atomic.IAtomicValuedItem;
-import gov.nist.secauto.metaschema.core.metapath.item.function.IArrayItem;
 import gov.nist.secauto.metaschema.core.metapath.item.node.INodeItem;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 
 import java.util.List;
-import java.util.stream.Stream;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
@@ -77,7 +73,7 @@ public final class FnData {
     if (item == null) {
       retval = ISequence.empty();
     } else {
-      IAnyAtomicItem data = fnDataItem(item);
+      IAnyAtomicItem data = item.toAtomicItem();
       retval = ISequence.of(data);
     }
     return retval;
@@ -91,83 +87,6 @@ public final class FnData {
       @NonNull DynamicContext dynamicContext,
       IItem focus) {
 
-    return FunctionUtils.asType(ObjectUtils.requireNonNull(arguments.get(0))).atomize();
-  }
-
-  /**
-   * An implementation of
-   * <a href="https://www.w3.org/TR/xpath-31/#id-atomization">item
-   * atomization</a>.
-   *
-   * @param item
-   *          the item to atomize
-   * @return the atomized result
-   * @throws InvalidTypeFunctionException
-   *           if the item cannot be cast to an atomic value, most likely because
-   *           it doesn't have a typed value
-   */
-  @NonNull
-  public static IAnyAtomicItem fnDataItem(@NonNull IItem item) {
-    IAnyAtomicItem retval = null;
-    if (item instanceof IAtomicValuedItem) {
-      retval = ((IAtomicValuedItem) item).toAtomicItem();
-    }
-
-    if (retval != null) {
-      return retval;
-    }
-    throw new InvalidTypeFunctionException(InvalidTypeFunctionException.NODE_HAS_NO_TYPED_VALUE, item);
-  }
-
-  /**
-   * An implementation of
-   * <a href="https://www.w3.org/TR/xpath-31/#id-atomization">item
-   * atomization</a>.
-   *
-   * @param item
-   *          the item to atomize
-   * @return the atomized result
-   */
-  // FIXME: implement atomize on the called methods
-  @NonNull
-  public static Stream<IAnyAtomicItem> fnDataItem(@NonNull IArrayItem<?> item) {
-    return ObjectUtils.notNull(item.stream().flatMap(member -> {
-      Stream<IAnyAtomicItem> result;
-      if (member instanceof IItem) {
-        result = atomize((IItem) member);
-      } else if (member instanceof ISequence) {
-        result = ((ISequence<?>) member).stream()
-            .flatMap(FnData::atomize);
-      } else {
-        throw new UnsupportedOperationException("array member not an item or sequence.");
-      }
-      return result;
-    }));
-  }
-
-  /**
-   * An implementation of
-   * <a href="https://www.w3.org/TR/xpath-31/#id-atomization">item
-   * atomization</a>.
-   *
-   * @param item
-   *          the item to atomize
-   * @return the atomized result
-   */
-  @NonNull
-  public static Stream<IAnyAtomicItem> atomize(@NonNull IItem item) {
-    Stream<IAnyAtomicItem> retval;
-    if (item instanceof IAnyAtomicItem) {
-      retval = ObjectUtils.notNull(Stream.of((IAnyAtomicItem) item));
-    } else if (item instanceof IAtomicValuedItem) {
-      retval = ObjectUtils.notNull(Stream.of(((IAtomicValuedItem) item).toAtomicItem()));
-    } else if (item instanceof IArrayItem) {
-      retval = fnDataItem((IArrayItem<?>) item);
-    } else if (item instanceof IFunction) {
-      throw new InvalidTypeFunctionException(InvalidTypeFunctionException.DATA_ITEM_IS_FUNCTION, item);
-    } else {
-      throw new InvalidTypeFunctionException(InvalidTypeFunctionException.NODE_HAS_NO_TYPED_VALUE, item);
-    }
-    return retval;
+    return ISequence.of(FunctionUtils.asType(ObjectUtils.requireNonNull(arguments.get(0))).atomize());
   }
 }

@@ -11,6 +11,7 @@ import gov.nist.secauto.metaschema.core.metapath.MetapathException;
 import gov.nist.secauto.metaschema.core.metapath.StaticContext;
 import gov.nist.secauto.metaschema.core.metapath.StaticMetapathException;
 import gov.nist.secauto.metaschema.core.metapath.item.IItem;
+import gov.nist.secauto.metaschema.core.metapath.item.atomic.IAnyAtomicItem;
 import gov.nist.secauto.metaschema.core.metapath.type.IItemType;
 import gov.nist.secauto.metaschema.core.metapath.type.ISequenceType;
 import gov.nist.secauto.metaschema.core.metapath.type.Occurrence;
@@ -193,6 +194,11 @@ public interface IFunction extends IItem {
       @NonNull DynamicContext dynamicContext,
       @NonNull ISequence<?> focus);
 
+  @Override
+  default IAnyAtomicItem toAtomicItem() {
+    throw new InvalidTypeFunctionException(InvalidTypeFunctionException.DATA_ITEM_IS_FUNCTION, this);
+  }
+
   /**
    * Get the signature of the function as a string.
    *
@@ -235,7 +241,6 @@ public interface IFunction extends IItem {
   /**
    * Used to create a function's signature using a builder pattern.
    */
-  // FIXME: Should return type be ISequenceType?
   @SuppressWarnings("PMD.LooseCoupling")
   final class Builder {
     @NonNull
@@ -538,6 +543,7 @@ public interface IFunction extends IItem {
           ObjectUtils.requireNonNull(namespace, "the namespace must not be null"),
           properties,
           new ArrayList<>(arguments),
+          // FIXME: Should return type be ISequenceType?
           ISequenceType.of(returnType, returnOccurrence),
           ObjectUtils.requireNonNull(functionHandler, "the function handler must not be null"));
     }

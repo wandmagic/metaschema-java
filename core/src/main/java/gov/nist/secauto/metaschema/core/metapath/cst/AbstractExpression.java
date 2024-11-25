@@ -30,7 +30,7 @@ public abstract class AbstractExpression implements IExpression {
   @Nullable
   public static IAnyAtomicItem getFirstDataItem(@NonNull ISequence<?> sequence,
       boolean requireSingleton) {
-    return sequence.atomize().getFirstItem(requireSingleton);
+    return ISequence.of(sequence.atomize()).getFirstItem(requireSingleton);
   }
 
   @Override

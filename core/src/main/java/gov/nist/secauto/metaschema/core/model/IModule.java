@@ -101,10 +101,8 @@ public interface IModule {
    *
    * @return the qualified name
    */
-  // FIXME: cache this value
-  default IEnhancedQName getQName() {
-    return IEnhancedQName.of(getXmlNamespace(), getShortName());
-  }
+  @NonNull
+  IEnhancedQName getQName();
 
   /**
    * Retrieves all Metaschema modules imported by this Metaschema module.

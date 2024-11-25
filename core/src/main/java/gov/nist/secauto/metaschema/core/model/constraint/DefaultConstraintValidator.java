@@ -14,7 +14,6 @@ import gov.nist.secauto.metaschema.core.metapath.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.MetapathException;
 import gov.nist.secauto.metaschema.core.metapath.MetapathExpression;
 import gov.nist.secauto.metaschema.core.metapath.function.library.FnBoolean;
-import gov.nist.secauto.metaschema.core.metapath.function.library.FnData;
 import gov.nist.secauto.metaschema.core.metapath.item.node.AbstractNodeItemVisitor;
 import gov.nist.secauto.metaschema.core.metapath.item.node.IAssemblyNodeItem;
 import gov.nist.secauto.metaschema.core.metapath.item.node.IDefinitionNodeItem;
@@ -542,7 +541,7 @@ public class DefaultConstraintValidator
       @NonNull INodeItem node,
       @NonNull INodeItem item,
       @NonNull DynamicContext dynamicContext) {
-    String value = FnData.fnDataItem(item).asString();
+    String value = item.toAtomicItem().asString();
 
     IConstraintValidationHandler handler = getConstraintValidationHandler();
     boolean valid = true;
@@ -882,7 +881,7 @@ public class DefaultConstraintValidator
 
     public ValueStatus(@NonNull INodeItem item) {
       this.item = item;
-      this.value = FnData.fnDataItem(item).asString();
+      this.value = item.toAtomicItem().asString();
     }
 
     public void registerAllowedValue(
