@@ -62,7 +62,15 @@ public class StaticMetapathException
   public static final int UNKNOWN_TYPE = 51;
 
   /**
-   * <a href= "https://www.w3.org/TR/xpath-31/#ERRXQST0070">err:MPST0070</a>: A
+   * <a href= "https://www.w3.org/TR/xpath-31/#ERRXQST0052">err:MQST0052</a>: The
+   * type named in a cast or castable expression must be the name of a type
+   * defined in the <a href="https://www.w3.org/TR/xpath-31/#dt-is-types">in-scope
+   * schema types</a>, and the type must be simple.
+   */
+  public static final int CAST_UNKNOWN_TYPE = 52;
+
+  /**
+   * <a href= "https://www.w3.org/TR/xpath-31/#ERRXQST0070">err:MQST0070</a>: A
    * <a href="https://www.w3.org/TR/xpath-31/#dt-static-error">static error</a> is
    * raised if any of the following conditions is statically detected in any
    * expression.
@@ -77,6 +85,14 @@ public class StaticMetapathException
    * </ul>
    */
   public static final int NAMESPACE_MISUSE = 70;
+
+  /**
+   * <a href= "https://www.w3.org/TR/xpath-31/#ERRXPST0080">err:MPST0080</a>: It
+   * is a <a href="https://www.w3.org/TR/xpath-31/#dt-static-error">static
+   * error</a> if the target type of a cast or castable expression is
+   * meta:anyAtomicType.
+   */
+  public static final int CAST_ANY_ATOMIC = 80;
 
   /**
    * <a href= "https://www.w3.org/TR/xpath-31/#ERRXQST0070">err:MPST0070</a>: It

@@ -6,6 +6,7 @@
 package gov.nist.secauto.metaschema.core.metapath.cst;
 
 import gov.nist.secauto.metaschema.core.metapath.StaticContext;
+import gov.nist.secauto.metaschema.core.metapath.StaticMetapathException;
 import gov.nist.secauto.metaschema.core.metapath.antlr.Metapath10;
 import gov.nist.secauto.metaschema.core.metapath.antlr.Metapath10Lexer;
 import gov.nist.secauto.metaschema.core.metapath.cst.items.ArraySequenceConstructor;
@@ -55,6 +56,7 @@ import gov.nist.secauto.metaschema.core.metapath.cst.path.RootSlashPath;
 import gov.nist.secauto.metaschema.core.metapath.cst.path.Step;
 import gov.nist.secauto.metaschema.core.metapath.cst.path.Wildcard;
 import gov.nist.secauto.metaschema.core.metapath.cst.type.Cast;
+import gov.nist.secauto.metaschema.core.metapath.cst.type.Castable;
 import gov.nist.secauto.metaschema.core.metapath.cst.type.InstanceOf;
 import gov.nist.secauto.metaschema.core.metapath.cst.type.TypeTestSupport;
 import gov.nist.secauto.metaschema.core.metapath.function.ComparisonFunctions;
@@ -62,6 +64,7 @@ import gov.nist.secauto.metaschema.core.metapath.impl.AbstractKeySpecifier;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IIntegerItem;
 import gov.nist.secauto.metaschema.core.metapath.item.function.IKeySpecifier;
 import gov.nist.secauto.metaschema.core.metapath.type.IAtomicOrUnionType;
+import gov.nist.secauto.metaschema.core.metapath.type.IItemType;
 import gov.nist.secauto.metaschema.core.metapath.type.ISequenceType;
 import gov.nist.secauto.metaschema.core.qname.IEnhancedQName;
 import gov.nist.secauto.metaschema.core.util.CollectionUtil;
@@ -1070,8 +1073,7 @@ public class BuildCSTVisitor
 
     boolean allowEmptySequence = singleType.QM() != null;
 
-    IAtomicOrUnionType<?> type
-        = getContext().lookupAtomicType(ObjectUtils.notNull(singleType.simpletypename().getText()));
+    IAtomicOrUnionType<?> type = getTypeForCast(ObjectUtils.notNull(singleType.simpletypename().getText()));
 
     return new Cast(left, type, allowEmptySequence);
   }
@@ -1080,9 +1082,37 @@ public class BuildCSTVisitor
   // castable - https://www.w3.org/TR/xpath-31/#id-cast
   // ==================================================
 
+  @NonNull
+  private IAtomicOrUnionType<?> getTypeForCast(@NonNull String name) {
+    IAtomicOrUnionType<?> type;
+    try {
+      type = getContext().lookupAtomicType(name);
+    } catch (StaticMetapathException ex) {
+      if (StaticMetapathException.UNKNOWN_TYPE == ex.getCode()) {
+        throw new StaticMetapathException(StaticMetapathException.CAST_UNKNOWN_TYPE, ex);
+      }
+      throw ex;
+    }
+
+    if (IItemType.anyAtomic().equals(type)) {
+      throw new StaticMetapathException(
+          StaticMetapathException.CAST_ANY_ATOMIC,
+          String.format("Type cannot be '%s',", IItemType.anyAtomic()));
+    }
+    return type;
+  }
+
   @Override
   protected IExpression handleCastableexpr(Metapath10.CastableexprContext ctx) {
-    throw new UnsupportedOperationException("expression not supported");
+    IExpression left = visit(ctx.castexpr());
+
+    Metapath10.SingletypeContext singleType = ObjectUtils.notNull(ctx.singletype());
+
+    boolean allowEmptySequence = singleType.QM() != null;
+
+    IAtomicOrUnionType<?> type = getTypeForCast(ObjectUtils.notNull(singleType.simpletypename().getText()));
+
+    return new Castable(left, type, allowEmptySequence);
   }
 
   // ================================================

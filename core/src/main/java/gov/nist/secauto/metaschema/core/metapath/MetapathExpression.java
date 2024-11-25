@@ -210,6 +210,11 @@ public class MetapathExpression {
           LOGGER.atDebug().log(String.format("Metapath CST:%n%s", CSTPrinter.toString(expr)));
         }
         retval = new MetapathExpression(path, expr, context);
+      } catch (StaticMetapathException ex) {
+        String message = ex.getMessageText();
+        throw new StaticMetapathException(
+            ex.getCode(),
+            String.format("Unable to compile path '%s'.%s", path, message == null ? "" : " " + message));
       } catch (MetapathException | ParseCancellationException ex) {
         String msg = String.format("Unable to compile Metapath '%s'", path);
         LOGGER.atError().withThrowable(ex).log(msg);
