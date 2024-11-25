@@ -40,20 +40,20 @@ public final class MapPut {
       .focusIndependent()
       .argument(IArgument.builder()
           .name("map")
-          .type(IMapItem.class)
+          .type(IMapItem.type())
           .one()
           .build())
       .argument(IArgument.builder()
           .name("key")
-          .type(IAnyAtomicItem.class)
+          .type(IAnyAtomicItem.type())
           .one()
           .build())
       .argument(IArgument.builder()
           .name("value")
-          .type(IItem.class)
+          .type(IItem.type())
           .zeroOrMore()
           .build())
-      .returnType(IMapItem.class)
+      .returnType(IMapItem.type())
       .returnOne()
       .functionHandler(MapPut::execute)
       .build();
@@ -73,7 +73,7 @@ public final class MapPut {
     @SuppressWarnings("unchecked")
     V value = (V) ObjectUtils.requireNonNull(arguments.get(2)).toCollectionValue();
 
-    return put(map, key, value).asSequence();
+    return put(map, key, value).toSequence();
   }
 
   /**

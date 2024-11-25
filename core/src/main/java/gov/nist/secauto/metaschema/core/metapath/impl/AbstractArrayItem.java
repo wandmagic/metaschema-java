@@ -10,11 +10,12 @@ import gov.nist.secauto.metaschema.core.metapath.ICollectionValue;
 import gov.nist.secauto.metaschema.core.metapath.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.function.FunctionUtils;
 import gov.nist.secauto.metaschema.core.metapath.function.IArgument;
-import gov.nist.secauto.metaschema.core.metapath.function.ISequenceType;
-import gov.nist.secauto.metaschema.core.metapath.function.Occurrence;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IAnyAtomicItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IIntegerItem;
 import gov.nist.secauto.metaschema.core.metapath.item.function.IArrayItem;
+import gov.nist.secauto.metaschema.core.metapath.type.ISequenceType;
+import gov.nist.secauto.metaschema.core.metapath.type.Occurrence;
+import gov.nist.secauto.metaschema.core.qname.IEnhancedQName;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 
 import java.util.EnumSet;
@@ -22,23 +23,29 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-import javax.xml.namespace.QName;
-
 import edu.umd.cs.findbugs.annotations.NonNull;
 
+/**
+ * The base class for {@link IArrayItem} implementations, that provides an
+ * implementation of common methods.
+ *
+ * @param <ITEM>
+ *          the Java type of the items contained within the sequence
+ */
 public abstract class AbstractArrayItem<ITEM extends ICollectionValue>
     extends ImmutableCollections.AbstractImmutableDelegatedList<ITEM>
     implements IArrayItem<ITEM> {
   @NonNull
-  public static final QName QNAME = new QName("array");
+  private static final IEnhancedQName QNAME = IEnhancedQName.of("array");
   @NonNull
-  public static final Set<FunctionProperty> PROPERTIES = ObjectUtils.notNull(
+  private static final Set<FunctionProperty> PROPERTIES = ObjectUtils.notNull(
       EnumSet.of(FunctionProperty.DETERMINISTIC));
   @NonNull
-  public static final List<IArgument> ARGUMENTS = ObjectUtils.notNull(List.of(
-      IArgument.builder().name("position").type(IIntegerItem.class).one().build()));
+  private static final List<IArgument> ARGUMENTS = ObjectUtils.notNull(List.of(
+      IArgument.builder().name("position").type(IIntegerItem.type()).one().build()));
   @NonNull
-  public static final ISequenceType RESULT = ISequenceType.of(IAnyAtomicItem.class, Occurrence.ZERO_OR_ONE);
+  private static final ISequenceType RESULT = ISequenceType.of(
+      IAnyAtomicItem.type(), Occurrence.ZERO_OR_ONE);
 
   @NonNull
   private static final IArrayItem<?> EMPTY = new ArrayItemN<>();
@@ -57,6 +64,51 @@ public abstract class AbstractArrayItem<ITEM extends ICollectionValue>
   }
 
   @Override
+  public boolean isDeterministic() {
+    return true;
+  }
+
+  @Override
+  public boolean isContextDepenent() {
+    return false;
+  }
+
+  @Override
+  public boolean isFocusDepenent() {
+    return false;
+  }
+
+  @Override
+  public IEnhancedQName getQName() {
+    return QNAME;
+  }
+
+  @Override
+  public Set<FunctionProperty> getProperties() {
+    return PROPERTIES;
+  }
+
+  @Override
+  public List<IArgument> getArguments() {
+    return ARGUMENTS;
+  }
+
+  @Override
+  public int arity() {
+    return 1;
+  }
+
+  @Override
+  public boolean isArityUnbounded() {
+    return false;
+  }
+
+  @Override
+  public ISequenceType getResult() {
+    return RESULT;
+  }
+
+  @Override
   public ISequence<?> execute(List<? extends ISequence<?>> arguments, DynamicContext dynamicContext,
       ISequence<?> focus) {
     ISequence<? extends IIntegerItem> arg = FunctionUtils.asType(
@@ -69,7 +121,7 @@ public abstract class AbstractArrayItem<ITEM extends ICollectionValue>
 
     int index = position.asInteger().intValueExact() - 1;
     ICollectionValue result = getValue().get(index);
-    return result.asSequence();
+    return result.toSequence();
   }
 
   @Override

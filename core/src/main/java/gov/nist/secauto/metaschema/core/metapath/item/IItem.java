@@ -8,12 +8,25 @@ package gov.nist.secauto.metaschema.core.metapath.item;
 import gov.nist.secauto.metaschema.core.datatype.IDataTypeAdapter;
 import gov.nist.secauto.metaschema.core.metapath.ICollectionValue;
 import gov.nist.secauto.metaschema.core.metapath.ISequence;
+import gov.nist.secauto.metaschema.core.metapath.type.IItemType;
 
 import java.util.stream.Stream;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
+/**
+ * The base interface inherited by all Metapath item implementations.
+ */
 public interface IItem extends ICollectionValue {
+  /**
+   * Get the type information for this item.
+   *
+   * @return the type information
+   */
+  @NonNull
+  static IItemType type() {
+    return IItemType.item();
+  }
 
   /**
    * Get the item's "wrapped" value. This "wrapped" value may be:
@@ -42,7 +55,7 @@ public interface IItem extends ICollectionValue {
   }
 
   @Override
-  default ISequence<?> asSequence() {
+  default ISequence<?> toSequence() {
     return ISequence.of(this);
   }
 
@@ -59,4 +72,9 @@ public interface IItem extends ICollectionValue {
    *          the visitor to call back
    */
   void accept(@NonNull IItemVisitor visitor);
+
+  @Override
+  default ISequence<?> contentsAsSequence() {
+    return toSequence();
+  }
 }

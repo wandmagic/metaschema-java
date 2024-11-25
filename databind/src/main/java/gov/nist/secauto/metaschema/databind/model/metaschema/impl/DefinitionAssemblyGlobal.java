@@ -21,6 +21,7 @@ import gov.nist.secauto.metaschema.core.model.IFieldInstanceAbsolute;
 import gov.nist.secauto.metaschema.core.model.IFlagInstance;
 import gov.nist.secauto.metaschema.core.model.IModelInstanceAbsolute;
 import gov.nist.secauto.metaschema.core.model.INamedModelInstanceAbsolute;
+import gov.nist.secauto.metaschema.core.model.ISource;
 import gov.nist.secauto.metaschema.core.model.constraint.AssemblyConstraintSet;
 import gov.nist.secauto.metaschema.core.model.constraint.IModelConstrained;
 import gov.nist.secauto.metaschema.core.model.xml.XmlModuleConstants;
@@ -102,28 +103,31 @@ public class DefinitionAssemblyGlobal
           this,
           jsonKey == null ? null : jsonKey.getFlagRef());
     }));
-    this.modelContainer = ObjectUtils.notNull(Lazy.lazy(() -> AssemblyModelContainerSupport.of(
+    this.modelContainer = ObjectUtils.notNull(Lazy.lazy(() -> AssemblyModelGenerator.of(
         binding.getModel(),
         ObjectUtils.requireNonNull(bindingInstance.getDefinition()
-            .getAssemblyInstanceByName(XmlModuleConstants.MODEL_QNAME)),
+            .getAssemblyInstanceByName(XmlModuleConstants.MODEL_QNAME.getIndexPosition())),
         this,
         nodeItemFactory)));
+
+    ISource source = module.getSource();
+
     this.modelConstraints = ObjectUtils.notNull(Lazy.lazy(() -> {
-      IModelConstrained retval = new AssemblyConstraintSet();
+      IModelConstrained retval = new AssemblyConstraintSet(source);
       AssemblyConstraints constraints = getBinding().getConstraint();
       if (constraints != null) {
-        ConstraintBindingSupport.parse(retval, constraints, module.getSource());
+        ConstraintBindingSupport.parse(retval, constraints, source);
       }
       return retval;
     }));
     this.boundNodeItem = ObjectUtils.notNull(Lazy.lazy(() -> ObjectUtils.requireNonNull(ModelSupport.toNodeItem(
         module,
-        bindingInstance.getXmlQName(),
+        bindingInstance.getQName(),
         position))));
   }
 
   @NonNull
-  protected METASCHEMA.DefineAssembly getBinding() {
+  private METASCHEMA.DefineAssembly getBinding() {
     return binding;
   }
 

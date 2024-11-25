@@ -16,6 +16,7 @@ import gov.nist.secauto.metaschema.core.model.IContainerModelAbsolute;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 import gov.nist.secauto.metaschema.databind.model.IBoundInstanceModelGroupedAssembly;
 import gov.nist.secauto.metaschema.databind.model.IGroupAs;
+import gov.nist.secauto.metaschema.databind.model.impl.IFeatureInstanceModelGroupAs;
 import gov.nist.secauto.metaschema.databind.model.metaschema.IBindingDefinitionModelAssembly;
 import gov.nist.secauto.metaschema.databind.model.metaschema.IBindingInstance;
 import gov.nist.secauto.metaschema.databind.model.metaschema.IBindingMetaschemaModule;
@@ -53,7 +54,7 @@ public class InstanceModelAssemblyReference
    * @param binding
    *          the assembly reference instance object bound to a Java class
    * @param bindingInstance
-   *          the Metaschema module instance for the bound object
+   *          the Metaschema instance for the bound object
    * @param position
    *          the zero-based position of this bound object relative to its bound
    *          object siblings
@@ -75,7 +76,7 @@ public class InstanceModelAssemblyReference
     this.groupAs = ModelSupport.groupAs(binding.getGroupAs(), parent.getOwningDefinition().getContainingModule());
     this.boundNodeItem = ObjectUtils.notNull(
         Lazy.lazy(() -> (IAssemblyNodeItem) ObjectUtils.notNull(getContainingModule().getSourceNodeItem())
-            .getModelItemsByName(bindingInstance.getXmlQName())
+            .getModelItemsByName(bindingInstance.getQName())
             .get(position)));
   }
 

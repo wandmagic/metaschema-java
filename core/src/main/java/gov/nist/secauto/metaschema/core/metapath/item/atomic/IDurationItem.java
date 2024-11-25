@@ -6,6 +6,8 @@
 package gov.nist.secauto.metaschema.core.metapath.item.atomic;
 
 import gov.nist.secauto.metaschema.core.metapath.function.InvalidValueForCastFunctionException;
+import gov.nist.secauto.metaschema.core.metapath.type.IAtomicOrUnionType;
+import gov.nist.secauto.metaschema.core.metapath.type.impl.TypeConstants;
 
 import java.time.temporal.TemporalAmount;
 
@@ -25,6 +27,16 @@ import edu.umd.cs.findbugs.annotations.NonNull;
  * @see IYearMonthDurationItem
  */
 public interface IDurationItem extends IAnyAtomicItem {
+  /**
+   * Get the type information for this item.
+   *
+   * @return the type information
+   */
+  @NonNull
+  static IAtomicOrUnionType<IDurationItem> type() {
+    return TypeConstants.DURATION_TYPE;
+  }
+
   /**
    * Cast the provided type to this item type.
    *

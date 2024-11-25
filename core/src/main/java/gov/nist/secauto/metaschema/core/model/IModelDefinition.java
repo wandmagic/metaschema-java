@@ -8,11 +8,13 @@ package gov.nist.secauto.metaschema.core.model;
 import java.util.Collection;
 import java.util.function.Predicate;
 
-import javax.xml.namespace.QName;
-
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 
+/**
+ * Represents a Metaschema definition for a complex object that may contain
+ * flags.
+ */
 public interface IModelDefinition extends IDefinition, IContainer {
   /**
    * Tests if the provided definition represents complex data. The data is complex
@@ -43,16 +45,16 @@ public interface IModelDefinition extends IDefinition, IContainer {
   }
 
   /**
-   * Retrieves a flag instance, by the flag's effective name, that is defined on
-   * the containing definition.
+   * Retrieves a flag instance, by the flag's effective name-based qualified name
+   * index.
    *
-   * @param name
-   *          the flag's name
+   * @param index
+   *          the flag's name-based qualified name index
    * @return the matching flag instance, or {@code null} if there is no flag
    *         matching the specified name
    */
   @Nullable
-  IFlagInstance getFlagInstanceByName(@NonNull QName name);
+  IFlagInstance getFlagInstanceByName(@NonNull Integer index);
 
   /**
    * Retrieves the flag instances for all flags defined on the containing

@@ -5,9 +5,9 @@
 
 package gov.nist.secauto.metaschema.core.model;
 
+import gov.nist.secauto.metaschema.core.model.util.ModuleUtils;
+import gov.nist.secauto.metaschema.core.qname.IEnhancedQName;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
-
-import javax.xml.namespace.QName;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
@@ -26,8 +26,7 @@ public abstract class AbstractFlagInstance<
     DEFINITION extends IFlagDefinition,
     INSTANCE extends IFlagInstance>
     extends AbstractNamedInstance<PARENT>
-    implements IFlagInstance, IFeatureDefinitionReferenceInstance<DEFINITION, INSTANCE> {
-
+    implements IFlagInstance {
   /**
    * Construct a new flag instance.
    *
@@ -35,16 +34,16 @@ public abstract class AbstractFlagInstance<
    *          the parent model containing this instance
    */
   protected AbstractFlagInstance(@NonNull PARENT parent) {
-    super(parent, name -> parent.getContainingModule().toFlagQName(name));
+    super(parent, name -> ModuleUtils.parseFlagName(parent.getContainingModule(), name));
   }
 
   @Override
   public DEFINITION getDefinition() {
-    QName qname = getReferencedDefinitionQName();
+    IEnhancedQName qname = getReferencedDefinitionQName();
     // this should always be not null
     IFlagDefinition definition = getContainingModule().getScopedFlagDefinitionByName(qname);
     if (definition == null) {
-      throw new IllegalStateException(
+      throw new ModelInitializationException(
           String.format("Unable to resolve field reference '%s' in definition '%s' in module '%s'",
               qname,
               getContainingDefinition().getName(),
@@ -68,7 +67,7 @@ public abstract class AbstractFlagInstance<
   public String toCoordinates() {
     IDefinition definition = getDefinition();
     return String.format("flag instance %s -> %s in module %s (@%d(%d)",
-        getXmlQName(),
+        getQName(),
         definition.getDefinitionQName(),
         getContainingDefinition().getContainingModule().getShortName(),
         hashCode(),

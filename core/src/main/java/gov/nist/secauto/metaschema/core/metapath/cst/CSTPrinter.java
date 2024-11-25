@@ -5,8 +5,30 @@
 
 package gov.nist.secauto.metaschema.core.metapath.cst;
 
-import gov.nist.secauto.metaschema.core.metapath.cst.comparison.GeneralComparison;
-import gov.nist.secauto.metaschema.core.metapath.cst.comparison.ValueComparison;
+import gov.nist.secauto.metaschema.core.metapath.cst.items.ArraySequenceConstructor;
+import gov.nist.secauto.metaschema.core.metapath.cst.items.ArraySquareConstructor;
+import gov.nist.secauto.metaschema.core.metapath.cst.items.DecimalLiteral;
+import gov.nist.secauto.metaschema.core.metapath.cst.items.EmptySequence;
+import gov.nist.secauto.metaschema.core.metapath.cst.items.FunctionCallAccessor;
+import gov.nist.secauto.metaschema.core.metapath.cst.items.IntegerLiteral;
+import gov.nist.secauto.metaschema.core.metapath.cst.items.Intersect;
+import gov.nist.secauto.metaschema.core.metapath.cst.items.MapConstructor;
+import gov.nist.secauto.metaschema.core.metapath.cst.items.PostfixLookup;
+import gov.nist.secauto.metaschema.core.metapath.cst.items.Quantified;
+import gov.nist.secauto.metaschema.core.metapath.cst.items.Range;
+import gov.nist.secauto.metaschema.core.metapath.cst.items.SimpleMap;
+import gov.nist.secauto.metaschema.core.metapath.cst.items.StringConcat;
+import gov.nist.secauto.metaschema.core.metapath.cst.items.StringLiteral;
+import gov.nist.secauto.metaschema.core.metapath.cst.items.UnaryLookup;
+import gov.nist.secauto.metaschema.core.metapath.cst.items.Union;
+import gov.nist.secauto.metaschema.core.metapath.cst.logic.And;
+import gov.nist.secauto.metaschema.core.metapath.cst.logic.Except;
+import gov.nist.secauto.metaschema.core.metapath.cst.logic.GeneralComparison;
+import gov.nist.secauto.metaschema.core.metapath.cst.logic.If;
+import gov.nist.secauto.metaschema.core.metapath.cst.logic.Negate;
+import gov.nist.secauto.metaschema.core.metapath.cst.logic.Or;
+import gov.nist.secauto.metaschema.core.metapath.cst.logic.PredicateExpression;
+import gov.nist.secauto.metaschema.core.metapath.cst.logic.ValueComparison;
 import gov.nist.secauto.metaschema.core.metapath.cst.math.Addition;
 import gov.nist.secauto.metaschema.core.metapath.cst.math.Division;
 import gov.nist.secauto.metaschema.core.metapath.cst.math.IntegerDivision;
@@ -25,6 +47,9 @@ import gov.nist.secauto.metaschema.core.metapath.cst.path.RootSlashOnlyPath;
 import gov.nist.secauto.metaschema.core.metapath.cst.path.RootSlashPath;
 import gov.nist.secauto.metaschema.core.metapath.cst.path.Step;
 import gov.nist.secauto.metaschema.core.metapath.cst.path.Wildcard;
+import gov.nist.secauto.metaschema.core.metapath.cst.type.Cast;
+import gov.nist.secauto.metaschema.core.metapath.cst.type.Castable;
+import gov.nist.secauto.metaschema.core.metapath.cst.type.InstanceOf;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
@@ -89,7 +114,10 @@ public final class CSTPrinter {
      *         its children
      */
     @SuppressWarnings("static-method")
-    protected String appendNode(@NonNull IExpression expr, @Nullable String childResult, @NonNull State context) {
+    protected String appendNode(
+        @NonNull IExpression expr,
+        @Nullable String childResult,
+        @NonNull State context) {
       StringBuilder buffer = new StringBuilder();
       buffer.append(context.getIndentation())
           .append(expr.toASTString());
@@ -350,6 +378,21 @@ public final class CSTPrinter {
     @Override
     public String visitMapConstructorEntry(MapConstructor.Entry expr, State context) {
       return appendNode(expr, super.visitMapConstructorEntry(expr, context), context);
+    }
+
+    @Override
+    public String visitInstanceOf(InstanceOf expr, State context) {
+      return appendNode(expr, super.visitInstanceOf(expr, context), context);
+    }
+
+    @Override
+    public String visitCast(Cast expr, State context) {
+      return appendNode(expr, super.visitCast(expr, context), context);
+    }
+
+    @Override
+    public String visitCastable(Castable expr, State context) {
+      return appendNode(expr, super.visitCastable(expr, context), context);
     }
   }
 

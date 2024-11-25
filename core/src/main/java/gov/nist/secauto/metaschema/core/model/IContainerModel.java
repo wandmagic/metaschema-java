@@ -7,8 +7,6 @@ package gov.nist.secauto.metaschema.core.model;
 
 import java.util.Collection;
 
-import javax.xml.namespace.QName;
-
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 
@@ -51,13 +49,13 @@ public interface IContainerModel extends IContainer {
    * Get the model instance contained within the model with the associated use
    * name.
    *
-   * @param name
-   *          the effective name of the model instance
+   * @param index
+   *          the effective name-based qualified name index of the model instance
    * @return the matching model instance, or {@code null} if no match was found
    * @see INamedModelInstance#getEffectiveName()
    */
   @Nullable
-  INamedModelInstance getNamedModelInstanceByName(QName name);
+  INamedModelInstance getNamedModelInstanceByName(Integer index);
 
   /**
    * Get all field instances within the container.
@@ -71,13 +69,13 @@ public interface IContainerModel extends IContainer {
    * Get the field instance contained within the model with the associated use
    * name.
    *
-   * @param name
-   *          the use name of the field instance
+   * @param index
+   *          the use name-based qualified name index of the field instance
    * @return the matching field instance, or {@code null} if no match was found
    * @see IFieldInstance#getUseName()
    */
   @Nullable
-  IFieldInstance getFieldInstanceByName(QName name);
+  IFieldInstance getFieldInstanceByName(Integer index);
 
   /**
    * Get all assembly instances within the container.
@@ -91,11 +89,12 @@ public interface IContainerModel extends IContainer {
    * Get the assembly instance contained within the model with the associated use
    * name.
    *
-   * @param name
-   *          the effective name of the assembly instance
+   * @param index
+   *          the effective name-based qualified name index of the assembly
+   *          instance
    * @return the matching assembly instance, or {@code null} if no match was found
    * @see INamedModelInstance#getEffectiveName()
    */
   @Nullable
-  IAssemblyInstance getAssemblyInstanceByName(QName name);
+  IAssemblyInstance getAssemblyInstanceByName(Integer index);
 }

@@ -5,25 +5,24 @@
 
 package gov.nist.secauto.metaschema.core.metapath;
 
+import gov.nist.secauto.metaschema.core.metapath.function.library.FnData;
 import gov.nist.secauto.metaschema.core.metapath.impl.AbstractSequence;
 import gov.nist.secauto.metaschema.core.metapath.impl.SequenceN;
 import gov.nist.secauto.metaschema.core.metapath.impl.SingletonSequence;
 import gov.nist.secauto.metaschema.core.metapath.impl.StreamSequence;
 import gov.nist.secauto.metaschema.core.metapath.item.IItem;
+import gov.nist.secauto.metaschema.core.metapath.item.atomic.IAnyAtomicItem;
 import gov.nist.secauto.metaschema.core.metapath.item.function.IArrayItem;
+import gov.nist.secauto.metaschema.core.metapath.type.InvalidTypeMetapathException;
+import gov.nist.secauto.metaschema.core.metapath.type.TypeMetapathException;
+import gov.nist.secauto.metaschema.core.util.CustomCollectors;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
-import java.util.function.BiConsumer;
-import java.util.function.BinaryOperator;
 import java.util.function.Function;
-import java.util.function.Supplier;
-import java.util.stream.Collector;
 import java.util.stream.Stream;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -150,6 +149,22 @@ public interface ISequence<ITEM extends IItem> extends List<ITEM>, IPrintable, I
   }
 
   /**
+   * An implementation of XPath 3.1
+   * <a href="https://www.w3.org/TR/xpath-functions-31/#func-data">fn:data</a>
+   * supporting <a href="https://www.w3.org/TR/xpath-31/#id-atomization">item
+   * atomization</a>.
+   *
+   * @param sequence
+   *          the sequence of items to atomize
+   * @return the atomized result
+   */
+  @NonNull
+  default ISequence<IAnyAtomicItem> atomize() {
+    return of(ObjectUtils.notNull(stream()
+        .flatMap(FnData::atomize)));
+  }
+
+  /**
    * Get this sequence as a collection value.
    *
    * @return the collection value
@@ -174,6 +189,9 @@ public interface ISequence<ITEM extends IItem> extends List<ITEM>, IPrintable, I
 
   /**
    * Get a stream guaranteed to be backed by a list.
+   * <p>
+   * This call ensures that the sequence is backed by a List and not a stream, so
+   * the underlying collection can be reused.
    *
    * @return the stream
    */
@@ -188,50 +206,13 @@ public interface ISequence<ITEM extends IItem> extends List<ITEM>, IPrintable, I
     return safeStream();
   }
 
-  /**
-   * A {@link Collector} implementation to generates a sequence from a stream of
-   * Metapath items.
-   *
-   * @param <ITEM_TYPE>
-   *          the Java type of the items
-   * @return a collector that will generate a sequence
-   */
-  @NonNull
-  static <ITEM_TYPE extends IItem> Collector<ITEM_TYPE, ?, ISequence<ITEM_TYPE>> toSequence() {
-    return new Collector<ITEM_TYPE, List<ITEM_TYPE>, ISequence<ITEM_TYPE>>() {
-
-      @Override
-      public Supplier<List<ITEM_TYPE>> supplier() {
-        return ArrayList::new;
-      }
-
-      @Override
-      public BiConsumer<List<ITEM_TYPE>, ITEM_TYPE> accumulator() {
-        return List::add;
-      }
-
-      @Override
-      public BinaryOperator<List<ITEM_TYPE>> combiner() {
-        return (list1, list2) -> {
-          list1.addAll(list2);
-          return list1;
-        };
-      }
-
-      @Override
-      public Function<List<ITEM_TYPE>, ISequence<ITEM_TYPE>> finisher() {
-        return list -> ofCollection(ObjectUtils.notNull(list));
-      }
-
-      @Override
-      public Set<Characteristics> characteristics() {
-        return Collections.emptySet();
-      }
-    };
+  @Override
+  default ISequence<ITEM> toSequence() {
+    return this;
   }
 
   @Override
-  default ISequence<ITEM> asSequence() {
+  default ISequence<?> contentsAsSequence() {
     return this;
   }
 
@@ -253,7 +234,7 @@ public interface ISequence<ITEM extends IItem> extends List<ITEM>, IPrintable, I
       @NonNull ISequence<T> seq) {
     return seq.safeStream()
         .map(mapFunction::apply)
-        .collect(toSequence());
+        .collect(CustomCollectors.toSequence());
   }
 
   /**
@@ -267,7 +248,7 @@ public interface ISequence<ITEM extends IItem> extends List<ITEM>, IPrintable, I
    */
   @NonNull
   static <ITEM_TYPE extends IItem> ISequence<ITEM_TYPE> ofCollection( // NOPMD - intentional
-      @NonNull List<ITEM_TYPE> items) {
+      @NonNull Collection<ITEM_TYPE> items) {
     ISequence<ITEM_TYPE> retval;
     if (items.isEmpty()) {
       retval = empty();

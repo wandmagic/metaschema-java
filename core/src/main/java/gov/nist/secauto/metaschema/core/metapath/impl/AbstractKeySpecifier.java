@@ -8,10 +8,8 @@ package gov.nist.secauto.metaschema.core.metapath.impl;
 import gov.nist.secauto.metaschema.core.metapath.DynamicContext;
 import gov.nist.secauto.metaschema.core.metapath.ICollectionValue;
 import gov.nist.secauto.metaschema.core.metapath.ISequence;
-import gov.nist.secauto.metaschema.core.metapath.InvalidTypeMetapathException;
 import gov.nist.secauto.metaschema.core.metapath.cst.IExpression;
 import gov.nist.secauto.metaschema.core.metapath.function.library.ArrayGet;
-import gov.nist.secauto.metaschema.core.metapath.function.library.FnData;
 import gov.nist.secauto.metaschema.core.metapath.function.library.MapGet;
 import gov.nist.secauto.metaschema.core.metapath.item.IItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IAnyAtomicItem;
@@ -21,6 +19,7 @@ import gov.nist.secauto.metaschema.core.metapath.item.function.ArrayException;
 import gov.nist.secauto.metaschema.core.metapath.item.function.IArrayItem;
 import gov.nist.secauto.metaschema.core.metapath.item.function.IKeySpecifier;
 import gov.nist.secauto.metaschema.core.metapath.item.function.IMapItem;
+import gov.nist.secauto.metaschema.core.metapath.type.InvalidTypeMetapathException;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 
 import java.util.stream.Stream;
@@ -236,7 +235,7 @@ public abstract class AbstractKeySpecifier implements IKeySpecifier {
         IArrayItem<?> targetItem,
         DynamicContext dynamicContext,
         ISequence<?> focus) {
-      ISequence<IAnyAtomicItem> keys = FnData.fnData(getKeyExpression().accept(dynamicContext, focus));
+      ISequence<IAnyAtomicItem> keys = getKeyExpression().accept(dynamicContext, focus).atomize();
 
       return ObjectUtils.notNull(keys.stream()
           .flatMap(key -> {
@@ -266,8 +265,9 @@ public abstract class AbstractKeySpecifier implements IKeySpecifier {
         IMapItem<?> targetItem,
         DynamicContext dynamicContext,
         ISequence<?> focus) {
-      ISequence<? extends IAnyAtomicItem> keys
-          = ObjectUtils.requireNonNull(FnData.fnData(getKeyExpression().accept(dynamicContext, focus)));
+      ISequence<? extends IAnyAtomicItem> keys = ObjectUtils.requireNonNull(getKeyExpression()
+          .accept(dynamicContext, focus)
+          .atomize());
 
       return ObjectUtils.notNull(keys.stream()
           .flatMap(key -> {

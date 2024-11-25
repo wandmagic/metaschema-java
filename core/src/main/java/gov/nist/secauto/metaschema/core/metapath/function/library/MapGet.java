@@ -38,15 +38,15 @@ public final class MapGet {
       .focusIndependent()
       .argument(IArgument.builder()
           .name("map")
-          .type(IMapItem.class)
+          .type(IMapItem.type())
           .one()
           .build())
       .argument(IArgument.builder()
           .name("key")
-          .type(IAnyAtomicItem.class)
+          .type(IAnyAtomicItem.type())
           .one()
           .build())
-      .returnType(IItem.class)
+      .returnType(IItem.type())
       .returnZeroOrOne()
       .functionHandler(MapGet::execute)
       .build();
@@ -65,7 +65,7 @@ public final class MapGet {
     IAnyAtomicItem key = FunctionUtils.asType(ObjectUtils.requireNonNull(arguments.get(1).getFirstItem(true)));
 
     ICollectionValue value = get(map, key);
-    return value == null ? ISequence.empty() : value.asSequence();
+    return value == null ? ISequence.empty() : value.toSequence();
   }
 
   /**

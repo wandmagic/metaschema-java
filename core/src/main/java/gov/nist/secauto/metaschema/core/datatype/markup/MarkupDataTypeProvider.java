@@ -6,6 +6,10 @@
 package gov.nist.secauto.metaschema.core.datatype.markup;
 
 import gov.nist.secauto.metaschema.core.datatype.AbstractDataTypeProvider;
+import gov.nist.secauto.metaschema.core.metapath.MetapathConstants;
+import gov.nist.secauto.metaschema.core.metapath.item.atomic.IMarkupItem;
+import gov.nist.secauto.metaschema.core.metapath.type.IAtomicOrUnionType;
+import gov.nist.secauto.metaschema.core.qname.EQNameFactory;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
@@ -31,10 +35,23 @@ public final class MarkupDataTypeProvider
   public static final MarkupMultilineAdapter MARKUP_MULTILINE = new MarkupMultilineAdapter();
 
   /**
+   * The Metaschema data type that represents all markup types.
+   */
+  @NonNull
+  public static final IAtomicOrUnionType<IMarkupItem> MARKUP_TYPE
+      = IAtomicOrUnionType.of(
+          IMarkupItem.class,
+          IMarkupItem::cast,
+          EQNameFactory.instance().newQName(MetapathConstants.NS_METAPATH, "markup"));
+
+  /**
    * Create the data type provider.
    */
   public MarkupDataTypeProvider() {
-    registerDatatype(MARKUP_LINE);
-    registerDatatype(MARKUP_MULTILINE);
+    register(MARKUP_LINE);
+    register(MARKUP_MULTILINE);
+
+    // register abstract types
+    register(MARKUP_TYPE);
   }
 }

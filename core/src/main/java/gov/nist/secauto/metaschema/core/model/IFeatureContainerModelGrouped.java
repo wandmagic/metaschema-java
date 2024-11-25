@@ -7,21 +7,18 @@ package gov.nist.secauto.metaschema.core.model;
 
 import java.util.Collection;
 
-import javax.xml.namespace.QName;
-
 import edu.umd.cs.findbugs.annotations.NonNull;
 
 public interface IFeatureContainerModelGrouped<
     NMI extends INamedModelInstanceGrouped,
     FI extends IFieldInstanceGrouped,
     AI extends IAssemblyInstanceGrouped>
-    extends IContainerModelGrouped, IFeatureContainerModel<NMI, NMI, FI, AI> {
+    extends IContainerModelGrouped, IContainerModel {
   /**
-   * Lazy initialize the model instances associated with this choice group.
+   * Get the model container implementation instance.
    *
-   * @return the model container
+   * @return the model container instance
    */
-  @Override
   @NonNull
   IContainerModelSupport<NMI, NMI, FI, AI> getModelContainer();
 
@@ -32,11 +29,11 @@ public interface IFeatureContainerModelGrouped<
 
   @Override
   default Collection<NMI> getModelInstances() {
-    return getModelContainer().getModelInstances();
+    return getNamedModelInstances();
   }
 
   @Override
-  default NMI getNamedModelInstanceByName(QName name) {
+  default NMI getNamedModelInstanceByName(Integer name) {
     return getModelContainer().getNamedModelInstanceMap().get(name);
   }
 
@@ -47,7 +44,7 @@ public interface IFeatureContainerModelGrouped<
   }
 
   @Override
-  default FI getFieldInstanceByName(QName name) {
+  default FI getFieldInstanceByName(Integer name) {
     return getModelContainer().getFieldInstanceMap().get(name);
   }
 
@@ -58,7 +55,7 @@ public interface IFeatureContainerModelGrouped<
   }
 
   @Override
-  default AI getAssemblyInstanceByName(QName name) {
+  default AI getAssemblyInstanceByName(Integer name) {
     return getModelContainer().getAssemblyInstanceMap().get(name);
   }
 

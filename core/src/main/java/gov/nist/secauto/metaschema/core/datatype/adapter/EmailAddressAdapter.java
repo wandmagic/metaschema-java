@@ -7,11 +7,11 @@ package gov.nist.secauto.metaschema.core.datatype.adapter;
 
 import gov.nist.secauto.metaschema.core.metapath.MetapathConstants;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IEmailAddressItem;
+import gov.nist.secauto.metaschema.core.qname.EQNameFactory;
+import gov.nist.secauto.metaschema.core.qname.IEnhancedQName;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 
 import java.util.List;
-
-import javax.xml.namespace.QName;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
@@ -23,25 +23,19 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 public class EmailAddressAdapter
     extends AbstractStringAdapter<IEmailAddressItem> {
   @NonNull
-  private static final List<QName> NAMES = ObjectUtils.notNull(
+  private static final List<IEnhancedQName> NAMES = ObjectUtils.notNull(
       List.of(
-          new QName(MetapathConstants.NS_METAPATH.toASCIIString(), "email-address"),
+          EQNameFactory.instance().newQName(MetapathConstants.NS_METAPATH, "email-address"),
           // for backwards compatibility with original type name
-          new QName(MetapathConstants.NS_METAPATH.toASCIIString(), "email")));
+          EQNameFactory.instance().newQName(MetapathConstants.NS_METAPATH, "email")));
 
   EmailAddressAdapter() {
-    // avoid general construction
+    super(IEmailAddressItem.class, IEmailAddressItem::cast);
   }
 
   @Override
-  public List<QName> getNames() {
+  public List<IEnhancedQName> getNames() {
     return NAMES;
-  }
-
-  @Override
-  @NonNull
-  public Class<IEmailAddressItem> getItemClass() {
-    return IEmailAddressItem.class;
   }
 
   @Override

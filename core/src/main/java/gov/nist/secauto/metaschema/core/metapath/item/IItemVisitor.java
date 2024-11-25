@@ -5,6 +5,7 @@
 
 package gov.nist.secauto.metaschema.core.metapath.item;
 
+import gov.nist.secauto.metaschema.core.metapath.function.IFunction;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IAnyAtomicItem;
 import gov.nist.secauto.metaschema.core.metapath.item.function.IArrayItem;
 import gov.nist.secauto.metaschema.core.metapath.item.function.IMapItem;
@@ -12,6 +13,9 @@ import gov.nist.secauto.metaschema.core.metapath.item.node.INodeItem;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
+/**
+ * Use to visit the major types of items.
+ */
 public interface IItemVisitor {
   /**
    * Visit the array item instance.
@@ -44,4 +48,12 @@ public interface IItemVisitor {
    *          the instance to visit
    */
   void visit(@NonNull IAnyAtomicItem item);
+
+  /**
+   * Visit the function item instance.
+   *
+   * @param function
+   *          the instance to visit
+   */
+  void visit(@NonNull IFunction function);
 }

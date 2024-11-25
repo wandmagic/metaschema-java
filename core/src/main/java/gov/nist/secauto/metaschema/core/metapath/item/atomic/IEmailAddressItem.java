@@ -6,9 +6,10 @@
 package gov.nist.secauto.metaschema.core.metapath.item.atomic;
 
 import gov.nist.secauto.metaschema.core.datatype.adapter.MetaschemaDataTypeProvider;
-import gov.nist.secauto.metaschema.core.metapath.InvalidTypeMetapathException;
 import gov.nist.secauto.metaschema.core.metapath.function.InvalidValueForCastFunctionException;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.impl.EmailAddressItemImpl;
+import gov.nist.secauto.metaschema.core.metapath.type.IAtomicOrUnionType;
+import gov.nist.secauto.metaschema.core.metapath.type.InvalidTypeMetapathException;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
@@ -17,7 +18,18 @@ import edu.umd.cs.findbugs.annotations.NonNull;
  */
 public interface IEmailAddressItem extends IStringItem {
   /**
-   * Construct a new email address item using the provided string {@code value}.
+   * Get the type information for this item.
+   *
+   * @return the type information
+   */
+  @NonNull
+  static IAtomicOrUnionType<IEmailAddressItem> type() {
+    return MetaschemaDataTypeProvider.EMAIL_ADDRESS.getItemType();
+  }
+
+  /**
+   * /** Construct a new email address item using the provided string
+   * {@code value}.
    *
    * @param value
    *          a string representing an email address value

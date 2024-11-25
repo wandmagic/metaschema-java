@@ -12,6 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import gov.nist.secauto.metaschema.core.qname.IEnhancedQName;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 import gov.nist.secauto.metaschema.databind.DefaultBindingContext;
 import gov.nist.secauto.metaschema.databind.IBindingContext;
@@ -34,8 +35,6 @@ import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
-import javax.xml.namespace.QName;
-
 class ModelTest
     extends ModelTestBase {
   private static final String NS = "https://csrc.nist.gov/ns/test/xml";
@@ -51,11 +50,11 @@ class ModelTest
           context.getBoundDefinitionForClass(RootAssemblyWithFlags.class));
 
       IBoundInstanceFlag idFlag = ObjectUtils.requireNonNull(definition.getFlagInstanceByName(
-          new QName("id")));
+          IEnhancedQName.of("id").getIndexPosition()));
       IBoundInstanceFlag defaultFlag = ObjectUtils.requireNonNull(definition.getFlagInstanceByName(
-          new QName("defaultFlag")));
+          IEnhancedQName.of("defaultFlag").getIndexPosition()));
       IBoundInstanceFlag numberFlag = ObjectUtils.requireNonNull(definition.getFlagInstanceByName(
-          new QName("number")));
+          IEnhancedQName.of("number").getIndexPosition()));
 
       assertAll(
           "root assembly",
@@ -138,17 +137,17 @@ class ModelTest
           (IBoundDefinitionModelAssembly) context.getBoundDefinitionForClass(RootAssemblyWithFields.class));
 
       IBoundInstanceModelField<?> defaultField = ObjectUtils.requireNonNull(
-          definition.getFieldInstanceByName(new QName(NS, "defaultField")));
+          definition.getFieldInstanceByName(IEnhancedQName.of(NS, "defaultField").getIndexPosition()));
       IBoundInstanceModelField<?> collectionField = ObjectUtils.requireNonNull(
-          definition.getFieldInstanceByName(new QName(NS, "field2")));
+          definition.getFieldInstanceByName(IEnhancedQName.of(NS, "field2").getIndexPosition()));
       IBoundInstanceModelField<?> specifiedValueKeyField = ObjectUtils.requireNonNull(
-          definition.getFieldInstanceByName(new QName(NS, "field-value-key")));
+          definition.getFieldInstanceByName(IEnhancedQName.of(NS, "field-value-key").getIndexPosition()));
       IBoundInstanceModelField<?> defaultValueKeyField = ObjectUtils.requireNonNull(
-          definition.getFieldInstanceByName(new QName(NS, "field-default-value-key")));
+          definition.getFieldInstanceByName(IEnhancedQName.of(NS, "field-default-value-key").getIndexPosition()));
       IBoundInstanceModelField<?> flagValueKeyField = ObjectUtils.requireNonNull(
-          definition.getFieldInstanceByName(new QName(NS, "field-flag-value-key")));
+          definition.getFieldInstanceByName(IEnhancedQName.of(NS, "field-flag-value-key").getIndexPosition()));
       IBoundInstanceModelField<?> flagJsonKeyField = ObjectUtils.requireNonNull(
-          definition.getFieldInstanceByName(new QName(NS, "field-json-key")));
+          definition.getFieldInstanceByName(IEnhancedQName.of(NS, "field-json-key").getIndexPosition()));
 
       assertAll(
           "root assembly",

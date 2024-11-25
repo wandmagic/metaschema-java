@@ -11,22 +11,21 @@ import gov.nist.secauto.metaschema.core.model.IModelDefinition;
 import gov.nist.secauto.metaschema.core.model.IModelElement;
 import gov.nist.secauto.metaschema.core.model.INamedInstance;
 import gov.nist.secauto.metaschema.core.model.INamedModelElement;
+import gov.nist.secauto.metaschema.core.qname.IEnhancedQName;
 import gov.nist.secauto.metaschema.core.util.CollectionUtil;
+import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 
-import org.apache.commons.lang3.ObjectUtils;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
 
 import java.net.URI;
-
-import javax.xml.namespace.QName;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
 public abstract class AbstractModelBuilder<T extends AbstractModelBuilder<T>>
     extends MockFactory {
 
-  private String namespace;
+  private String namespace = "";
   private String name;
 
   /**
@@ -136,10 +135,8 @@ public abstract class AbstractModelBuilder<T extends AbstractModelBuilder<T>>
     applyAttributable(instance);
     getContext().checking(new Expectations() {
       {
-        allowing(instance).getXmlNamespace();
-        will(returnValue(namespace));
-        allowing(instance).getXmlQName();
-        will(returnValue(new QName(namespace, name)));
+        allowing(instance).getQName();
+        will(returnValue(IEnhancedQName.of(ObjectUtils.notNull(namespace), ObjectUtils.notNull(name))));
         allowing(instance).getDefinition();
         will(returnValue(definition));
         allowing(instance).getContainingDefinition();
@@ -164,8 +161,8 @@ public abstract class AbstractModelBuilder<T extends AbstractModelBuilder<T>>
         will(returnValue(name));
         allowing(element).getUseName();
         will(returnValue(null));
-        allowing(element).getXmlQName();
-        will(returnValue(new QName(namespace, name)));
+        allowing(element).getQName();
+        will(returnValue(IEnhancedQName.of(ObjectUtils.notNull(namespace), ObjectUtils.notNull(name))));
         allowing(element).getEffectiveName();
         will(returnValue(name));
         allowing(element).getFormalName();

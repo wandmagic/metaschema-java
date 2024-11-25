@@ -8,6 +8,7 @@ package gov.nist.secauto.metaschema.databind.io.xml;
 import gov.nist.secauto.metaschema.core.model.IBoundObject;
 import gov.nist.secauto.metaschema.core.model.IMetaschemaData;
 import gov.nist.secauto.metaschema.core.model.util.XmlEventUtil;
+import gov.nist.secauto.metaschema.core.qname.IEnhancedQName;
 import gov.nist.secauto.metaschema.core.util.CollectionUtil;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 import gov.nist.secauto.metaschema.databind.io.BindingException;
@@ -190,13 +191,13 @@ public class MetaschemaXmlReader
       @NonNull StartElement start) throws IOException, XMLStreamException {
     URI resource = getSource();
 
-    Map<QName, IBoundInstanceFlag> flagInstanceMap = targetDefinition.getFlagInstances().stream()
+    Map<IEnhancedQName, IBoundInstanceFlag> flagInstanceMap = targetDefinition.getFlagInstances().stream()
         .collect(Collectors.toMap(
-            IBoundInstanceFlag::getXmlQName,
+            IBoundInstanceFlag::getQName,
             Function.identity()));
 
     for (Attribute attribute : CollectionUtil.toIterable(ObjectUtils.notNull(start.getAttributes()))) {
-      QName qname = attribute.getName();
+      IEnhancedQName qname = IEnhancedQName.of(attribute.getName());
       IBoundInstanceFlag instance = flagInstanceMap.get(qname);
       if (instance == null) {
         // unrecognized flag
@@ -298,7 +299,7 @@ public class MetaschemaXmlReader
 
     boolean retval = nextEvent.isStartElement();
     if (retval) {
-      QName qname = ObjectUtils.notNull(nextEvent.asStartElement().getName());
+      IEnhancedQName qname = IEnhancedQName.of(ObjectUtils.notNull(nextEvent.asStartElement().getName()));
       retval = qname.equals(targetInstance.getEffectiveXmlGroupAsQName()) // parse the grouping element
           || targetInstance.canHandleXmlQName(qname); // parse the instance(s)
     }
@@ -332,7 +333,8 @@ public class MetaschemaXmlReader
 
         // XmlEventUtil.skipWhitespace(reader);
 
-        QName groupQName = parseGrouping ? instance.getEffectiveXmlGroupAsQName() : null;
+        IEnhancedQName groupEQName = parseGrouping ? instance.getEffectiveXmlGroupAsQName() : null;
+        QName groupQName = groupEQName == null ? null : groupEQName.toQName();
         if (groupQName != null) {
           // we need to parse the grouping element, if the next token matches
           XmlEventUtil.requireStartElement(reader, resource, groupQName);
@@ -406,7 +408,8 @@ public class MetaschemaXmlReader
         IBoundInstanceModel<?> instance = getCollectionInfo().getInstance();
         XMLEvent event;
         while ((event = reader.peek()).isStartElement()
-            && instance.canHandleXmlQName(ObjectUtils.notNull(event.asStartElement().getName()))) {
+            && instance.canHandleXmlQName(
+                IEnhancedQName.of(ObjectUtils.notNull(event.asStartElement().getName())))) {
 
           // Consume the start element
           ITEM value = readItem();
@@ -455,11 +458,12 @@ public class MetaschemaXmlReader
     private <DEF extends IBoundDefinitionModelComplex> IBoundObject readDefinitionElement(
         @NonNull DEF definition,
         @NonNull StartElement start,
-        @NonNull QName expectedQName,
+        @NonNull IEnhancedQName expectedEQName,
         @Nullable IBoundObject parent,
         @NonNull DefinitionBodyHandler<DEF, IBoundObject> bodyHandler) throws IOException {
       XMLEventReader2 reader = getReader();
       URI resource = getSource();
+      QName expectedQName = expectedEQName.toQName();
 
       try {
         // consume the start element
@@ -522,7 +526,7 @@ public class MetaschemaXmlReader
       try {
         QName wrapper = null;
         if (instance.isEffectiveValueWrappedInXml()) {
-          wrapper = instance.getXmlQName();
+          wrapper = instance.getQName().toQName();
 
           XmlEventUtil.skipWhitespace(reader);
           XmlEventUtil.requireStartElement(reader, resource, wrapper);
@@ -549,7 +553,7 @@ public class MetaschemaXmlReader
       return readDefinitionElement(
           instance.getDefinition(),
           getStartElement(),
-          instance.getXmlQName(),
+          instance.getQName(),
           parent,
           this::handleFieldDefinitionBody);
     }
@@ -560,7 +564,7 @@ public class MetaschemaXmlReader
       return readDefinitionElement(
           instance.getDefinition(),
           getStartElement(),
-          instance.getXmlQName(),
+          instance.getQName(),
           parent,
           this::handleFieldDefinitionBody);
     }
@@ -572,7 +576,7 @@ public class MetaschemaXmlReader
       return readDefinitionElement(
           definition,
           getStartElement(),
-          definition.getXmlQName(),
+          definition.getQName(),
           parent,
           this::handleFieldDefinitionBody);
     }
@@ -607,7 +611,7 @@ public class MetaschemaXmlReader
       return readDefinitionElement(
           instance.getDefinition(),
           getStartElement(),
-          instance.getXmlQName(),
+          instance.getQName(),
           parent,
           this::handleAssemblyDefinitionBody);
     }
@@ -618,7 +622,7 @@ public class MetaschemaXmlReader
       return readDefinitionElement(
           instance.getDefinition(),
           getStartElement(),
-          instance.getXmlQName(),
+          instance.getQName(),
           parent,
           this::handleAssemblyDefinitionBody);
     }
@@ -630,7 +634,7 @@ public class MetaschemaXmlReader
       return readDefinitionElement(
           definition,
           getStartElement(),
-          ObjectUtils.requireNonNull(definition.getRootXmlQName()),
+          ObjectUtils.requireNonNull(definition.getRootQName()),
           parent,
           this::handleAssemblyDefinitionBody);
     }
@@ -650,7 +654,7 @@ public class MetaschemaXmlReader
         XmlEventUtil.skipWhitespace(eventReader);
 
         XMLEvent event = eventReader.peek();
-        QName nextQName = ObjectUtils.notNull(event.asStartElement().getName());
+        IEnhancedQName nextQName = IEnhancedQName.of(ObjectUtils.notNull(event.asStartElement().getName()));
         IBoundInstanceModelGroupedNamed actualInstance = instance.getGroupedModelInstance(nextQName);
         assert actualInstance != null;
         return actualInstance.readItem(parent, this);

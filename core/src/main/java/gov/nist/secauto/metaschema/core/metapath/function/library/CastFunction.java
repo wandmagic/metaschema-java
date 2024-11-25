@@ -13,9 +13,10 @@ import gov.nist.secauto.metaschema.core.metapath.function.IFunction;
 import gov.nist.secauto.metaschema.core.metapath.function.IFunctionExecutor;
 import gov.nist.secauto.metaschema.core.metapath.item.IItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IAnyAtomicItem;
+import gov.nist.secauto.metaschema.core.metapath.type.AbstractAtomicOrUnionType;
+import gov.nist.secauto.metaschema.core.metapath.type.IAtomicOrUnionType;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 
-import java.net.URI;
 import java.util.List;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -30,27 +31,14 @@ import edu.umd.cs.findbugs.annotations.NonNull;
  */
 public final class CastFunction<ITEM extends IAnyAtomicItem> implements IFunctionExecutor {
   @NonNull
-  private final ICastExecutor<ITEM> castExecutor;
-
-  @NonNull
-  static <ITEM extends IAnyAtomicItem> IFunction signature(
-      @NonNull URI namespace,
-      @NonNull String name,
-      @NonNull Class<ITEM> resultingAtomicType,
-      @NonNull ICastExecutor<ITEM> executor) {
-    return signature(
-        ObjectUtils.notNull(namespace.toASCIIString()),
-        name,
-        resultingAtomicType,
-        executor);
-  }
+  private final IAtomicOrUnionType.ICastExecutor<ITEM> castExecutor;
 
   @NonNull
   static <ITEM extends IAnyAtomicItem> IFunction signature(
       @NonNull String namespace,
       @NonNull String name,
-      @NonNull Class<ITEM> resulingAtomicType,
-      @NonNull ICastExecutor<ITEM> executor) {
+      @NonNull IAtomicOrUnionType<?> resulingAtomicType,
+      @NonNull IAtomicOrUnionType.ICastExecutor<ITEM> executor) {
     return IFunction.builder()
         .name(name)
         .namespace(namespace)
@@ -59,7 +47,7 @@ public final class CastFunction<ITEM extends IAnyAtomicItem> implements IFunctio
         .focusIndependent()
         .argument(IArgument.builder()
             .name("arg1")
-            .type(IAnyAtomicItem.class)
+            .type(IAnyAtomicItem.type())
             .zeroOrOne()
             .build())
         .returnType(resulingAtomicType)
@@ -70,11 +58,11 @@ public final class CastFunction<ITEM extends IAnyAtomicItem> implements IFunctio
 
   @NonNull
   private static <ITEM extends IAnyAtomicItem> CastFunction<ITEM>
-      newCastExecutor(@NonNull ICastExecutor<ITEM> executor) {
+      newCastExecutor(@NonNull IAtomicOrUnionType.ICastExecutor<ITEM> executor) {
     return new CastFunction<>(executor);
   }
 
-  private CastFunction(@NonNull ICastExecutor<ITEM> castExecutor) {
+  private CastFunction(@NonNull AbstractAtomicOrUnionType.ICastExecutor<ITEM> castExecutor) {
     this.castExecutor = castExecutor;
   }
 
@@ -94,24 +82,5 @@ public final class CastFunction<ITEM extends IAnyAtomicItem> implements IFunctio
 
     ITEM castItem = castExecutor.cast(item);
     return ISequence.of(castItem);
-  }
-
-  /**
-   * A callback used to perform a casting operation.
-   *
-   * @param <ITEM>
-   *          the Java type for the resulting item
-   */
-  @FunctionalInterface
-  public interface ICastExecutor<ITEM extends IAnyAtomicItem> {
-    /**
-     * Cast the provided {@code item}.
-     *
-     * @param item
-     *          the item to cast
-     * @return the item cast to the appropriate type
-     */
-    @NonNull
-    ITEM cast(@NonNull IAnyAtomicItem item);
   }
 }

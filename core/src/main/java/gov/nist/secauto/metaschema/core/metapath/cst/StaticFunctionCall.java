@@ -8,16 +8,13 @@ package gov.nist.secauto.metaschema.core.metapath.cst;
 import gov.nist.secauto.metaschema.core.metapath.DynamicContext;
 import gov.nist.secauto.metaschema.core.metapath.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.StaticMetapathException;
-import gov.nist.secauto.metaschema.core.metapath.function.FunctionService;
 import gov.nist.secauto.metaschema.core.metapath.function.IFunction;
 import gov.nist.secauto.metaschema.core.metapath.item.IItem;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 
 import java.util.List;
-import java.util.Objects;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
-
-import javax.xml.namespace.QName;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import nl.talsmasoftware.lazy4j.Lazy;
@@ -25,21 +22,20 @@ import nl.talsmasoftware.lazy4j.Lazy;
 public class StaticFunctionCall implements IExpression {
   @NonNull
   private final List<IExpression> arguments;
-  private final Lazy<IFunction> function;
+  @NonNull
+  private final Lazy<IFunction> functionSupplier;
 
   /**
    * Construct a new function call expression.
    *
-   * @param name
-   *          the function name
+   * @param functionSupplier
+   *          the function implementation supplier
    * @param arguments
    *          the expressions used to provide arguments to the function call
    */
-  public StaticFunctionCall(@NonNull QName name, @NonNull List<IExpression> arguments) {
-    this.arguments = Objects.requireNonNull(arguments, "arguments");
-    this.function = Lazy.lazy(() -> FunctionService.getInstance().getFunction(
-        Objects.requireNonNull(name, "name"),
-        arguments.size()));
+  public StaticFunctionCall(@NonNull Supplier<IFunction> functionSupplier, @NonNull List<IExpression> arguments) {
+    this.arguments = arguments;
+    this.functionSupplier = ObjectUtils.notNull(Lazy.lazy(functionSupplier));
   }
 
   /**
@@ -51,7 +47,7 @@ public class StaticFunctionCall implements IExpression {
    *           if the function was not found
    */
   public IFunction getFunction() {
-    return function.get();
+    return ObjectUtils.notNull(functionSupplier.get());
   }
 
   @Override
@@ -61,11 +57,7 @@ public class StaticFunctionCall implements IExpression {
 
   @Override
   public Class<? extends IItem> getBaseResultType() {
-    Class<? extends IItem> retval = getFunction().getResult().getType();
-    if (retval == null) {
-      retval = IItem.class;
-    }
-    return retval;
+    return getFunction().getResult().getType().getItemClass();
   }
 
   @SuppressWarnings("null")
@@ -81,11 +73,8 @@ public class StaticFunctionCall implements IExpression {
 
   @Override
   public ISequence<?> accept(DynamicContext dynamicContext, ISequence<?> focus) {
-    List<ISequence<?>> arguments = ObjectUtils.notNull(getChildren().stream().map(expression -> {
-      @NonNull
-      ISequence<?> result = expression.accept(dynamicContext, focus);
-      return result;
-    }).collect(Collectors.toList()));
+    List<ISequence<?>> arguments = ObjectUtils.notNull(getChildren().stream()
+        .map(expression -> expression.accept(dynamicContext, focus)).collect(Collectors.toList()));
 
     IFunction function = getFunction();
     return function.execute(arguments, dynamicContext, focus);

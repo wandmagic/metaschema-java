@@ -6,6 +6,7 @@
 package gov.nist.secauto.metaschema.core.datatype.adapter;
 
 import gov.nist.secauto.metaschema.core.datatype.AbstractDataTypeProvider;
+import gov.nist.secauto.metaschema.core.metapath.type.impl.TypeConstants;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
@@ -187,28 +188,34 @@ public final class MetaschemaDataTypeProvider // NOPMD - Used for service initia
     // Java type. This ensures that when a data type is resolved that this data type
     // is matched first
     // before other String-based data types.
-    registerDatatype(STRING);
+    register(STRING);
+    register(BASE64);
+    register(BOOLEAN);
+    register(DATE);
+    register(DATE_WITH_TZ);
+    register(DATE_TIME);
+    register(DATE_TIME_WITH_TZ);
+    register(DAY_TIME_DURATION);
+    register(DECIMAL);
+    register(EMAIL_ADDRESS);
+    register(HOSTNAME);
+    register(INTEGER);
+    register(IP_V4_ADDRESS);
+    register(IP_V6_ADDRESS);
+    register(NON_NEGATIVE_INTEGER);
+    register(POSITIVE_INTEGER);
+    register(TOKEN);
+    register(URI);
+    register(URI_REFERENCE);
+    register(UUID);
+    register(YEAR_MONTH_DURATION);
 
-    registerDatatype(BASE64);
-    registerDatatype(BOOLEAN);
-    registerDatatype(DATE);
-    registerDatatype(DATE_WITH_TZ);
-    registerDatatype(DATE_TIME);
-    registerDatatype(DATE_TIME_WITH_TZ);
-    registerDatatype(DAY_TIME_DURATION);
-    registerDatatype(DECIMAL);
-    registerDatatype(EMAIL_ADDRESS);
-    registerDatatype(HOSTNAME);
-    registerDatatype(INTEGER);
-    registerDatatype(IP_V4_ADDRESS);
-    registerDatatype(IP_V6_ADDRESS);
-
-    registerDatatype(NON_NEGATIVE_INTEGER);
-    registerDatatype(POSITIVE_INTEGER);
-    registerDatatype(TOKEN);
-    registerDatatype(URI);
-    registerDatatype(URI_REFERENCE);
-    registerDatatype(UUID);
-    registerDatatype(YEAR_MONTH_DURATION);
+    // register abstract types
+    register(TypeConstants.ANY_ATOMIC_TYPE);
+    // register(TypeConstants.UNTYPED_ATOMIC_TYPE);
+    register(TypeConstants.DURATION_TYPE);
+    register(TypeConstants.IP_ADDRESS_TYPE);
+    register(TypeConstants.NUMERIC_TYPE);
+    register(TypeConstants.TEMPORAL_TYPE);
   }
 }

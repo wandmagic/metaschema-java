@@ -15,7 +15,6 @@ import gov.nist.secauto.metaschema.core.metapath.item.IItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.INumericItem;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 
-import java.net.URI;
 import java.util.List;
 
 import javax.xml.namespace.QName;
@@ -33,11 +32,6 @@ public final class NumericFunction implements IFunctionExecutor {
   private final INumericExecutor executor;
 
   @NonNull
-  static IFunction signature(@NonNull URI namespace, @NonNull String name, @NonNull INumericExecutor executor) {
-    return signature(ObjectUtils.notNull(namespace.toASCIIString()), name, executor);
-  }
-
-  @NonNull
   static IFunction signature(@NonNull String namespace, @NonNull String name, @NonNull INumericExecutor executor) {
     return IFunction.builder()
         .name(name)
@@ -47,10 +41,10 @@ public final class NumericFunction implements IFunctionExecutor {
         .focusIndependent()
         .argument(IArgument.builder()
             .name("arg1")
-            .type(INumericItem.class)
+            .type(INumericItem.type())
             .zeroOrOne()
             .build())
-        .returnType(INumericItem.class)
+        .returnType(INumericItem.type())
         .returnZeroOrOne()
         .functionHandler(newFunctionHandler(executor))
         .build();

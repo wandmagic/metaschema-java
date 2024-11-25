@@ -25,6 +25,7 @@ import gov.nist.secauto.metaschema.core.metapath.item.node.INodeItem;
 import gov.nist.secauto.metaschema.core.model.IAssemblyDefinition;
 import gov.nist.secauto.metaschema.core.model.IFieldDefinition;
 import gov.nist.secauto.metaschema.core.model.IFlagDefinition;
+import gov.nist.secauto.metaschema.core.qname.IEnhancedQName;
 import gov.nist.secauto.metaschema.core.util.CollectionUtil;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 
@@ -40,8 +41,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
-
-import javax.xml.namespace.QName;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
@@ -887,12 +888,6 @@ public class DefaultConstraintValidator
     public void registerAllowedValue(
         @NonNull IAllowedValuesConstraint allowedValues,
         @NonNull IDefinitionNodeItem<?, ?> node) {
-      this.constraints.add(Pair.of(allowedValues, node));
-      if (!allowedValues.isAllowedOther()) {
-        // record the most restrictive value
-        allowOthers = false;
-      }
-
       IAllowedValuesConstraint.Extensible newExtensible = allowedValues.getExtensible();
       if (newExtensible.ordinal() > extensible.ordinal()) {
         // record the most restrictive value
@@ -901,7 +896,18 @@ public class DefaultConstraintValidator
           && IAllowedValuesConstraint.Extensible.NONE.equals(extensible)) {
         // this is an error, where there are two none constraints that conflict
         throw new MetapathException(
-            String.format("Multiple constraints have extensibility scope=none at path '%s'", item.getMetapath()));
+            String.format(
+                "Multiple constraints matching path '%s' have scope='none', which prevents extension. Involved" +
+                    " constraints are those: %s",
+                Stream.concat(
+                    Stream.of(allowedValues),
+                    constraints.stream()
+                        .map(Pair::getLeft)
+                        .filter(
+                            constraint -> IAllowedValuesConstraint.Extensible.NONE.equals(constraint.getExtensible())))
+                    .map(IConstraint::getConstraintIdentity)
+                    .collect(Collectors.joining(", ", "{", "}")),
+                item.getMetapath()));
       } else if (allowedValues.getExtensible().ordinal() < extensible.ordinal()) {
         String msg = String.format(
             "An allowed values constraint with an extensibility scope '%s'"
@@ -909,6 +915,11 @@ public class DefaultConstraintValidator
             allowedValues.getExtensible().name(), extensible.name(), item.getMetapath());
         LOGGER.atError().log(msg);
         throw new MetapathException(msg);
+      }
+      this.constraints.add(Pair.of(allowedValues, node));
+      if (!allowedValues.isAllowedOther()) {
+        // record the most restrictive value
+        allowOthers = false;
       }
     }
 
@@ -948,7 +959,7 @@ public class DefaultConstraintValidator
     @NonNull
     private DynamicContext handleLetStatements(
         @NonNull INodeItem focus,
-        @NonNull Map<QName, ILet> letExpressions,
+        @NonNull Map<IEnhancedQName, ILet> letExpressions,
         @NonNull DynamicContext dynamicContext) {
 
       DynamicContext retval;
@@ -959,7 +970,7 @@ public class DefaultConstraintValidator
         final DynamicContext subContext = dynamicContext.subContext();
 
         for (ILet let : lets) {
-          QName name = let.getName();
+          IEnhancedQName name = let.getName();
           ISequence<?> result = let.getValueExpression().evaluate(focus, subContext);
 
           // ensure the sequence is list backed
@@ -1012,7 +1023,7 @@ public class DefaultConstraintValidator
 
     @Override
     public Void visitMetaschema(@NonNull IModuleNodeItem item, DynamicContext context) {
-      throw new UnsupportedOperationException("not needed");
+      throw new UnsupportedOperationException("Method not used.");
     }
 
     @Override

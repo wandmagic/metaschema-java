@@ -41,20 +41,20 @@ public final class ArrayPut {
       .focusIndependent()
       .argument(IArgument.builder()
           .name("array")
-          .type(IArrayItem.class)
+          .type(IArrayItem.type())
           .one()
           .build())
       .argument(IArgument.builder()
           .name("position")
-          .type(IIntegerItem.class)
+          .type(IIntegerItem.type())
           .one()
           .build())
       .argument(IArgument.builder()
           .name("member")
-          .type(IItem.class)
+          .type(IItem.type())
           .zeroOrMore()
           .build())
-      .returnType(IArrayItem.class)
+      .returnType(IArrayItem.type())
       .returnOne()
       .functionHandler(ArrayPut::execute)
       .build();
@@ -76,7 +76,7 @@ public final class ArrayPut {
     @SuppressWarnings("unchecked")
     T member = (T) arguments.get(2).toCollectionValue();
 
-    return put(array, position, member).asSequence();
+    return put(array, position, member).toSequence();
   }
 
   /**

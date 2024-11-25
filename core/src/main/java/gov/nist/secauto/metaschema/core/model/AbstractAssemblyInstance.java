@@ -5,9 +5,8 @@
 
 package gov.nist.secauto.metaschema.core.model;
 
+import gov.nist.secauto.metaschema.core.qname.IEnhancedQName;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
-
-import javax.xml.namespace.QName;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
@@ -44,11 +43,11 @@ public abstract class AbstractAssemblyInstance<
 
   @Override
   public DEFINITION getDefinition() {
-    QName qname = getReferencedDefinitionQName();
+    IEnhancedQName qname = getReferencedDefinitionQName();
     // this should always be not null
-    IAssemblyDefinition definition = getContainingModule().getScopedAssemblyDefinitionByName(qname);
+    IAssemblyDefinition definition = getContainingModule().getScopedAssemblyDefinitionByName(qname.getIndexPosition());
     if (definition == null) {
-      throw new IllegalStateException(
+      throw new ModelInitializationException(
           String.format("Unable to resolve assembly reference '%s' in definition '%s' in module '%s'",
               qname,
               getParentContainer().getOwningDefinition().getName(),
@@ -67,7 +66,7 @@ public abstract class AbstractAssemblyInstance<
   public String toCoordinates() {
     IDefinition definition = getDefinition();
     return String.format("assembly instance %s -> %s in module %s (@%d(%d)",
-        getXmlQName(),
+        getQName(),
         definition.getDefinitionQName(),
         getContainingDefinition().getContainingModule().getShortName(),
         hashCode(),

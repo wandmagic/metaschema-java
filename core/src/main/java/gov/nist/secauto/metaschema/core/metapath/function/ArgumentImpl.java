@@ -5,6 +5,8 @@
 
 package gov.nist.secauto.metaschema.core.metapath.function;
 
+import gov.nist.secauto.metaschema.core.metapath.type.ISequenceType;
+
 import java.util.Objects;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -53,10 +55,7 @@ class ArgumentImpl implements IArgument {
     if (this == obj) {
       return true; // NOPMD - readability
     }
-    if (obj == null) {
-      return false; // NOPMD - readability
-    }
-    if (getClass() != obj.getClass()) {
+    if (obj == null || getClass() != obj.getClass()) {
       return false; // NOPMD - readability
     }
     ArgumentImpl other = (ArgumentImpl) obj;

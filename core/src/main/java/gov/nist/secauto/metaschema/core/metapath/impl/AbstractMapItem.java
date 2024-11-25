@@ -10,13 +10,14 @@ import gov.nist.secauto.metaschema.core.metapath.ICollectionValue;
 import gov.nist.secauto.metaschema.core.metapath.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.function.FunctionUtils;
 import gov.nist.secauto.metaschema.core.metapath.function.IArgument;
-import gov.nist.secauto.metaschema.core.metapath.function.ISequenceType;
-import gov.nist.secauto.metaschema.core.metapath.function.Occurrence;
 import gov.nist.secauto.metaschema.core.metapath.function.library.MapGet;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IAnyAtomicItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IIntegerItem;
 import gov.nist.secauto.metaschema.core.metapath.item.function.IMapItem;
 import gov.nist.secauto.metaschema.core.metapath.item.function.IMapKey;
+import gov.nist.secauto.metaschema.core.metapath.type.ISequenceType;
+import gov.nist.secauto.metaschema.core.metapath.type.Occurrence;
+import gov.nist.secauto.metaschema.core.qname.IEnhancedQName;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 
 import java.util.EnumSet;
@@ -24,23 +25,38 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-import javax.xml.namespace.QName;
-
 import edu.umd.cs.findbugs.annotations.NonNull;
 
+/**
+ * The base class for {@link IMapItem} implementations, that provide an
+ * implementation of common utility methods.
+ *
+ * @param <VALUE>
+ *          the Java type of the value items contained within the map
+ */
 public abstract class AbstractMapItem<VALUE extends ICollectionValue>
     extends ImmutableCollections.AbstractImmutableDelegatedMap<IMapKey, VALUE>
     implements IMapItem<VALUE> {
+  /**
+   * The function qualified name.
+   */
   @NonNull
-  public static final QName QNAME = new QName("map");
+  private static final IEnhancedQName QNAME = IEnhancedQName.of("map");
+  /**
+   * The function properties.
+   */
   @NonNull
-  public static final Set<FunctionProperty> PROPERTIES = ObjectUtils.notNull(
+  private static final Set<FunctionProperty> PROPERTIES = ObjectUtils.notNull(
       EnumSet.of(FunctionProperty.DETERMINISTIC));
+  /**
+   * The function arguments.
+   */
   @NonNull
-  public static final List<IArgument> ARGUMENTS = ObjectUtils.notNull(List.of(
-      IArgument.builder().name("key").type(IAnyAtomicItem.class).one().build()));
+  private static final List<IArgument> ARGUMENTS = ObjectUtils.notNull(List.of(
+      IArgument.builder().name("key").type(IAnyAtomicItem.type()).one().build()));
   @NonNull
-  public static final ISequenceType RESULT = ISequenceType.of(IAnyAtomicItem.class, Occurrence.ZERO_OR_ONE);
+  private static final ISequenceType RESULT = ISequenceType.of(
+      IAnyAtomicItem.type(), Occurrence.ZERO_OR_ONE);
 
   @NonNull
   private static final IMapItem<?> EMPTY = new MapItemN<>();
@@ -60,6 +76,51 @@ public abstract class AbstractMapItem<VALUE extends ICollectionValue>
   }
 
   @Override
+  public boolean isDeterministic() {
+    return true;
+  }
+
+  @Override
+  public boolean isContextDepenent() {
+    return false;
+  }
+
+  @Override
+  public boolean isFocusDepenent() {
+    return false;
+  }
+
+  @Override
+  public IEnhancedQName getQName() {
+    return QNAME;
+  }
+
+  @Override
+  public Set<FunctionProperty> getProperties() {
+    return PROPERTIES;
+  }
+
+  @Override
+  public List<IArgument> getArguments() {
+    return ARGUMENTS;
+  }
+
+  @Override
+  public int arity() {
+    return 1;
+  }
+
+  @Override
+  public boolean isArityUnbounded() {
+    return false;
+  }
+
+  @Override
+  public ISequenceType getResult() {
+    return RESULT;
+  }
+
+  @Override
   public ISequence<?> execute(List<? extends ISequence<?>> arguments, DynamicContext dynamicContext,
       ISequence<?> focus) {
     ISequence<? extends IIntegerItem> arg = FunctionUtils.asType(
@@ -71,7 +132,7 @@ public abstract class AbstractMapItem<VALUE extends ICollectionValue>
     }
 
     ICollectionValue result = MapGet.get(this, key);
-    return result == null ? ISequence.empty() : result.asSequence();
+    return result == null ? ISequence.empty() : result.toSequence();
   }
 
   @Override

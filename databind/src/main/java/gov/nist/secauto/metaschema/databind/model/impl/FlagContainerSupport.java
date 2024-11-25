@@ -25,15 +25,13 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.xml.namespace.QName;
-
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 public class FlagContainerSupport implements IContainerFlagSupport<IBoundInstanceFlag> {
   @NonNull
-  private final Map<QName, IBoundInstanceFlag> flagInstances;
+  private final Map<Integer, IBoundInstanceFlag> flagInstances;
   @Nullable
   private IBoundInstanceFlag jsonKeyFlag;
 
@@ -64,7 +62,7 @@ public class FlagContainerSupport implements IContainerFlagSupport<IBoundInstanc
     this.flagInstances = CollectionUtil.unmodifiableMap(ObjectUtils.notNull(instances
         .peek(intermediate)
         .collect(Collectors.toMap(
-            IBoundInstanceFlag::getXmlQName,
+            flag -> flag.getQName().getIndexPosition(),
             Function.identity(),
             (v1, v2) -> v2,
             LinkedHashMap::new))));
@@ -115,7 +113,7 @@ public class FlagContainerSupport implements IContainerFlagSupport<IBoundInstanc
 
   @Override
   @NonNull
-  public Map<QName, IBoundInstanceFlag> getFlagInstanceMap() {
+  public Map<Integer, IBoundInstanceFlag> getFlagInstanceMap() {
     return flagInstances;
   }
 

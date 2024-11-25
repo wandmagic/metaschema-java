@@ -14,17 +14,17 @@ import gov.nist.secauto.metaschema.core.model.IAttributable;
 import gov.nist.secauto.metaschema.core.model.IContainerFlagSupport;
 import gov.nist.secauto.metaschema.core.model.IFieldInstance;
 import gov.nist.secauto.metaschema.core.model.IFlagInstance;
+import gov.nist.secauto.metaschema.core.model.ISource;
 import gov.nist.secauto.metaschema.core.model.constraint.IValueConstrained;
 import gov.nist.secauto.metaschema.core.model.constraint.ValueConstraintSet;
 import gov.nist.secauto.metaschema.core.model.xml.xmlbeans.GlobalFieldDefinitionType;
 import gov.nist.secauto.metaschema.core.model.xml.xmlbeans.UseNameType;
+import gov.nist.secauto.metaschema.core.qname.IEnhancedQName;
 import gov.nist.secauto.metaschema.core.util.CollectionUtil;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 
 import java.util.Map;
 import java.util.Set;
-
-import javax.xml.namespace.QName;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
@@ -60,10 +60,11 @@ class XmlGlobalFieldDefinition
     }
     this.defaultValue = defaultValue;
     this.flagContainer = ObjectUtils.notNull(Lazy.lazy(() -> XmlFlagContainerSupport.newInstance(xmlObject, this)));
+    ISource source = module.getSource();
     this.constraints = ObjectUtils.notNull(Lazy.lazy(() -> {
-      IValueConstrained retval = new ValueConstraintSet();
+      IValueConstrained retval = new ValueConstraintSet(source);
       if (getXmlObject().isSetConstraint()) {
-        ConstraintXmlSupport.parse(retval, ObjectUtils.notNull(getXmlObject().getConstraint()), module.getSource());
+        ConstraintXmlSupport.parse(retval, ObjectUtils.notNull(getXmlObject().getConstraint()), source);
       }
       return retval;
     }));
@@ -171,10 +172,10 @@ class XmlGlobalFieldDefinition
   public IFlagInstance getJsonValueKeyFlagInstance() {
     IFlagInstance retval = null;
     if (getXmlObject().isSetJsonValueKeyFlag() && getXmlObject().getJsonValueKeyFlag().isSetFlagRef()) {
-      retval = getFlagInstanceByName(
-          new QName(
-              getXmlNamespace(),
-              ObjectUtils.notNull(getXmlObject().getJsonValueKeyFlag().getFlagRef())));
+      String namespace = getQName().getNamespace();
+      String name = ObjectUtils.notNull(getXmlObject().getJsonValueKeyFlag().getFlagRef());
+
+      retval = getFlagInstanceByName(IEnhancedQName.of(namespace, name).getIndexPosition());
     }
     return retval;
   }

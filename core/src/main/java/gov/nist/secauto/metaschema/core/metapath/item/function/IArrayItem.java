@@ -5,17 +5,15 @@
 
 package gov.nist.secauto.metaschema.core.metapath.item.function;
 
-import gov.nist.secauto.metaschema.core.metapath.DynamicContext;
 import gov.nist.secauto.metaschema.core.metapath.ICollectionValue;
 import gov.nist.secauto.metaschema.core.metapath.IPrintable;
 import gov.nist.secauto.metaschema.core.metapath.ISequence;
-import gov.nist.secauto.metaschema.core.metapath.function.IArgument;
 import gov.nist.secauto.metaschema.core.metapath.function.IFunction;
-import gov.nist.secauto.metaschema.core.metapath.function.ISequenceType;
 import gov.nist.secauto.metaschema.core.metapath.impl.AbstractArrayItem;
 import gov.nist.secauto.metaschema.core.metapath.impl.ArrayItemN;
 import gov.nist.secauto.metaschema.core.metapath.item.IItem;
 import gov.nist.secauto.metaschema.core.metapath.item.IItemVisitor;
+import gov.nist.secauto.metaschema.core.metapath.type.IItemType;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 
 import java.util.ArrayList;
@@ -31,8 +29,6 @@ import java.util.function.Supplier;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
 
-import javax.xml.namespace.QName;
-
 import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
@@ -44,8 +40,18 @@ import edu.umd.cs.findbugs.annotations.NonNull;
  * @param <ITEM>
  *          the Metapath item type of array members
  */
-@SuppressWarnings("PMD.ShortMethodName")
+@SuppressWarnings({ "PMD.ShortMethodName", "PMD.ExcessivePublicCount" })
 public interface IArrayItem<ITEM extends ICollectionValue> extends IFunction, IItem, List<ITEM>, IPrintable {
+  /**
+   * Get the type information for this item.
+   *
+   * @return the type information
+   */
+  @NonNull
+  static IItemType type() {
+    return IItemType.array();
+  }
+
   /**
    * Get an empty, immutable array item.
    *
@@ -59,64 +65,17 @@ public interface IArrayItem<ITEM extends ICollectionValue> extends IFunction, II
   }
 
   @Override
-  default QName getQName() {
-    return AbstractArrayItem.QNAME;
-  }
-
-  @Override
-  default Set<FunctionProperty> getProperties() {
-    return AbstractArrayItem.PROPERTIES;
-  }
-
-  @Override
-  default boolean isDeterministic() {
-    return true;
-  }
-
-  @Override
-  default boolean isContextDepenent() {
-    return false;
-  }
-
-  @Override
-  default boolean isFocusDepenent() {
-    return false;
-  }
-
-  @Override
-  default List<IArgument> getArguments() {
-    return AbstractArrayItem.ARGUMENTS;
-  }
-
-  @Override
-  default int arity() {
-    return 1;
-  }
-
-  @Override
-  default boolean isArityUnbounded() {
-    return false;
-  }
-
-  @Override
-  default ISequenceType getResult() {
-    return AbstractArrayItem.RESULT;
-  }
-
-  @Override
-  ISequence<?> execute(List<? extends ISequence<?>> arguments, DynamicContext dynamicContext, ISequence<?> focus);
-
-  @Override
-  default String toSignature() {
-    return "array()";
-  }
-
-  @Override
   List<ITEM> getValue();
 
   @Override
   default boolean hasValue() {
     return true;
+  }
+
+  @Override
+  default ISequence<?> contentsAsSequence() {
+    return ISequence.of(ObjectUtils.notNull(stream()
+        .flatMap(ICollectionValue::normalizeAsItems)));
   }
 
   /**
@@ -203,7 +162,6 @@ public interface IArrayItem<ITEM extends ICollectionValue> extends IFunction, II
   static <T extends ICollectionValue> Collector<T, ?, IArrayItem<T>> toArrayItem() {
     return new Collector<T, List<T>, IArrayItem<T>>() {
 
-      @SuppressWarnings("null")
       @Override
       public Supplier<List<T>> supplier() {
         return ArrayList::new;
@@ -235,7 +193,7 @@ public interface IArrayItem<ITEM extends ICollectionValue> extends IFunction, II
   }
 
   @Override
-  default ISequence<? extends IArrayItem<ITEM>> asSequence() {
+  default ISequence<? extends IArrayItem<ITEM>> toSequence() {
     return ISequence.of(this);
   }
 

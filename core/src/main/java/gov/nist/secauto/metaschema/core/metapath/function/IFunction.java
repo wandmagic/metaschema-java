@@ -8,10 +8,15 @@ package gov.nist.secauto.metaschema.core.metapath.function;
 import gov.nist.secauto.metaschema.core.metapath.DynamicContext;
 import gov.nist.secauto.metaschema.core.metapath.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.MetapathException;
+import gov.nist.secauto.metaschema.core.metapath.StaticContext;
+import gov.nist.secauto.metaschema.core.metapath.StaticMetapathException;
 import gov.nist.secauto.metaschema.core.metapath.item.IItem;
+import gov.nist.secauto.metaschema.core.metapath.type.IItemType;
+import gov.nist.secauto.metaschema.core.metapath.type.ISequenceType;
+import gov.nist.secauto.metaschema.core.metapath.type.Occurrence;
+import gov.nist.secauto.metaschema.core.qname.IEnhancedQName;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.LinkedList;
@@ -20,14 +25,12 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.xml.namespace.QName;
-
 import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
  * A common interface for all Metapath functions.
  */
-public interface IFunction {
+public interface IFunction extends IItem {
   /**
    * Details specific characteristics of a function.
    */
@@ -72,7 +75,7 @@ public interface IFunction {
    */
   @NonNull
   default String getName() {
-    return ObjectUtils.notNull(getQName().getLocalPart());
+    return ObjectUtils.notNull(getQName().getLocalName());
   }
 
   /**
@@ -81,7 +84,7 @@ public interface IFunction {
    * @return the namespace qualified name
    */
   @NonNull
-  QName getQName();
+  IEnhancedQName getQName();
 
   /**
    * Retrieve the set of assigned function properties.
@@ -212,14 +215,31 @@ public interface IFunction {
    */
   @NonNull
   static Builder builder() {
-    return new Builder();
+    return builder(StaticContext.instance());
+  }
+
+  /**
+   * Construct a new function signature builder.
+   *
+   * @param staticContext
+   *          the static context used to lookup data types and function
+   *          implementations
+   *
+   * @return the new builder instance
+   */
+  @NonNull
+  static Builder builder(@NonNull StaticContext staticContext) {
+    return new Builder(staticContext);
   }
 
   /**
    * Used to create a function's signature using a builder pattern.
    */
+  // FIXME: Should return type be ISequenceType?
   @SuppressWarnings("PMD.LooseCoupling")
   final class Builder {
+    @NonNull
+    private final StaticContext staticContext;
     private String name;
     private String namespace;
     @SuppressWarnings("null")
@@ -228,13 +248,17 @@ public interface IFunction {
     @NonNull
     private final List<IArgument> arguments = new LinkedList<>();
     @NonNull
-    private Class<? extends IItem> returnType = IItem.class;
+    private IItemType returnType = IItem.type();
     @NonNull
     private Occurrence returnOccurrence = Occurrence.ONE;
     private IFunctionExecutor functionHandler;
 
-    private Builder() {
-      // do nothing
+    private Builder(@NonNull StaticContext staticContext) {
+      this.staticContext = staticContext;
+    }
+
+    private StaticContext getStaticContext() {
+      return staticContext;
     }
 
     /**
@@ -252,18 +276,6 @@ public interface IFunction {
       }
       this.name = name.trim();
       return this;
-    }
-
-    /**
-     * Define the namespace of the function.
-     *
-     * @param uri
-     *          the function's namespace URI
-     * @return this builder
-     */
-    @NonNull
-    public Builder namespace(@NonNull URI uri) {
-      return namespace(ObjectUtils.notNull(uri.toASCIIString()));
     }
 
     /**
@@ -376,13 +388,48 @@ public interface IFunction {
     /**
      * Define the return sequence Java type of the function.
      *
+     * @param name
+     *          the extended qualified name of the function's return data type
+     * @return this builder
+     */
+    @NonNull
+    public Builder returnType(@NonNull String name) {
+      try {
+        this.returnType = getStaticContext().lookupAtomicType(name);
+      } catch (StaticMetapathException ex) {
+        throw new IllegalArgumentException(
+            String.format("No data type with the name '%s'.", name), ex);
+      }
+      return this;
+    }
+
+    /**
+     * Define the return sequence Java type of the function.
+     *
+     * @param name
+     *          the qualified name of the function's return data type
+     * @return this builder
+     */
+    @NonNull
+    public Builder returnType(@NonNull IEnhancedQName name) {
+      try {
+        this.returnType = StaticContext.lookupAtomicType(name);
+      } catch (StaticMetapathException ex) {
+        throw new IllegalArgumentException(
+            String.format("No data type with the name '%s'.", name), ex);
+      }
+      return this;
+    }
+
+    /**
+     * Define the return sequence Java type of the function.
+     *
      * @param type
      *          the function's return Java type
      * @return this builder
      */
     @NonNull
-    public Builder returnType(@NonNull Class<? extends IItem> type) {
-      Objects.requireNonNull(type, "type");
+    public Builder returnType(@NonNull IItemType type) {
       this.returnType = type;
       return this;
     }

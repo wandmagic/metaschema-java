@@ -7,12 +7,15 @@ package gov.nist.secauto.metaschema.core.model.xml.impl;
 
 import gov.nist.secauto.metaschema.core.datatype.markup.MarkupMultiline;
 import gov.nist.secauto.metaschema.core.model.AbstractChoiceInstance;
+import gov.nist.secauto.metaschema.core.model.DefaultChoiceModelBuilder;
 import gov.nist.secauto.metaschema.core.model.IAssemblyDefinition;
 import gov.nist.secauto.metaschema.core.model.IAssemblyInstanceAbsolute;
 import gov.nist.secauto.metaschema.core.model.IChoiceInstance;
+import gov.nist.secauto.metaschema.core.model.IContainerModelSupport;
 import gov.nist.secauto.metaschema.core.model.IFieldInstanceAbsolute;
 import gov.nist.secauto.metaschema.core.model.IModelInstanceAbsolute;
 import gov.nist.secauto.metaschema.core.model.INamedModelInstanceAbsolute;
+import gov.nist.secauto.metaschema.core.model.ISource;
 import gov.nist.secauto.metaschema.core.model.xml.XmlModuleConstants;
 import gov.nist.secauto.metaschema.core.model.xml.xmlbeans.AssemblyReferenceType;
 import gov.nist.secauto.metaschema.core.model.xml.xmlbeans.ChoiceType;
@@ -27,8 +30,6 @@ import org.apache.xmlbeans.XmlObject;
 
 import java.util.Map;
 
-import javax.xml.namespace.QName;
-
 import edu.umd.cs.findbugs.annotations.NonNull;
 import nl.talsmasoftware.lazy4j.Lazy;
 
@@ -42,7 +43,117 @@ class XmlChoiceInstance
   @NonNull
   private final ChoiceType xmlChoice;
   @NonNull
-  private final Lazy<XmlModelContainer> modelContainer;
+  private final Lazy<IContainerModelSupport<
+      IModelInstanceAbsolute,
+      INamedModelInstanceAbsolute,
+      IFieldInstanceAbsolute,
+      IAssemblyInstanceAbsolute>> modelContainer;
+
+  @SuppressWarnings("PMD.UseConcurrentHashMap")
+  @NonNull
+  private static final XmlObjectParser<Pair<IChoiceInstance, ModelBuilder>> XML_MODEL_PARSER
+      = new XmlObjectParser<>(ObjectUtils.notNull(
+          Map.ofEntries(
+              Map.entry(XmlModuleConstants.ASSEMBLY_QNAME, XmlChoiceInstance::handleAssembly),
+              Map.entry(XmlModuleConstants.DEFINE_ASSEMBLY_QNAME, XmlChoiceInstance::handleDefineAssembly),
+              Map.entry(XmlModuleConstants.FIELD_QNAME, XmlChoiceInstance::handleField),
+              Map.entry(XmlModuleConstants.DEFINE_FIELD_QNAME, XmlChoiceInstance::handleDefineField)))) {
+
+        @Override
+        protected Handler<Pair<IChoiceInstance, ModelBuilder>> identifyHandler(
+            XmlCursor cursor,
+            XmlObject obj) {
+          Handler<Pair<IChoiceInstance, ModelBuilder>> retval;
+          if (obj instanceof FieldReferenceType) {
+            retval = XmlChoiceInstance::handleField;
+          } else if (obj instanceof InlineFieldDefinitionType) {
+            retval = XmlChoiceInstance::handleDefineField;
+          } else if (obj instanceof AssemblyReferenceType) {
+            retval = XmlChoiceInstance::handleAssembly;
+          } else if (obj instanceof InlineAssemblyDefinitionType) {
+            retval = XmlChoiceInstance::handleDefineAssembly;
+          } else {
+            retval = super.identifyHandler(cursor, obj);
+          }
+          return retval;
+        }
+      };
+
+  /**
+   * Parse a choice group XMLBeans object.
+   *
+   * @param xmlObject
+   *          the XMLBeans object
+   * @param parent
+   *          the parent Metaschema node, either an assembly definition or choice
+   */
+  private static IContainerModelSupport<
+      IModelInstanceAbsolute,
+      INamedModelInstanceAbsolute,
+      IFieldInstanceAbsolute,
+      IAssemblyInstanceAbsolute> newContainer(
+          @NonNull ChoiceType xmlObject,
+          @NonNull IChoiceInstance parent) {
+    ModelBuilder builder = new ModelBuilder();
+    XML_MODEL_PARSER.parse(
+        parent.getContainingModule().getSource(),
+        xmlObject,
+        Pair.of(parent, builder));
+    return builder.buildChoice();
+  }
+
+  private static final class ModelBuilder
+      extends DefaultChoiceModelBuilder<
+          IModelInstanceAbsolute,
+          INamedModelInstanceAbsolute,
+          IFieldInstanceAbsolute,
+          IAssemblyInstanceAbsolute> {
+    // no other methods
+  }
+
+  @SuppressWarnings("unused")
+  private static void handleField(
+      @NonNull ISource source,
+      @NonNull XmlObject obj,
+      Pair<IChoiceInstance, ModelBuilder> state) {
+    IFieldInstanceAbsolute instance = new XmlFieldInstance(
+        (FieldReferenceType) obj,
+        ObjectUtils.notNull(state.getLeft()));
+    ObjectUtils.notNull(state.getRight()).append(instance);
+  }
+
+  @SuppressWarnings("unused")
+  private static void handleDefineField(
+      @NonNull ISource source,
+      @NonNull XmlObject obj,
+      Pair<IChoiceInstance, ModelBuilder> state) {
+    IFieldInstanceAbsolute instance = new XmlInlineFieldDefinition(
+        (InlineFieldDefinitionType) obj,
+        ObjectUtils.notNull(state.getLeft()));
+    ObjectUtils.notNull(state.getRight()).append(instance);
+  }
+
+  @SuppressWarnings("unused")
+  private static void handleAssembly(
+      @NonNull ISource source,
+      @NonNull XmlObject obj,
+      Pair<IChoiceInstance, ModelBuilder> state) {
+    IAssemblyInstanceAbsolute instance = new XmlAssemblyInstance(
+        (AssemblyReferenceType) obj,
+        ObjectUtils.notNull(state.getLeft()));
+    ObjectUtils.notNull(state.getRight()).append(instance);
+  }
+
+  @SuppressWarnings("unused")
+  private static void handleDefineAssembly(
+      @NonNull ISource source,
+      @NonNull XmlObject obj,
+      Pair<IChoiceInstance, ModelBuilder> state) {
+    IAssemblyInstanceAbsolute instance = new XmlInlineAssemblyDefinition(
+        (InlineAssemblyDefinitionType) obj,
+        ObjectUtils.notNull(state.getLeft()));
+    ObjectUtils.notNull(state.getRight()).append(instance);
+  }
 
   /**
    * Constructs a mutually exclusive choice between two possible objects.
@@ -57,11 +168,15 @@ class XmlChoiceInstance
       @NonNull IAssemblyDefinition parent) {
     super(parent);
     this.xmlChoice = xmlObject;
-    this.modelContainer = ObjectUtils.notNull(Lazy.lazy(() -> new XmlModelContainer(xmlObject, this)));
+    this.modelContainer = ObjectUtils.notNull(Lazy.lazy(() -> newContainer(xmlObject, this)));
   }
 
   @Override
-  public XmlModelContainer getModelContainer() {
+  public IContainerModelSupport<
+      IModelInstanceAbsolute,
+      INamedModelInstanceAbsolute,
+      IFieldInstanceAbsolute,
+      IAssemblyInstanceAbsolute> getModelContainer() {
     return ObjectUtils.notNull(modelContainer.get());
   }
 
@@ -88,106 +203,4 @@ class XmlChoiceInstance
   // -------------------------------------
   // - End XmlBeans driven code - CPD-ON -
   // -------------------------------------
-
-  @SuppressWarnings("PMD.UseConcurrentHashMap")
-  @NonNull
-  private static final XmlObjectParser<Pair<IChoiceInstance,
-      XmlModelContainer>> XML_MODEL_PARSER
-          = new XmlObjectParser<>(ObjectUtils.notNull(
-              Map.ofEntries(
-                  Map.entry(XmlModuleConstants.ASSEMBLY_QNAME, XmlChoiceInstance::handleAssembly),
-                  Map.entry(XmlModuleConstants.DEFINE_ASSEMBLY_QNAME, XmlChoiceInstance::handleDefineAssembly),
-                  Map.entry(XmlModuleConstants.FIELD_QNAME, XmlChoiceInstance::handleField),
-                  Map.entry(XmlModuleConstants.DEFINE_FIELD_QNAME, XmlChoiceInstance::handleDefineField)))) {
-
-            @Override
-            protected Handler<Pair<IChoiceInstance, XmlModelContainer>> identifyHandler(XmlCursor cursor,
-                XmlObject obj) {
-              Handler<Pair<IChoiceInstance, XmlModelContainer>> retval;
-              if (obj instanceof FieldReferenceType) {
-                retval = XmlChoiceInstance::handleField;
-              } else if (obj instanceof InlineFieldDefinitionType) {
-                retval = XmlChoiceInstance::handleDefineField;
-              } else if (obj instanceof AssemblyReferenceType) {
-                retval = XmlChoiceInstance::handleAssembly;
-              } else if (obj instanceof InlineAssemblyDefinitionType) {
-                retval = XmlChoiceInstance::handleDefineAssembly;
-              } else {
-                retval = super.identifyHandler(cursor, obj);
-              }
-              return retval;
-            }
-          };
-
-  private static void handleField( // NOPMD false positive
-      @NonNull XmlObject obj,
-      Pair<IChoiceInstance, XmlModelContainer> state) {
-    IFieldInstanceAbsolute instance = new XmlFieldInstance(
-        (FieldReferenceType) obj,
-        ObjectUtils.notNull(state.getLeft()));
-    ObjectUtils.notNull(state.getRight()).append(instance);
-  }
-
-  private static void handleDefineField( // NOPMD false positive
-      @NonNull XmlObject obj,
-      Pair<IChoiceInstance, XmlModelContainer> state) {
-    IFieldInstanceAbsolute instance = new XmlInlineFieldDefinition(
-        (InlineFieldDefinitionType) obj,
-        ObjectUtils.notNull(state.getLeft()));
-    ObjectUtils.notNull(state.getRight()).append(instance);
-  }
-
-  private static void handleAssembly( // NOPMD false positive
-      @NonNull XmlObject obj,
-      Pair<IChoiceInstance, XmlModelContainer> state) {
-    IAssemblyInstanceAbsolute instance = new XmlAssemblyInstance(
-        (AssemblyReferenceType) obj,
-        ObjectUtils.notNull(state.getLeft()));
-    ObjectUtils.notNull(state.getRight()).append(instance);
-  }
-
-  private static void handleDefineAssembly( // NOPMD false positive
-      @NonNull XmlObject obj,
-      Pair<IChoiceInstance, XmlModelContainer> state) {
-    IAssemblyInstanceAbsolute instance = new XmlInlineAssemblyDefinition(
-        (InlineAssemblyDefinitionType) obj,
-        ObjectUtils.notNull(state.getLeft()));
-    ObjectUtils.notNull(state.getRight()).append(instance);
-  }
-
-  private static class XmlModelContainer
-      extends DefaultContainerModelSupport<
-          IModelInstanceAbsolute,
-          INamedModelInstanceAbsolute,
-          IFieldInstanceAbsolute,
-          IAssemblyInstanceAbsolute> {
-
-    /**
-     * Parse a choice group XMLBeans object.
-     *
-     * @param xmlObject
-     *          the XMLBeans object
-     * @param parent
-     *          the parent Metaschema node, either an assembly definition or choice
-     */
-    public XmlModelContainer(
-        @NonNull ChoiceType xmlObject,
-        @NonNull IChoiceInstance parent) {
-      XML_MODEL_PARSER.parse(xmlObject, Pair.of(parent, this));
-    }
-
-    public void append(@NonNull IFieldInstanceAbsolute instance) {
-      QName key = instance.getXmlQName();
-      getFieldInstanceMap().put(key, instance);
-      getNamedModelInstanceMap().put(key, instance);
-      getModelInstances().add(instance);
-    }
-
-    public void append(@NonNull IAssemblyInstanceAbsolute instance) {
-      QName key = instance.getXmlQName();
-      getAssemblyInstanceMap().put(key, instance);
-      getNamedModelInstanceMap().put(key, instance);
-      getModelInstances().add(instance);
-    }
-  }
 }

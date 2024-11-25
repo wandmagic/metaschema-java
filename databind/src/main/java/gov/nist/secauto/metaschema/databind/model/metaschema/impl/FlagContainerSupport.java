@@ -10,6 +10,8 @@ import gov.nist.secauto.metaschema.core.model.IFlagContainerBuilder;
 import gov.nist.secauto.metaschema.core.model.IFlagDefinition;
 import gov.nist.secauto.metaschema.core.model.IFlagInstance;
 import gov.nist.secauto.metaschema.core.model.IModule;
+import gov.nist.secauto.metaschema.core.model.util.ModuleUtils;
+import gov.nist.secauto.metaschema.core.qname.IEnhancedQName;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 import gov.nist.secauto.metaschema.databind.model.IBoundInstanceModelChoiceGroup;
 import gov.nist.secauto.metaschema.databind.model.IBoundInstanceModelGroupedAssembly;
@@ -19,8 +21,6 @@ import gov.nist.secauto.metaschema.databind.model.metaschema.binding.InlineDefin
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import javax.xml.namespace.QName;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
@@ -42,7 +42,8 @@ public final class FlagContainerSupport {
     // create temporary collections to store the child binding objects
     IFlagContainerBuilder<IFlagInstance> builder = jsonKeyName == null
         ? IContainerFlagSupport.builder()
-        : IContainerFlagSupport.builder(parent.getContainingModule().toFlagQName(jsonKeyName));
+        : IContainerFlagSupport.builder(
+            ModuleUtils.parseFlagName(parent.getContainingModule(), jsonKeyName).getIndexPosition());
 
     // create counter to track child positions
     AtomicInteger flagReferencePosition = new AtomicInteger();
@@ -87,7 +88,7 @@ public final class FlagContainerSupport {
       @NonNull IBindingDefinitionModel parent) {
     IModule module = parent.getContainingModule();
 
-    QName qname = module.toFlagQName(ObjectUtils.requireNonNull(obj.getRef()));
+    IEnhancedQName qname = ModuleUtils.parseFlagName(module, ObjectUtils.requireNonNull(obj.getRef()));
     IFlagDefinition definition = module.getScopedFlagDefinitionByName(qname);
     if (definition == null) {
       throw new IllegalStateException(

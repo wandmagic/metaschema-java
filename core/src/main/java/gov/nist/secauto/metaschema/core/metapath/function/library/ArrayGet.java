@@ -38,15 +38,15 @@ public final class ArrayGet {
       .focusIndependent()
       .argument(IArgument.builder()
           .name("array")
-          .type(IArrayItem.class)
+          .type(IArrayItem.type())
           .one()
           .build())
       .argument(IArgument.builder()
           .name("position")
-          .type(IIntegerItem.class)
+          .type(IIntegerItem.type())
           .one()
           .build())
-      .returnType(IItem.class)
+      .returnType(IItem.type())
       .returnZeroOrOne()
       .functionHandler(ArrayGet::execute)
       .build();
@@ -64,7 +64,7 @@ public final class ArrayGet {
     IArrayItem<?> array = FunctionUtils.asType(ObjectUtils.requireNonNull(arguments.get(0).getFirstItem(true)));
     IIntegerItem position = FunctionUtils.asType(ObjectUtils.requireNonNull(arguments.get(1).getFirstItem(true)));
 
-    return get(array, position).asSequence();
+    return get(array, position).toSequence();
   }
 
   /**

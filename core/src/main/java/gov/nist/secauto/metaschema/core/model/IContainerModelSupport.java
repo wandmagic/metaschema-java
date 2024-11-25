@@ -5,12 +5,10 @@
 
 package gov.nist.secauto.metaschema.core.model;
 
-import gov.nist.secauto.metaschema.core.model.xml.impl.DefaultContainerModelSupport;
+import gov.nist.secauto.metaschema.core.model.impl.DefaultContainerModelSupport;
 
 import java.util.Collection;
 import java.util.Map;
-
-import javax.xml.namespace.QName;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
@@ -45,13 +43,13 @@ public interface IContainerModelSupport<
    *          the assembly instance Java type
    * @return the empty container
    */
-  @SuppressWarnings("unchecked")
+  @NonNull
   static <
       MI extends IModelInstance,
       NMI extends INamedModelInstance,
       FI extends IFieldInstance,
       AI extends IAssemblyInstance> IContainerModelSupport<MI, NMI, FI, AI> empty() {
-    return DefaultContainerModelSupport.EMPTY;
+    return DefaultContainerModelSupport.empty();
   }
 
   /**
@@ -69,7 +67,7 @@ public interface IContainerModelSupport<
    * @return the mapping
    */
   @NonNull
-  Map<QName, NMI> getNamedModelInstanceMap();
+  Map<Integer, NMI> getNamedModelInstanceMap();
 
   /**
    * Get a mapping of all field instances, mapped from their effective name to the
@@ -78,7 +76,7 @@ public interface IContainerModelSupport<
    * @return the mapping
    */
   @NonNull
-  Map<QName, FI> getFieldInstanceMap();
+  Map<Integer, FI> getFieldInstanceMap();
 
   /**
    * Get a mapping of all assembly instances, mapped from their effective name to
@@ -87,5 +85,5 @@ public interface IContainerModelSupport<
    * @return the mapping
    */
   @NonNull
-  Map<QName, AI> getAssemblyInstanceMap();
+  Map<Integer, AI> getAssemblyInstanceMap();
 }

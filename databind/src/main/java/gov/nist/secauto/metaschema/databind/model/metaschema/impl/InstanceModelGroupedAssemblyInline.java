@@ -22,6 +22,7 @@ import gov.nist.secauto.metaschema.core.model.IFieldInstanceAbsolute;
 import gov.nist.secauto.metaschema.core.model.IFlagInstance;
 import gov.nist.secauto.metaschema.core.model.IModelInstanceAbsolute;
 import gov.nist.secauto.metaschema.core.model.INamedModelInstanceAbsolute;
+import gov.nist.secauto.metaschema.core.model.ISource;
 import gov.nist.secauto.metaschema.core.model.constraint.AssemblyConstraintSet;
 import gov.nist.secauto.metaschema.core.model.constraint.IModelConstrained;
 import gov.nist.secauto.metaschema.core.model.xml.XmlModuleConstants;
@@ -52,8 +53,7 @@ public class InstanceModelGroupedAssemblyInline
         IAssemblyInstanceAbsolute,
         IChoiceInstance,
         IChoiceGroupInstance>
-    implements IAssemblyInstanceGrouped, IBindingInstance, IBindingDefinitionModelAssembly,
-    IFeatureBindingContainerModelAssembly {
+    implements IAssemblyInstanceGrouped, IBindingInstance, IBindingDefinitionModelAssembly {
   @NonNull
   private final AssemblyModel.ChoiceGroup.DefineAssembly binding;
   @NonNull
@@ -87,26 +87,29 @@ public class InstanceModelGroupedAssemblyInline
         bindingInstance,
         this,
         getParentContainer().getJsonKeyFlagInstanceName())));
-    this.modelContainer = ObjectUtils.notNull(Lazy.lazy(() -> AssemblyModelContainerSupport.of(
+    this.modelContainer = ObjectUtils.notNull(Lazy.lazy(() -> AssemblyModelGenerator.of(
         binding.getModel(),
         ObjectUtils.requireNonNull(bindingInstance.getDefinition()
-            .getAssemblyInstanceByName(XmlModuleConstants.MODEL_QNAME)),
+            .getAssemblyInstanceByName(XmlModuleConstants.MODEL_QNAME.getIndexPosition())),
         this,
         nodeItemFactory)));
+
+    ISource source = parent.getOwningDefinition().getContainingModule().getSource();
+
     this.modelConstraints = ObjectUtils.notNull(Lazy.lazy(() -> {
-      IModelConstrained retval = new AssemblyConstraintSet();
+      IModelConstrained retval = new AssemblyConstraintSet(source);
       AssemblyConstraints constraints = binding.getConstraint();
       if (constraints != null) {
         ConstraintBindingSupport.parse(
             retval,
             constraints,
-            parent.getOwningDefinition().getContainingModule().getSource());
+            source);
       }
       return retval;
     }));
     this.boundNodeItem = ObjectUtils.notNull(
         Lazy.lazy(() -> (IAssemblyNodeItem) ObjectUtils.notNull(getContainingDefinition().getSourceNodeItem())
-            .getModelItemsByName(bindingInstance.getXmlQName())
+            .getModelItemsByName(bindingInstance.getQName())
             .get(position)));
   }
 

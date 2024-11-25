@@ -7,12 +7,14 @@ package gov.nist.secauto.metaschema.core.metapath.item.atomic;
 
 import gov.nist.secauto.metaschema.core.datatype.adapter.MetaschemaDataTypeProvider;
 import gov.nist.secauto.metaschema.core.datatype.object.AmbiguousDateTime;
-import gov.nist.secauto.metaschema.core.metapath.InvalidTypeMetapathException;
 import gov.nist.secauto.metaschema.core.metapath.function.InvalidValueForCastFunctionException;
-import gov.nist.secauto.metaschema.core.metapath.item.atomic.impl.DateTimeWithTimeZoneItemImpl;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.impl.DateTimeWithoutTimeZoneItemImpl;
+import gov.nist.secauto.metaschema.core.metapath.type.IAtomicOrUnionType;
+import gov.nist.secauto.metaschema.core.metapath.type.InvalidTypeMetapathException;
+import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 
 import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
@@ -26,6 +28,16 @@ import edu.umd.cs.findbugs.annotations.NonNull;
  * properly handle time zone ambiguity.
  */
 public interface IDateTimeItem extends ITemporalItem {
+  /**
+   * Get the type information for this item.
+   *
+   * @return the type information
+   */
+  @NonNull
+  static IAtomicOrUnionType<IDateTimeItem> type() {
+    return MetaschemaDataTypeProvider.DATE_TIME.getItemType();
+  }
+
   /**
    * Construct a new date/time item using the provided string {@code value}.
    *
@@ -65,7 +77,7 @@ public interface IDateTimeItem extends ITemporalItem {
   @NonNull
   static IDateTimeItem valueOf(@NonNull ZonedDateTime value, boolean hasTimeZone) {
     return hasTimeZone
-        ? valueOf(value)
+        ? IDateTimeWithTimeZoneItem.valueOf(value)
         : valueOf(new AmbiguousDateTime(value, false));
   }
 
@@ -84,24 +96,8 @@ public interface IDateTimeItem extends ITemporalItem {
   @NonNull
   static IDateTimeItem valueOf(@NonNull AmbiguousDateTime value) {
     return value.hasTimeZone()
-        ? valueOf(value.getValue())
+        ? IDateTimeWithTimeZoneItem.valueOf(value.getValue())
         : new DateTimeWithoutTimeZoneItemImpl(value);
-  }
-
-  /**
-   * Construct a new date/time item using the provided {@code value}.
-   * <p>
-   * This method handles dates with explicit timezone information using
-   * ZonedDateTime. The timezone is preserved as specified in the input and is
-   * significant for date/time operations and comparisons.
-   *
-   * @param value
-   *          a date/time, with time zone information
-   * @return the new item
-   */
-  @NonNull
-  static IDateTimeItem valueOf(@NonNull ZonedDateTime value) {
-    return new DateTimeWithTimeZoneItemImpl(value);
   }
 
   /**
@@ -119,17 +115,22 @@ public interface IDateTimeItem extends ITemporalItem {
     IDateTimeItem retval;
     if (item instanceof IDateTimeItem) {
       retval = (IDateTimeItem) item;
-    } else {
+    } else if (item instanceof IDateItem) {
+      IDateItem date = (IDateItem) item;
+      // get the time at midnight
+      ZonedDateTime zdt = ObjectUtils.notNull(date.asZonedDateTime().truncatedTo(ChronoUnit.DAYS));
+      // pass on the timezone ambiguity
+      retval = valueOf(zdt, date.hasTimezone());
+    } else if (item instanceof IStringItem || item instanceof IUntypedAtomicItem) {
       try {
         retval = valueOf(item.asString());
       } catch (IllegalStateException | InvalidTypeMetapathException ex) {
         // asString can throw IllegalStateException exception
-        throw new InvalidValueForCastFunctionException(
-            String.format("The value '%s' is not compatible with the type '%s'",
-                item.getValue(),
-                item.getClass().getName()),
-            ex);
+        throw new InvalidValueForCastFunctionException(ex);
       }
+    } else {
+      throw new InvalidValueForCastFunctionException(
+          String.format("unsupported item type '%s'", item.getClass().getName()));
     }
     return retval;
   }

@@ -5,29 +5,34 @@
 
 package gov.nist.secauto.metaschema.databind.model.metaschema.impl;
 
-import gov.nist.secauto.metaschema.core.datatype.DataTypeService;
 import gov.nist.secauto.metaschema.core.datatype.IDataTypeAdapter;
 import gov.nist.secauto.metaschema.core.datatype.adapter.MetaschemaDataTypeProvider;
 import gov.nist.secauto.metaschema.core.datatype.markup.MarkupMultiline;
+import gov.nist.secauto.metaschema.core.metapath.MetapathConstants;
+import gov.nist.secauto.metaschema.core.metapath.StaticContext;
+import gov.nist.secauto.metaschema.core.metapath.StaticMetapathException;
 import gov.nist.secauto.metaschema.core.metapath.item.node.IAssemblyNodeItem;
 import gov.nist.secauto.metaschema.core.metapath.item.node.IDocumentNodeItem;
+import gov.nist.secauto.metaschema.core.metapath.type.IAtomicOrUnionType;
 import gov.nist.secauto.metaschema.core.model.IAttributable;
 import gov.nist.secauto.metaschema.core.model.IDefinition;
 import gov.nist.secauto.metaschema.core.model.IFieldInstance;
 import gov.nist.secauto.metaschema.core.model.IGroupable;
 import gov.nist.secauto.metaschema.core.model.IModule;
+import gov.nist.secauto.metaschema.core.model.ISource;
 import gov.nist.secauto.metaschema.core.model.JsonGroupAsBehavior;
 import gov.nist.secauto.metaschema.core.model.XmlGroupAsBehavior;
+import gov.nist.secauto.metaschema.core.qname.IEnhancedQName;
 import gov.nist.secauto.metaschema.core.util.CollectionUtil;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 import gov.nist.secauto.metaschema.databind.model.IGroupAs;
 import gov.nist.secauto.metaschema.databind.model.annotations.ModelUtil;
 import gov.nist.secauto.metaschema.databind.model.metaschema.IBindingMetaschemaModule;
 import gov.nist.secauto.metaschema.databind.model.metaschema.binding.GroupingAs;
+import gov.nist.secauto.metaschema.databind.model.metaschema.binding.METASCHEMA.DefineAssembly.RootName;
 import gov.nist.secauto.metaschema.databind.model.metaschema.binding.Property;
 import gov.nist.secauto.metaschema.databind.model.metaschema.binding.Remarks;
 import gov.nist.secauto.metaschema.databind.model.metaschema.binding.UseName;
-import gov.nist.secauto.metaschema.databind.model.metaschema.binding.METASCHEMA.DefineAssembly.RootName;
 
 import java.math.BigInteger;
 import java.net.URI;
@@ -36,8 +41,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import javax.xml.namespace.QName;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
@@ -117,14 +120,25 @@ public final class ModelSupport {
   }
 
   @NonNull
-  public static IDataTypeAdapter<?> dataType(@Nullable String dataType) {
+  public static IDataTypeAdapter<?> dataType(
+      @Nullable String dataType,
+      @NonNull ISource source) {
     IDataTypeAdapter<?> retval;
     if (dataType == null) {
       retval = MetaschemaDataTypeProvider.DEFAULT_DATA_TYPE;
     } else {
-      retval = DataTypeService.getInstance().getJavaTypeAdapterByName(dataType);
+      IEnhancedQName qname = IEnhancedQName.of(MetapathConstants.NS_METAPATH, dataType);
+      IAtomicOrUnionType type;
+      try {
+        source.getStaticContext();
+        type = StaticContext.lookupAtomicType(qname);
+      } catch (StaticMetapathException ex) {
+        throw new IllegalStateException("Unrecognized data type: " + qname, ex);
+
+      }
+      retval = type.getAdapter();
       if (retval == null) {
-        throw new IllegalStateException("Unrecognized data type: " + dataType);
+        throw new IllegalStateException("No type adapter registered for data type: " + qname);
       }
     }
     return retval;
@@ -226,7 +240,7 @@ public final class ModelSupport {
   @Nullable
   public static <NODE extends IAssemblyNodeItem> NODE toNodeItem(
       @NonNull IBindingMetaschemaModule module,
-      @NonNull QName definitionQName,
+      @NonNull IEnhancedQName definitionQName,
       int position) {
     IDocumentNodeItem moduleNodeItem = module.getSourceNodeItem();
     return (NODE) moduleNodeItem.getModelItemsByName(definitionQName).get(position);

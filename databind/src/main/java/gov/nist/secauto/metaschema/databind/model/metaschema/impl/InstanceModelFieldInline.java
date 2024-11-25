@@ -16,11 +16,14 @@ import gov.nist.secauto.metaschema.core.model.IContainerModelAbsolute;
 import gov.nist.secauto.metaschema.core.model.IFieldDefinition;
 import gov.nist.secauto.metaschema.core.model.IFieldInstanceAbsolute;
 import gov.nist.secauto.metaschema.core.model.IFlagInstance;
+import gov.nist.secauto.metaschema.core.model.ISource;
 import gov.nist.secauto.metaschema.core.model.constraint.IValueConstrained;
 import gov.nist.secauto.metaschema.core.model.constraint.ValueConstraintSet;
+import gov.nist.secauto.metaschema.core.qname.IEnhancedQName;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 import gov.nist.secauto.metaschema.databind.model.IBoundInstanceModelGroupedAssembly;
 import gov.nist.secauto.metaschema.databind.model.IGroupAs;
+import gov.nist.secauto.metaschema.databind.model.impl.IFeatureInstanceModelGroupAs;
 import gov.nist.secauto.metaschema.databind.model.metaschema.IBindingDefinitionModel;
 import gov.nist.secauto.metaschema.databind.model.metaschema.IBindingDefinitionModelAssembly;
 import gov.nist.secauto.metaschema.databind.model.metaschema.IBindingInstance;
@@ -33,8 +36,6 @@ import gov.nist.secauto.metaschema.databind.model.metaschema.binding.JsonValueKe
 import java.math.BigInteger;
 import java.util.Map;
 import java.util.Set;
-
-import javax.xml.namespace.QName;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
@@ -77,9 +78,14 @@ public class InstanceModelFieldInline
     this.groupAs = ModelSupport.groupAs(binding.getGroupAs(), parent.getOwningDefinition().getContainingModule());
     this.boundNodeItem = ObjectUtils.notNull(
         Lazy.lazy(() -> (IAssemblyNodeItem) ObjectUtils.notNull(getContainingDefinition().getSourceNodeItem())
-            .getModelItemsByName(bindingInstance.getXmlQName())
+            .getModelItemsByName(bindingInstance.getQName())
             .get(position)));
-    this.javaTypeAdapter = ModelSupport.dataType(binding.getAsType());
+
+    ISource source = parent.getOwningDefinition().getContainingModule().getSource();
+
+    this.javaTypeAdapter = ModelSupport.dataType(
+        binding.getAsType(),
+        source);
     this.defaultValue = ModelSupport.defaultValue(binding.getDefault(), this.javaTypeAdapter);
     this.flagContainer = ObjectUtils.notNull(Lazy.lazy(() -> {
       JsonKey jsonKey = binding.getJsonKey();
@@ -90,13 +96,13 @@ public class InstanceModelFieldInline
           jsonKey == null ? null : jsonKey.getFlagRef());
     }));
     this.valueConstraints = ObjectUtils.notNull(Lazy.lazy(() -> {
-      IValueConstrained retval = new ValueConstraintSet();
+      IValueConstrained retval = new ValueConstraintSet(source);
       FieldConstraints constraints = binding.getConstraint();
       if (constraints != null) {
         ConstraintBindingSupport.parse(
             retval,
             constraints,
-            parent.getOwningDefinition().getContainingModule().getSource());
+            source);
       }
       return retval;
     }));
@@ -200,7 +206,7 @@ public class InstanceModelFieldInline
     String namespace = getContainingModule().getXmlNamespace().toASCIIString();
     return name == null ? null
         : ObjectUtils.requireNonNull(getFlagInstanceByName(
-            new QName(namespace, name)));
+            IEnhancedQName.of(namespace, name).getIndexPosition()));
   }
 
   @Override

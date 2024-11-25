@@ -6,9 +6,10 @@
 package gov.nist.secauto.metaschema.core.metapath.item.atomic;
 
 import gov.nist.secauto.metaschema.core.datatype.adapter.MetaschemaDataTypeProvider;
-import gov.nist.secauto.metaschema.core.metapath.InvalidTypeMetapathException;
 import gov.nist.secauto.metaschema.core.metapath.function.InvalidValueForCastFunctionException;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.impl.NonNegativeIntegerItemImpl;
+import gov.nist.secauto.metaschema.core.metapath.type.IAtomicOrUnionType;
+import gov.nist.secauto.metaschema.core.metapath.type.InvalidTypeMetapathException;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 
 import java.math.BigInteger;
@@ -29,6 +30,16 @@ public interface INonNegativeIntegerItem extends IIntegerItem {
    */
   @NonNull
   INonNegativeIntegerItem ZERO = valueOf(ObjectUtils.notNull(BigInteger.ZERO));
+
+  /**
+   * Get the type information for this item.
+   *
+   * @return the type information
+   */
+  @NonNull
+  static IAtomicOrUnionType<INonNegativeIntegerItem> type() {
+    return MetaschemaDataTypeProvider.NON_NEGATIVE_INTEGER.getItemType();
+  }
 
   /**
    * Create an item from an existing integer value.

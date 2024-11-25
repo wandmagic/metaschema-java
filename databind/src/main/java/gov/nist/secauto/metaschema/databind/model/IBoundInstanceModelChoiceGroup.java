@@ -7,6 +7,8 @@ package gov.nist.secauto.metaschema.databind.model;
 
 import gov.nist.secauto.metaschema.core.model.IBoundObject;
 import gov.nist.secauto.metaschema.core.model.IChoiceGroupInstance;
+import gov.nist.secauto.metaschema.core.model.IFeatureContainerModelGrouped;
+import gov.nist.secauto.metaschema.core.qname.IEnhancedQName;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 import gov.nist.secauto.metaschema.databind.io.BindingException;
 import gov.nist.secauto.metaschema.databind.model.impl.InstanceModelChoiceGroup;
@@ -16,8 +18,6 @@ import gov.nist.secauto.metaschema.databind.model.info.IItemWriteHandler;
 import java.io.IOException;
 import java.lang.reflect.Field;
 
-import javax.xml.namespace.QName;
-
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 
@@ -25,7 +25,11 @@ import edu.umd.cs.findbugs.annotations.Nullable;
  * Represents a choice group instance bound to Java field.
  */
 public interface IBoundInstanceModelChoiceGroup
-    extends IBoundInstanceModel<IBoundObject>, IBoundContainerModelChoiceGroup, IChoiceGroupInstance {
+    extends IBoundInstanceModel<IBoundObject>, IFeatureContainerModelGrouped<
+        IBoundInstanceModelGroupedNamed,
+        IBoundInstanceModelGroupedField,
+        IBoundInstanceModelGroupedAssembly>,
+    IChoiceGroupInstance {
 
   /**
    * Create a new bound choice group instance.
@@ -80,7 +84,7 @@ public interface IBoundInstanceModelChoiceGroup
    *         the requested XML qualified name
    */
   @Nullable
-  IBoundInstanceModelGroupedNamed getGroupedModelInstance(@NonNull QName name);
+  IBoundInstanceModelGroupedNamed getGroupedModelInstance(@NonNull IEnhancedQName name);
 
   /**
    * Get the bound grouped model instance associated with the provided JSON
@@ -126,7 +130,7 @@ public interface IBoundInstanceModelChoiceGroup
   }
 
   @Override
-  default boolean canHandleXmlQName(@NonNull QName qname) {
+  default boolean canHandleXmlQName(@NonNull IEnhancedQName qname) {
     return getGroupedModelInstance(qname) != null;
   }
 }

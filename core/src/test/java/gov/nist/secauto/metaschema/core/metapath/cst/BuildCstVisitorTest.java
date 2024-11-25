@@ -28,9 +28,12 @@ import gov.nist.secauto.metaschema.core.metapath.StaticContext;
 import gov.nist.secauto.metaschema.core.metapath.antlr.FailingErrorListener;
 import gov.nist.secauto.metaschema.core.metapath.antlr.Metapath10;
 import gov.nist.secauto.metaschema.core.metapath.antlr.Metapath10Lexer;
-import gov.nist.secauto.metaschema.core.metapath.cst.comparison.AbstractComparison;
-import gov.nist.secauto.metaschema.core.metapath.cst.comparison.GeneralComparison;
-import gov.nist.secauto.metaschema.core.metapath.cst.comparison.ValueComparison;
+import gov.nist.secauto.metaschema.core.metapath.cst.items.SimpleMap;
+import gov.nist.secauto.metaschema.core.metapath.cst.logic.AbstractComparison;
+import gov.nist.secauto.metaschema.core.metapath.cst.logic.And;
+import gov.nist.secauto.metaschema.core.metapath.cst.logic.GeneralComparison;
+import gov.nist.secauto.metaschema.core.metapath.cst.logic.If;
+import gov.nist.secauto.metaschema.core.metapath.cst.logic.ValueComparison;
 import gov.nist.secauto.metaschema.core.metapath.function.ComparisonFunctions;
 import gov.nist.secauto.metaschema.core.metapath.item.IItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IBooleanItem;
@@ -42,6 +45,7 @@ import gov.nist.secauto.metaschema.core.metapath.item.node.IFieldNodeItem;
 import gov.nist.secauto.metaschema.core.metapath.item.node.IFlagNodeItem;
 import gov.nist.secauto.metaschema.core.metapath.item.node.IRootAssemblyNodeItem;
 import gov.nist.secauto.metaschema.core.metapath.item.node.MockNodeItemFactory;
+import gov.nist.secauto.metaschema.core.qname.IEnhancedQName;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 
 import org.antlr.v4.runtime.CharStreams;
@@ -59,8 +63,6 @@ import java.net.URI;
 import java.util.List;
 import java.util.stream.Stream;
 
-import javax.xml.namespace.QName;
-
 import edu.umd.cs.findbugs.annotations.NonNull;
 
 @SuppressWarnings("PMD.TooManyStaticImports")
@@ -70,15 +72,15 @@ class BuildCstVisitorTest {
   @NonNull
   private static final String NS = ObjectUtils.notNull(NS_URI.toASCIIString());
   @NonNull
-  private static final QName ROOT = new QName(NS, "root");
+  private static final IEnhancedQName ROOT = IEnhancedQName.of(NS, "root");
   @NonNull
-  private static final QName FIELD1 = new QName(NS, "field1");
+  private static final IEnhancedQName FIELD1 = IEnhancedQName.of(NS, "field1");
   @NonNull
-  private static final QName FIELD2 = new QName(NS, "field2");
+  private static final IEnhancedQName FIELD2 = IEnhancedQName.of(NS, "field2");
   @NonNull
-  private static final QName UUID = new QName(NS, "uuid");
+  private static final IEnhancedQName UUID = IEnhancedQName.of(NS, "uuid");
   @NonNull
-  private static final QName FLAG = new QName("flag");
+  private static final IEnhancedQName FLAG = IEnhancedQName.of("flag");
 
   @RegisterExtension
   Mockery context = new JUnit5Mockery();

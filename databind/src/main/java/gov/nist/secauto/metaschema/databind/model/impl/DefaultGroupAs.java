@@ -8,18 +8,18 @@ package gov.nist.secauto.metaschema.databind.model.impl;
 import gov.nist.secauto.metaschema.core.model.IModule;
 import gov.nist.secauto.metaschema.core.model.JsonGroupAsBehavior;
 import gov.nist.secauto.metaschema.core.model.XmlGroupAsBehavior;
+import gov.nist.secauto.metaschema.core.model.util.ModuleUtils;
+import gov.nist.secauto.metaschema.core.qname.IEnhancedQName;
 import gov.nist.secauto.metaschema.databind.model.IGroupAs;
 import gov.nist.secauto.metaschema.databind.model.annotations.GroupAs;
 import gov.nist.secauto.metaschema.databind.model.annotations.ModelUtil;
-
-import javax.xml.namespace.QName;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 public class DefaultGroupAs implements IGroupAs {
   @NonNull
-  private final QName qname;
+  private final IEnhancedQName qname;
   @NonNull
   private final GroupAs annotation;
 
@@ -35,11 +35,11 @@ public class DefaultGroupAs implements IGroupAs {
               GroupAs.class.getName(),
               annotation.name()));
     }
-    this.qname = module.toModelQName(value);
+    this.qname = ModuleUtils.parseModelName(module, value);
   }
 
   @Override
-  public QName getGroupAsQName() {
+  public IEnhancedQName getGroupAsQName() {
     return qname;
   }
 

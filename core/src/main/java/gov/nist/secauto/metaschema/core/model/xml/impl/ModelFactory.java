@@ -10,6 +10,7 @@ import gov.nist.secauto.metaschema.core.model.IAttributable;
 import gov.nist.secauto.metaschema.core.model.ISource;
 import gov.nist.secauto.metaschema.core.model.constraint.AbstractConstraintBuilder;
 import gov.nist.secauto.metaschema.core.model.constraint.AbstractKeyConstraintBuilder;
+import gov.nist.secauto.metaschema.core.model.constraint.ConstraintInitializationException;
 import gov.nist.secauto.metaschema.core.model.constraint.IAllowedValue;
 import gov.nist.secauto.metaschema.core.model.constraint.IAllowedValuesConstraint;
 import gov.nist.secauto.metaschema.core.model.constraint.ICardinalityConstraint;
@@ -47,8 +48,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import javax.xml.namespace.QName;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
@@ -111,14 +110,17 @@ public final class ModelFactory {
    */
   @NonNull
   private static Map<String, IAllowedValue> toAllowedValues(
-      @NonNull AllowedValuesType xmlObject) {
+      @NonNull AllowedValuesType xmlObject,
+      @NonNull ISource source) {
     Map<String, IAllowedValue> allowedValues // NOPMD - intentional
         = new LinkedHashMap<>(xmlObject.sizeOfEnumArray());
     for (AllowedValueType xmlEnum : xmlObject.getEnumList()) {
       String value = xmlEnum.getValue();
       if (value == null) {
-        throw new IllegalStateException(String.format("Null value found in allowed value enumeration: %s",
-            xmlObject.xmlText()));
+        throw new ConstraintInitializationException(
+            String.format("Null value found in allowed value enumeration in '%s': %s",
+                source.getLocationHint(),
+                xmlObject.xmlText()));
       }
 
       IAllowedValue allowedValue = IAllowedValue.of(
@@ -176,7 +178,7 @@ public final class ModelFactory {
       builder.remarks(remarks(ObjectUtils.notNull(xmlObject.getRemarks())));
     }
 
-    builder.allowedValues(toAllowedValues(xmlObject));
+    builder.allowedValues(toAllowedValues(xmlObject, source));
     if (xmlObject.isSetAllowOther()) {
       builder.allowsOther(xmlObject.getAllowOther());
     }
@@ -497,9 +499,8 @@ public final class ModelFactory {
       @NonNull ConstraintLetType xmlObject,
       @NonNull ISource source) {
 
-    // TODO: figure out how to resolve the namespace prefix on var
     return ILet.of(
-        new QName(xmlObject.getVar()),
+        source.getStaticContext().parseVariableName(ObjectUtils.requireNonNull(xmlObject.getVar())),
         ObjectUtils.notNull(xmlObject.getExpression()),
         source,
         xmlObject.isSetRemarks()

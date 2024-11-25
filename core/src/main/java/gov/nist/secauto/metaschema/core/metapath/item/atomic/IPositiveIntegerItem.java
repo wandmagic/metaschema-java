@@ -5,9 +5,11 @@
 
 package gov.nist.secauto.metaschema.core.metapath.item.atomic;
 
-import gov.nist.secauto.metaschema.core.metapath.InvalidTypeMetapathException;
+import gov.nist.secauto.metaschema.core.datatype.adapter.MetaschemaDataTypeProvider;
 import gov.nist.secauto.metaschema.core.metapath.function.InvalidValueForCastFunctionException;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.impl.PositiveIntegerItemImpl;
+import gov.nist.secauto.metaschema.core.metapath.type.IAtomicOrUnionType;
+import gov.nist.secauto.metaschema.core.metapath.type.InvalidTypeMetapathException;
 
 import java.math.BigInteger;
 
@@ -25,6 +27,16 @@ public interface IPositiveIntegerItem extends INonNegativeIntegerItem {
   IPositiveIntegerItem ONE = valueOf(BigInteger.ONE);
 
   /**
+   * Get the type information for this item.
+   *
+   * @return the type information
+   */
+  @NonNull
+  static IAtomicOrUnionType<IPositiveIntegerItem> type() {
+    return MetaschemaDataTypeProvider.POSITIVE_INTEGER.getItemType();
+  }
+
+  /**
    * Create an item from an existing integer value.
    *
    * @param value
@@ -36,7 +48,7 @@ public interface IPositiveIntegerItem extends INonNegativeIntegerItem {
   @NonNull
   static IPositiveIntegerItem valueOf(@NonNull String value) {
     try {
-      return valueOf(new BigInteger(value));
+      return valueOf(MetaschemaDataTypeProvider.POSITIVE_INTEGER.parse(value));
     } catch (IllegalArgumentException ex) {
       throw new InvalidTypeMetapathException(
           null,

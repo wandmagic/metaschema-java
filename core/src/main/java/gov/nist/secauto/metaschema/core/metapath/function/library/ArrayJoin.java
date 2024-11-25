@@ -38,10 +38,10 @@ public final class ArrayJoin {
       .focusIndependent()
       .argument(IArgument.builder()
           .name("array")
-          .type(IArrayItem.class)
+          .type(IArrayItem.type())
           .zeroOrMore()
           .build())
-      .returnType(IItem.class)
+      .returnType(IItem.type())
       .returnZeroOrOne()
       .functionHandler(ArrayJoin::execute)
       .build();
@@ -58,7 +58,7 @@ public final class ArrayJoin {
       IItem focus) {
     ISequence<? extends IArrayItem<T>> arrays = FunctionUtils.asType(ObjectUtils.requireNonNull(arguments.get(0)));
 
-    return join(arrays).asSequence();
+    return join(arrays).toSequence();
   }
 
   /**

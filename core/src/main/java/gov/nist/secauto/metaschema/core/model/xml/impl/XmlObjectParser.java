@@ -5,6 +5,8 @@
 
 package gov.nist.secauto.metaschema.core.model.xml.impl;
 
+import gov.nist.secauto.metaschema.core.model.ISource;
+import gov.nist.secauto.metaschema.core.qname.IEnhancedQName;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -20,10 +22,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
-import javax.xml.namespace.QName;
-
 import edu.umd.cs.findbugs.annotations.NonNull;
-import edu.umd.cs.findbugs.annotations.Nullable;
 
 /**
  * Supports parsing Metaschema assembly and field XMLBeans objects that contain
@@ -35,14 +34,14 @@ import edu.umd.cs.findbugs.annotations.Nullable;
  */
 public class XmlObjectParser<T> {
   private static final XmlOptions XML_OPTIONS = new XmlOptions().setXPathUseSaxon(false).setXPathUseXmlBeans(true);
-  private final Map<QName, Handler<T>> elementNameToHandlerMap;
+  private final Map<IEnhancedQName, Handler<T>> elementNameToHandlerMap;
   private final String xpath;
 
-  private static String generatePath(@NonNull Collection<QName> nodes) {
+  private static String generatePath(@NonNull Collection<IEnhancedQName> nodes) {
     // build a mapping of namespace prefix to namespace
     AtomicInteger count = new AtomicInteger();
     Map<String, String> namespaceToPrefixMap = nodes.stream()
-        .map(QName::getNamespaceURI)
+        .map(IEnhancedQName::getNamespace)
         .distinct()
         .map(ns -> Pair.of(ns, "m" + count.getAndIncrement()))
         .collect(Collectors.toMap(
@@ -53,7 +52,7 @@ public class XmlObjectParser<T> {
 
     // generate namespace declarations using prefix and namespace
     StringBuilder builder = new StringBuilder(24);
-    namespaceToPrefixMap.entrySet().forEach((entry) -> {
+    namespaceToPrefixMap.entrySet().forEach(entry -> {
       builder.append("declare namespace ")
           .append(entry.getValue())
           .append("='")
@@ -63,14 +62,13 @@ public class XmlObjectParser<T> {
 
     // generate child path
     builder.append(nodes.stream()
-        .map(qname -> {
-          return new StringBuilder()
-              .append("$this/")
-              .append(namespaceToPrefixMap.get(qname.getNamespaceURI()))
-              .append(':')
-              .append(qname.getLocalPart())
-              .toString();
-        }).collect(Collectors.joining("|")));
+        .map(qname -> new StringBuilder()
+            .append("$this/")
+            .append(namespaceToPrefixMap.get(qname.getNamespace()))
+            .append(':')
+            .append(qname.getLocalName())
+            .toString())
+        .collect(Collectors.joining("|")));
 
     return builder.toString();
   }
@@ -81,12 +79,12 @@ public class XmlObjectParser<T> {
    * @param elementNameToHandlerMap
    *          the mapping of element names to associated handlers
    */
-  public XmlObjectParser(@NonNull Map<QName, Handler<T>> elementNameToHandlerMap) {
+  public XmlObjectParser(@NonNull Map<IEnhancedQName, Handler<T>> elementNameToHandlerMap) {
     this.elementNameToHandlerMap = elementNameToHandlerMap;
     this.xpath = generatePath(ObjectUtils.notNull(elementNameToHandlerMap.keySet()));
   }
 
-  private Map<QName, Handler<T>> getElementNameToHandlerMap() {
+  private Map<IEnhancedQName, Handler<T>> getElementNameToHandlerMap() {
     return elementNameToHandlerMap;
   }
 
@@ -99,12 +97,12 @@ public class XmlObjectParser<T> {
    *
    * @param obj
    *          the XMLBeans object to get the location for
-   * @return the resource location or {@code null} if the location is not known
+   * @return the resource location or an empty string if the location is not known
    */
-  @SuppressWarnings({ "resource", "null" })
-  @Nullable
+  @SuppressWarnings({ "resource" })
+  @NonNull
   public static String toLocation(@NonNull XmlObject obj) {
-    return toLocation(obj.newCursor());
+    return toLocation(ObjectUtils.notNull(obj.newCursor()));
   }
 
   /**
@@ -114,9 +112,9 @@ public class XmlObjectParser<T> {
    *          the XMLBeans cursor to get the location for
    * @return the resource location or {@code null} if the location is not known
    */
-  @Nullable
+  @NonNull
   public static String toLocation(@NonNull XmlCursor cursor) {
-    String retval = null;
+    String retval = "";
     XmlBookmark bookmark = cursor.getBookmark(XmlLineNumber.class);
     if (bookmark != null) {
       StringBuilder locationBuilder = new StringBuilder();
@@ -132,7 +130,7 @@ public class XmlObjectParser<T> {
           .append(':')
           .append(lineNumber.getColumn());
 
-      retval = locationBuilder.toString();
+      retval = ObjectUtils.notNull(locationBuilder.toString());
     }
     return retval;
   }
@@ -154,13 +152,11 @@ public class XmlObjectParser<T> {
    */
   @NonNull
   protected Handler<T> identifyHandler(@NonNull XmlCursor cursor, @NonNull XmlObject obj) {
-    QName qname = cursor.getName();
+    IEnhancedQName qname = IEnhancedQName.of(ObjectUtils.notNull(cursor.getName()));
     Handler<T> retval = getElementNameToHandlerMap().get(qname);
     if (retval == null) {
       String location = toLocation(cursor);
-      if (location == null) {
-        location = "";
-      } else {
+      if (!location.isEmpty()) {
         location = new StringBuilder()
             .append(" at location '")
             .append(location)
@@ -175,13 +171,15 @@ public class XmlObjectParser<T> {
   /**
    * Parse an XmlObject element tree using the configured child element handlers.
    *
+   * @param source
+   *          information about the parsed resource
    * @param xmlObject
    *          the XmlObject container to parse
    * @param state
    *          parsing state to pass to the handlers
    * @return the state
    */
-  public T parse(@NonNull XmlObject xmlObject, T state) {
+  public T parse(@NonNull ISource source, @NonNull XmlObject xmlObject, T state) {
     try (XmlCursor cursor = xmlObject.newCursor()) {
       assert cursor != null;
       cursor.selectPath(getXpath(), XML_OPTIONS);
@@ -189,7 +187,7 @@ public class XmlObjectParser<T> {
         XmlObject obj = cursor.getObject();
         assert obj != null;
         Handler<T> handler = identifyHandler(cursor, obj);
-        handler.handle(obj, state);
+        handler.handle(source, obj, state);
       }
     }
     return state;
@@ -207,11 +205,13 @@ public class XmlObjectParser<T> {
     /**
      * Parse the provided {@code obj} using the provided {@code state}.
      *
-     * @param obj
+     * @param source
+     *          information about the parsed resource
+     * @param xmlObject
      *          the object to parse
      * @param state
      *          the state to use for parsing
      */
-    void handle(@NonNull XmlObject obj, T state);
+    void handle(@NonNull ISource source, @NonNull XmlObject xmlObject, T state);
   }
 }

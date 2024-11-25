@@ -6,9 +6,10 @@
 package gov.nist.secauto.metaschema.core.metapath.item.atomic;
 
 import gov.nist.secauto.metaschema.core.datatype.adapter.MetaschemaDataTypeProvider;
-import gov.nist.secauto.metaschema.core.metapath.InvalidTypeMetapathException;
 import gov.nist.secauto.metaschema.core.metapath.function.InvalidValueForCastFunctionException;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.impl.NcNameItemImpl;
+import gov.nist.secauto.metaschema.core.metapath.type.IAtomicOrUnionType;
+import gov.nist.secauto.metaschema.core.metapath.type.InvalidTypeMetapathException;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
@@ -17,6 +18,16 @@ import edu.umd.cs.findbugs.annotations.NonNull;
  */
 @Deprecated(forRemoval = true, since = "0.7.0")
 public interface INcNameItem extends IStringItem {
+  /**
+   * Get the type information for this item.
+   *
+   * @return the type information
+   */
+  @NonNull
+  static IAtomicOrUnionType<INcNameItem> type() {
+    return MetaschemaDataTypeProvider.NCNAME.getItemType();
+  }
+
   /**
    * Construct a new item using the provided string {@code value}.
    *

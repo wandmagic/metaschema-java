@@ -21,6 +21,21 @@ public class StaticMetapathException
   public static final int INVALID_PATH_GRAMMAR = 3;
 
   /**
+   * <a href= "https://www.w3.org/TR/xpath-31/#ERRXPST0008">err:MPST0008</a>: It
+   * is a <a href="https://www.w3.org/TR/xpath-31/#dt-static-error">static
+   * error</a> if an expression refers to an element name, attribute name, schema
+   * type name, namespace prefix, or variable name that is not defined in the
+   * <a href="https://www.w3.org/TR/xpath-31/#dt-static-context">static
+   * context</a>, except for an ElementName in an <a href=
+   * "https://www.w3.org/TR/xpath-31/#doc-xpath31-ElementTest">ElementTest</a> or
+   * an AttributeName in an <a href=
+   * "https://www.w3.org/TR/xpath-31/#doc-xpath31-AttributeTest">AttributeTest</a>.
+   */
+  // FIXME: Check for use in all calls to the static or dyanmic context to lookup
+  // a name
+  public static final int NOT_DEFINED = 8;
+
+  /**
    * <a href= "https://www.w3.org/TR/xpath-31/#ERRXPST0017">err:MPST0017</a>: It
    * is a <a href="https://www.w3.org/TR/xpath-31/#dt-static-error">static
    * error</a> if the
@@ -33,6 +48,18 @@ public class StaticMetapathException
    * context</a>.
    */
   public static final int NO_FUNCTION_MATCH = 17;
+
+  /**
+   * <a href= "https://www.w3.org/TR/xpath-31/#ERRXPST0051">err:MPST0051</a>: It
+   * is a static error if the
+   * <a href="https://www.w3.org/TR/xpath-31/#dt-expanded-qname">expanded
+   * QName</a> for an AtomicOrUnionType in a SequenceType is not defined in the
+   * <a href="https://www.w3.org/TR/xpath-31/#dt-is-types">in-scope schema
+   * types</a> as a <a href=
+   * "https://www.w3.org/TR/xpath-31/#dt-generalized-atomic-type">generalized
+   * atomic type</a>.
+   */
+  public static final int UNKNOWN_TYPE = 51;
 
   /**
    * <a href= "https://www.w3.org/TR/xpath-31/#ERRXQST0070">err:MPST0070</a>: A

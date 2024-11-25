@@ -6,9 +6,10 @@
 package gov.nist.secauto.metaschema.core.metapath.item.atomic;
 
 import gov.nist.secauto.metaschema.core.datatype.adapter.MetaschemaDataTypeProvider;
-import gov.nist.secauto.metaschema.core.metapath.InvalidTypeMetapathException;
 import gov.nist.secauto.metaschema.core.metapath.function.InvalidValueForCastFunctionException;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.impl.YearMonthDurationItemImpl;
+import gov.nist.secauto.metaschema.core.metapath.type.IAtomicOrUnionType;
+import gov.nist.secauto.metaschema.core.metapath.type.InvalidTypeMetapathException;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 
 import java.time.Period;
@@ -16,9 +17,20 @@ import java.time.Period;
 import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
- * An atomic Metapath item containing a duration data value in years and months.
+ * An atomic Metapath item containing a duration data value in years, months,
+ * and days.
  */
 public interface IYearMonthDurationItem extends IDurationItem {
+  /**
+   * Get the type information for this item.
+   *
+   * @return the type information
+   */
+  @NonNull
+  static IAtomicOrUnionType<IYearMonthDurationItem> type() {
+    return MetaschemaDataTypeProvider.YEAR_MONTH_DURATION.getItemType();
+  }
+
   /**
    * Construct a new year month day duration item using the provided string
    * {@code value}.

@@ -5,6 +5,7 @@
 
 package gov.nist.secauto.metaschema.core.model;
 
+import gov.nist.secauto.metaschema.core.model.util.ModuleUtils;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -61,7 +62,9 @@ public interface INamedModelInstanceGrouped extends INamedModelInstance {
     String name = getParentContainer().getJsonKeyFlagInstanceName();
     return name == null
         ? null
-        : ObjectUtils.requireNonNull(getDefinition().getFlagInstanceByName(getContainingModule().toFlagQName(name)));
+        : ObjectUtils.requireNonNull(
+            getDefinition().getFlagInstanceByName(
+                ModuleUtils.parseFlagName(getContainingModule(), name).getIndexPosition()));
   }
 
   @Override

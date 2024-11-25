@@ -20,7 +20,7 @@ import gov.nist.secauto.metaschema.databind.model.IBoundInstanceModelGroupedAsse
 import gov.nist.secauto.metaschema.databind.model.metaschema.IBindingDefinitionModelAssembly;
 import gov.nist.secauto.metaschema.databind.model.metaschema.IBindingInstance;
 import gov.nist.secauto.metaschema.databind.model.metaschema.IBindingMetaschemaModule;
-import gov.nist.secauto.metaschema.databind.model.metaschema.binding.AssemblyModel.Choice;
+import gov.nist.secauto.metaschema.databind.model.metaschema.binding.AssemblyModel;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import nl.talsmasoftware.lazy4j.Lazy;
@@ -43,20 +43,20 @@ public class InstanceModelChoice
   private final Lazy<IAssemblyNodeItem> boundNodeItem;
 
   public InstanceModelChoice(
-      @NonNull Choice binding,
+      @NonNull AssemblyModel.Choice binding,
       @NonNull IBoundInstanceModelGroupedAssembly bindingInstance,
       int position,
       @NonNull IBindingDefinitionModelAssembly parent,
       @NonNull INodeItemFactory nodeItemFactory) {
     super(parent);
-    this.modelContainer = ObjectUtils.notNull(Lazy.lazy(() -> ChoiceModelContainerSupport.of(
+    this.modelContainer = ObjectUtils.notNull(Lazy.lazy(() -> ChoiceModelGenerator.of(
         binding,
         bindingInstance,
         this,
         nodeItemFactory)));
     this.boundNodeItem = ObjectUtils.notNull(
         Lazy.lazy(() -> (IAssemblyNodeItem) ObjectUtils.notNull(getContainingDefinition().getSourceNodeItem())
-            .getModelItemsByName(bindingInstance.getXmlQName())
+            .getModelItemsByName(bindingInstance.getQName())
             .get(position)));
   }
 
@@ -90,8 +90,4 @@ public class InstanceModelChoice
     return null;
   }
 
-  @Override
-  public String getGroupAsXmlNamespace() {
-    return null;
-  }
 }

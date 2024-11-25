@@ -16,6 +16,7 @@ import gov.nist.secauto.metaschema.core.model.IFieldInstanceAbsolute;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 import gov.nist.secauto.metaschema.databind.model.IBoundInstanceModelGroupedAssembly;
 import gov.nist.secauto.metaschema.databind.model.IGroupAs;
+import gov.nist.secauto.metaschema.databind.model.impl.IFeatureInstanceModelGroupAs;
 import gov.nist.secauto.metaschema.databind.model.metaschema.IBindingDefinitionModelAssembly;
 import gov.nist.secauto.metaschema.databind.model.metaschema.IBindingInstance;
 import gov.nist.secauto.metaschema.databind.model.metaschema.IBindingMetaschemaModule;
@@ -50,6 +51,21 @@ public class InstanceModelFieldReference
   @Nullable
   private final Object defaultValue;
 
+  /**
+   * Construct a new field reference.
+   *
+   * @param binding
+   *          the field reference instance object bound to a Java class
+   * @param bindingInstance
+   *          the Metaschema instance for the bound object
+   * @param position
+   *          the zero-based position of this bound object relative to its bound
+   *          object siblings
+   * @param definition
+   *          the referenced global field definition
+   * @param parent
+   *          the assembly definition containing this binding
+   */
   public InstanceModelFieldReference(
       @NonNull FieldReference binding,
       @NonNull IBoundInstanceModelGroupedAssembly bindingInstance,
@@ -63,7 +79,7 @@ public class InstanceModelFieldReference
     this.groupAs = ModelSupport.groupAs(binding.getGroupAs(), parent.getOwningDefinition().getContainingModule());
     this.boundNodeItem = ObjectUtils.notNull(
         Lazy.lazy(() -> (IAssemblyNodeItem) ObjectUtils.notNull(getContainingDefinition().getSourceNodeItem())
-            .getModelItemsByName(bindingInstance.getXmlQName())
+            .getModelItemsByName(bindingInstance.getQName())
             .get(position)));
     this.defaultValue = ModelSupport.defaultValue(binding.getDefault(), definition.getJavaTypeAdapter());
   }

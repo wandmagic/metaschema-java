@@ -35,10 +35,10 @@ public final class ArrayFlatten {
       .focusIndependent()
       .argument(IArgument.builder()
           .name("input")
-          .type(IItem.class)
+          .type(IItem.type())
           .zeroOrMore()
           .build())
-      .returnType(IItem.class)
+      .returnType(IItem.type())
       .returnZeroOrMore()
       .functionHandler(ArrayFlatten::execute)
       .build();
@@ -87,7 +87,7 @@ public final class ArrayFlatten {
     return item instanceof IArrayItem
         // flatten the array members
         ? ((IArrayItem<?>) item).stream()
-            .flatMap(member -> member.asSequence().stream()
+            .flatMap(member -> member.toSequence().stream()
                 .flatMap(ArrayFlatten::flatten))
         // use the item
         : ObjectUtils.notNull(Stream.of(item));

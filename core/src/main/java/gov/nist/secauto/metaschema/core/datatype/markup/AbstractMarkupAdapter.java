@@ -10,6 +10,8 @@ import com.fasterxml.jackson.databind.jsonFormatVisitors.JsonFormatTypes;
 
 import gov.nist.secauto.metaschema.core.datatype.AbstractCustomJavaDataTypeAdapter;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IMarkupItem;
+import gov.nist.secauto.metaschema.core.metapath.type.IAtomicOrUnionType;
+import gov.nist.secauto.metaschema.core.qname.IEnhancedQName;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 
 import org.codehaus.stax2.XMLStreamWriter2;
@@ -17,7 +19,6 @@ import org.codehaus.stax2.evt.XMLEventFactory2;
 
 import java.io.IOException;
 
-import javax.xml.namespace.QName;
 import javax.xml.stream.XMLEventWriter;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.events.StartElement;
@@ -29,17 +30,26 @@ import edu.umd.cs.findbugs.annotations.NonNull;
  * "https://pages.nist.gov/metaschema/specification/datatypes/#markup-data-types">markup</a>
  * data types.
  */
-abstract class AbstractMarkupAdapter<TYPE extends IMarkupString<TYPE>>
-    extends AbstractCustomJavaDataTypeAdapter<TYPE, IMarkupItem> {
+abstract class AbstractMarkupAdapter<
+    TYPE extends IMarkupString<TYPE>,
+    ITEM_TYPE extends IMarkupItem>
+    extends AbstractCustomJavaDataTypeAdapter<TYPE, ITEM_TYPE> {
 
   /**
    * Construct a new adapter.
    *
-   * @param clazz
-   *          the markup type class
+   * @param valueClass
+   *          the Java value object type this adapter supports
+   * @param itemClass
+   *          the Java type of the Metapath item this adapter supports
+   * @param castExecutor
+   *          the method to call to cast an item to an item based on this type
    */
-  protected AbstractMarkupAdapter(@NonNull Class<TYPE> clazz) {
-    super(clazz);
+  protected AbstractMarkupAdapter(
+      @NonNull Class<TYPE> valueClass,
+      @NonNull Class<ITEM_TYPE> itemClass,
+      @NonNull IAtomicOrUnionType.ICastExecutor<ITEM_TYPE> castExecutor) {
+    super(valueClass, itemClass, castExecutor);
   }
 
   @Override
@@ -73,13 +83,13 @@ abstract class AbstractMarkupAdapter<TYPE extends IMarkupString<TYPE>>
   }
 
   @Override
-  public void writeXmlValue(Object value, QName parentName, XMLStreamWriter2 streamWriter)
+  public void writeXmlValue(Object value, IEnhancedQName parentName, XMLStreamWriter2 streamWriter)
       throws IOException {
     IMarkupString<?> markupString = (IMarkupString<?>) value;
 
     try {
       markupString.writeXHtml(
-          ObjectUtils.notNull(parentName.getNamespaceURI()),
+          ObjectUtils.notNull(parentName.getNamespace()),
           streamWriter);
     } catch (XMLStreamException ex) {
       throw new IOException(ex);

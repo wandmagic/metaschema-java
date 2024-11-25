@@ -5,7 +5,13 @@
 
 package gov.nist.secauto.metaschema.core.metapath.function;
 
+import gov.nist.secauto.metaschema.core.metapath.StaticContext;
+import gov.nist.secauto.metaschema.core.metapath.StaticMetapathException;
 import gov.nist.secauto.metaschema.core.metapath.item.IItem;
+import gov.nist.secauto.metaschema.core.metapath.type.IItemType;
+import gov.nist.secauto.metaschema.core.metapath.type.ISequenceType;
+import gov.nist.secauto.metaschema.core.metapath.type.Occurrence;
+import gov.nist.secauto.metaschema.core.qname.IEnhancedQName;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 
 import java.util.Objects;
@@ -56,15 +62,12 @@ public interface IArgument {
   final class Builder {
     private String name;
     @NonNull
-    private Class<? extends IItem> type = IItem.class;
+    private IItemType type;
     private Occurrence occurrence;
 
     private Builder() {
       // construct a new non-initialized builder
-    }
-
-    private Builder(@NonNull String name) {
-      this.name = name;
+      this.type = IItem.type();
     }
 
     /**
@@ -88,13 +91,33 @@ public interface IArgument {
      * <p>
      * By default an argument has the type {@link IItem}.
      *
+     * @param name
+     *          the qualified name of the argument's type
+     * @return this builder
+     */
+    @NonNull
+    public Builder type(@NonNull IEnhancedQName name) {
+      try {
+        this.type = StaticContext.lookupAtomicType(name);
+      } catch (StaticMetapathException ex) {
+        throw new IllegalArgumentException(
+            String.format("No data type with the name '%s'.", name), ex);
+      }
+      return this;
+    }
+
+    /**
+     * Define the type of the function argument.
+     * <p>
+     * By default an argument has the type {@link IItem}.
+     *
      * @param type
      *          the argument's type
      * @return this builder
      */
     @NonNull
-    public Builder type(@NonNull Class<? extends IItem> type) {
-      this.type = Objects.requireNonNull(type, "type");
+    public Builder type(@NonNull IItemType type) {
+      this.type = type;
       return this;
     }
 
