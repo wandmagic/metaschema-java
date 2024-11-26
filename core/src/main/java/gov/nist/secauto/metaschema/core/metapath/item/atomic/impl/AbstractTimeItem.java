@@ -32,6 +32,11 @@ public abstract class AbstractTimeItem<TYPE>
   }
 
   @Override
+  protected String getValueSignature() {
+    return "'" + asString() + "'";
+  }
+
+  @Override
   public int hashCode() {
     return asOffsetTime().hashCode();
   }

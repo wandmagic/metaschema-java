@@ -35,6 +35,11 @@ public interface ITimeItem extends IAnyAtomicItem {
     return MetaschemaDataTypeProvider.TIME.getItemType();
   }
 
+  @Override
+  default IAtomicOrUnionType<? extends ITimeItem> getType() {
+    return type();
+  }
+
   /**
    * Construct a new date/time item using the provided string {@code value}.
    *

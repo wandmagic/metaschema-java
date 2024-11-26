@@ -36,6 +36,11 @@ public interface ITimeWithTimeZoneItem extends ITimeItem {
     return MetaschemaDataTypeProvider.TIME_WITH_TZ.getItemType();
   }
 
+  @Override
+  default IAtomicOrUnionType<ITimeWithTimeZoneItem> getType() {
+    return type();
+  }
+
   /**
    * Construct a new time item using the provided string {@code value}.
    *
