@@ -62,7 +62,8 @@ public class DefaultFunctionLibrary
     // P2: https://www.w3.org/TR/xpath-functions-31/#func-current-date
     // https://www.w3.org/TR/xpath-functions-31/#func-current-dateTime
     registerFunction(FnCurrentDateTime.SIGNATURE);
-    // P2: https://www.w3.org/TR/xpath-functions-31/#func-current-time
+    // https://www.w3.org/TR/xpath-functions-31/#func-current-time
+    registerFunction(FnCurrentTime.SIGNATURE);
     // https://www.w3.org/TR/xpath-functions-31/#func-data
     registerFunction(FnData.SIGNATURE_NO_ARG);
     registerFunction(FnData.SIGNATURE_ONE_ARG);
@@ -103,6 +104,7 @@ public class DefaultFunctionLibrary
     // https://www.w3.org/TR/xpath-functions-31/#func-hours-from-duration
     // https://www.w3.org/TR/xpath-functions-31/#func-hours-from-time
     // https://www.w3.org/TR/xpath-functions-31/#func-implicit-timezone
+    registerFunction(FnImplicitTimezone.SIGNATURE);
     // P1: https://www.w3.org/TR/xpath-functions-31/#func-index-of
     // https://www.w3.org/TR/xpath-functions-31/#func-innermost
     // https://www.w3.org/TR/xpath-functions-31/#func-insert-before
@@ -253,6 +255,7 @@ public class DefaultFunctionLibrary
     // P3: https://www.w3.org/TR/xpath-functions-31/#func-map-for-each
 
     // // xpath casting functions
+    // FIXME: add these
     // registerFunction(
     // CastFunction.signature(MetapathConstants.NS_XML_SCHEMA, "boolean",
     // IBooleanItem.class, IBooleanItem::cast));
