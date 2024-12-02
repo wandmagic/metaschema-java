@@ -3,8 +3,11 @@
  * SPDX-License-Identifier: CC0-1.0
  */
 
-package gov.nist.secauto.metaschema.core.metapath.function; // NOPMD - intentional
+package gov.nist.secauto.metaschema.core.metapath.function.impl; // NOPMD - intentional
 
+import gov.nist.secauto.metaschema.core.metapath.function.ArithmeticFunctionException;
+import gov.nist.secauto.metaschema.core.metapath.function.DateTimeFunctionException;
+import gov.nist.secauto.metaschema.core.metapath.function.FunctionUtils;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IAnyAtomicItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IBase64BinaryItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IBooleanItem;
@@ -352,7 +355,7 @@ public final class OperationFunctions { // NOPMD - intentional
       @NonNull IDateTimeItem moment,
       @NonNull IDayTimeDurationItem duration) {
     return IDateTimeWithTimeZoneItem.valueOf(
-        ObjectUtils.notNull(moment.asZonedDateTime().plus(duration.asDuration())));
+        ObjectUtils.notNull(moment.asZonedDateTime().minus(duration.asDuration())));
   }
 
   /**

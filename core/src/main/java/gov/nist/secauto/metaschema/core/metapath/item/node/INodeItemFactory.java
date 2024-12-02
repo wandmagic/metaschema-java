@@ -1,7 +1,7 @@
 
 package gov.nist.secauto.metaschema.core.metapath.item.node;
 
-import gov.nist.secauto.metaschema.core.metapath.MetapathExpression;
+import gov.nist.secauto.metaschema.core.metapath.IMetapathExpression;
 import gov.nist.secauto.metaschema.core.model.IAssemblyDefinition;
 import gov.nist.secauto.metaschema.core.model.IAssemblyInstance;
 import gov.nist.secauto.metaschema.core.model.IAssemblyInstanceGrouped;
@@ -135,8 +135,8 @@ public interface INodeItemFactory {
    * @param definition
    *          the global definition
    * @param baseUri
-   *          the base URI to use for this node item when evaluating a
-   *          {@link MetapathExpression}
+   *          the base URI to use for this node item when evaluating an
+   *          {@link IMetapathExpression}
    * @return the new field node item
    */
   @NonNull
@@ -217,8 +217,8 @@ public interface INodeItemFactory {
    * @param definition
    *          the global definition
    * @param baseUri
-   *          the base URI to use for this node item when evaluating a
-   *          {@link MetapathExpression}
+   *          the base URI to use for this node item when evaluating an
+   *          {@link IMetapathExpression}
    * @return the new assembly node item
    */
   @NonNull
@@ -233,8 +233,8 @@ public interface INodeItemFactory {
    * @param definition
    *          the global definition
    * @param baseUri
-   *          the base URI to use for this node item when evaluating a
-   *          {@link MetapathExpression}
+   *          the base URI to use for this node item when evaluating an
+   *          {@link IMetapathExpression}
    * @param value
    *          the associated data
    * @return the new assembly node item

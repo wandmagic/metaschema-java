@@ -8,12 +8,12 @@ package gov.nist.secauto.metaschema.core.metapath.cst;
 import gov.nist.secauto.metaschema.core.metapath.StaticContext;
 import gov.nist.secauto.metaschema.core.metapath.StaticMetapathException;
 import gov.nist.secauto.metaschema.core.metapath.antlr.Metapath10;
+import gov.nist.secauto.metaschema.core.metapath.antlr.Metapath10.ParamContext;
 import gov.nist.secauto.metaschema.core.metapath.antlr.Metapath10Lexer;
 import gov.nist.secauto.metaschema.core.metapath.cst.items.ArraySequenceConstructor;
 import gov.nist.secauto.metaschema.core.metapath.cst.items.ArraySquareConstructor;
 import gov.nist.secauto.metaschema.core.metapath.cst.items.DecimalLiteral;
 import gov.nist.secauto.metaschema.core.metapath.cst.items.EmptySequence;
-import gov.nist.secauto.metaschema.core.metapath.cst.items.FunctionCallAccessor;
 import gov.nist.secauto.metaschema.core.metapath.cst.items.IntegerLiteral;
 import gov.nist.secauto.metaschema.core.metapath.cst.items.Intersect;
 import gov.nist.secauto.metaschema.core.metapath.cst.items.MapConstructor;
@@ -61,12 +61,14 @@ import gov.nist.secauto.metaschema.core.metapath.cst.type.InstanceOf;
 import gov.nist.secauto.metaschema.core.metapath.cst.type.Treat;
 import gov.nist.secauto.metaschema.core.metapath.cst.type.TypeTestSupport;
 import gov.nist.secauto.metaschema.core.metapath.function.ComparisonFunctions;
+import gov.nist.secauto.metaschema.core.metapath.function.IArgument;
 import gov.nist.secauto.metaschema.core.metapath.impl.AbstractKeySpecifier;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IIntegerItem;
 import gov.nist.secauto.metaschema.core.metapath.item.function.IKeySpecifier;
 import gov.nist.secauto.metaschema.core.metapath.type.IAtomicOrUnionType;
 import gov.nist.secauto.metaschema.core.metapath.type.IItemType;
 import gov.nist.secauto.metaschema.core.metapath.type.ISequenceType;
+import gov.nist.secauto.metaschema.core.metapath.type.Occurrence;
 import gov.nist.secauto.metaschema.core.qname.IEnhancedQName;
 import gov.nist.secauto.metaschema.core.util.CollectionUtil;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
@@ -100,6 +102,10 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 // https://www.w3.org/TR/xpath-31/#id-node-comparisons
 public class BuildCSTVisitor
     extends AbstractCSTVisitorBase {
+  @NonNull
+  private static final ISequenceType DEFAULT_FUNCTION_SEQUENCE_TYPE
+      = ISequenceType.of(IItemType.item(), Occurrence.ZERO_OR_MORE);
+
   @NonNull
   private final StaticContext context;
 
@@ -381,6 +387,53 @@ public class BuildCSTVisitor
         arguments);
   }
 
+  // ============================================================
+  // https://www.w3.org/TR/xpath-31/#doc-xpath31-NamedFunctionRef
+  // ============================================================
+
+  @Override
+  public IExpression visitNamedfunctionref(Metapath10.NamedfunctionrefContext ctx) {
+    throw new UnsupportedOperationException("expression not supported");
+  }
+
+  // ==============================================
+  // https://www.w3.org/TR/xpath-31/#id-inline-func
+  // ==============================================
+
+  @Override
+  public IExpression handleInlinefunctionexpr(Metapath10.InlinefunctionexprContext context) {
+    // parse the param list
+    List<IArgument> parameters = ObjectUtils.notNull(context.paramlist() == null
+        ? CollectionUtil.emptyList()
+        : nairyToList(
+            ObjectUtils.notNull(context.paramlist()),
+            0,
+            2,
+            (ctx, idx) -> {
+              int pos = (idx - 1) / 2;
+              ParamContext tree = ctx.param(pos);
+              return IArgument.of(
+                  getContext().parseVariableName(ObjectUtils.notNull(tree.eqname().getText())),
+                  tree.typedeclaration() == null
+                      ? DEFAULT_FUNCTION_SEQUENCE_TYPE
+                      : TypeTestSupport.parseSequenceType(
+                          ObjectUtils.notNull(tree.typedeclaration().sequencetype()),
+                          getContext()));
+            }));
+
+    // parse the result type
+    ISequenceType resultSequenceType = context.sequencetype() == null
+        ? DEFAULT_FUNCTION_SEQUENCE_TYPE
+        : TypeTestSupport.parseSequenceType(
+            ObjectUtils.notNull(context.sequencetype()),
+            getContext());
+
+    // parse the function body
+    IExpression body = visit(context.functionbody().enclosedexpr());
+
+    return new AnonymousFunctionCall(parameters, resultSequenceType, body);
+  }
+
   // =========================================================================
   // Filter Expressions - https://www.w3.org/TR/xpath-31/#id-filter-expression
   // =========================================================================
@@ -448,7 +501,8 @@ public class BuildCSTVisitor
             // map or array access using function call syntax
             result = new FunctionCallAccessor(
                 left,
-                ObjectUtils.notNull(parseArgumentList((Metapath10.ArgumentlistContext) tree).findFirst().get()));
+                ObjectUtils.notNull(parseArgumentList((Metapath10.ArgumentlistContext) tree)
+                    .collect(Collectors.toUnmodifiableList())));
           } else if (tree instanceof Metapath10.PredicateContext) {
             result = new PredicateExpression(
                 left,
@@ -1154,16 +1208,12 @@ public class BuildCSTVisitor
 
   @Override
   protected IExpression handleArrowexpr(Metapath10.ArrowexprContext context) {
-    // FIXME: handle additional syntax for varef and parenthesized
-
     return handleGroupedNAiry(context, 0, 3, (ctx, idx, left) -> {
       // the next child is "=>"
       assert "=>".equals(ctx.getChild(idx).getText());
 
       int offset = (idx - 1) / 3;
 
-      Metapath10.ArrowfunctionspecifierContext fcCtx
-          = ctx.getChild(Metapath10.ArrowfunctionspecifierContext.class, offset);
       Metapath10.ArgumentlistContext argumentCtx = ctx.getChild(Metapath10.ArgumentlistContext.class, offset);
 
       try (Stream<IExpression> args = Stream.concat(
@@ -1171,12 +1221,35 @@ public class BuildCSTVisitor
           parseArgumentList(ObjectUtils.notNull(argumentCtx)))) {
         assert args != null;
 
-        List<IExpression> arguments = ObjectUtils.notNull(args.collect(Collectors.toUnmodifiableList()));
+        // prepend the focus
+        List<IExpression> arguments = ObjectUtils.notNull(args
+            .collect(Collectors.toUnmodifiableList()));
 
-        return new StaticFunctionCall(
-            () -> getContext().lookupFunction(
-                ObjectUtils.notNull(fcCtx.eqname().getText()),
-                arguments.size()),
+        Metapath10.ArrowfunctionspecifierContext arrowCtx
+            = ctx.getChild(Metapath10.ArrowfunctionspecifierContext.class, offset);
+        if (arrowCtx.eqname() != null) {
+          // named function
+          return new StaticFunctionCall(
+              () -> getContext().lookupFunction(ObjectUtils.notNull(arrowCtx.eqname().getText()), arguments.size()),
+              arguments);
+        }
+
+        IExpression result;
+        if (arrowCtx.varref() != null) {
+          // function instance or name reference
+          result = new VariableReference(getContext().parseVariableName(
+              ObjectUtils.notNull(arrowCtx.varref().varname().eqname().getText())));
+        } else if (arrowCtx.parenthesizedexpr() != null) {
+          // function expression
+          result = visit(arrowCtx.parenthesizedexpr().expr());
+        } else {
+          throw new StaticMetapathException(
+              StaticMetapathException.INVALID_PATH_GRAMMAR,
+              String.format("Unable to get function name using arrow specifier '%s'.", arrowCtx.getText()));
+        }
+
+        return new DynamicFunctionCall(
+            result,
             arguments);
       }
     });

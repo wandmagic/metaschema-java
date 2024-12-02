@@ -31,12 +31,17 @@ public abstract class AbstractAtomicItemBase<TYPE> implements IAnyAtomicItem {
   public String toSignature() {
     return ObjectUtils.notNull(new StringBuilder()
         .append(getType().toSignature())
-        .append("(")
+        .append('(')
         .append(getValueSignature())
-        .append(")")
+        .append(')')
         .toString());
   }
 
+  /**
+   * Get the string to use for the item's value in the item's signature.
+   *
+   * @return the value string
+   */
   @NonNull
   protected abstract String getValueSignature();
 

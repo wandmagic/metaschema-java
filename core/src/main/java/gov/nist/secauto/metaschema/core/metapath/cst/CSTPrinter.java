@@ -9,7 +9,6 @@ import gov.nist.secauto.metaschema.core.metapath.cst.items.ArraySequenceConstruc
 import gov.nist.secauto.metaschema.core.metapath.cst.items.ArraySquareConstructor;
 import gov.nist.secauto.metaschema.core.metapath.cst.items.DecimalLiteral;
 import gov.nist.secauto.metaschema.core.metapath.cst.items.EmptySequence;
-import gov.nist.secauto.metaschema.core.metapath.cst.items.FunctionCallAccessor;
 import gov.nist.secauto.metaschema.core.metapath.cst.items.IntegerLiteral;
 import gov.nist.secauto.metaschema.core.metapath.cst.items.Intersect;
 import gov.nist.secauto.metaschema.core.metapath.cst.items.MapConstructor;
@@ -192,8 +191,18 @@ public final class CSTPrinter {
     }
 
     @Override
-    public String visitFunctionCall(StaticFunctionCall expr, State context) {
-      return appendNode(expr, super.visitFunctionCall(expr, context), context);
+    public String visitStaticFunctionCall(StaticFunctionCall expr, State context) {
+      return appendNode(expr, super.visitStaticFunctionCall(expr, context), context);
+    }
+
+    @Override
+    public String visitDynamicFunctionCall(DynamicFunctionCall expr, State context) {
+      return appendNode(expr, super.visitDynamicFunctionCall(expr, context), context);
+    }
+
+    @Override
+    public String visitAnonymousFunctionCall(AnonymousFunctionCall expr, State context) {
+      return appendNode(expr, super.visitAnonymousFunctionCall(expr, context), context);
     }
 
     @Override

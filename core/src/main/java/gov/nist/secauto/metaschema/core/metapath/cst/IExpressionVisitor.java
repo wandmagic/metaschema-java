@@ -9,7 +9,6 @@ import gov.nist.secauto.metaschema.core.metapath.cst.items.ArraySequenceConstruc
 import gov.nist.secauto.metaschema.core.metapath.cst.items.ArraySquareConstructor;
 import gov.nist.secauto.metaschema.core.metapath.cst.items.DecimalLiteral;
 import gov.nist.secauto.metaschema.core.metapath.cst.items.EmptySequence;
-import gov.nist.secauto.metaschema.core.metapath.cst.items.FunctionCallAccessor;
 import gov.nist.secauto.metaschema.core.metapath.cst.items.IntegerLiteral;
 import gov.nist.secauto.metaschema.core.metapath.cst.items.Intersect;
 import gov.nist.secauto.metaschema.core.metapath.cst.items.MapConstructor;
@@ -197,7 +196,29 @@ public interface IExpressionVisitor<RESULT, CONTEXT> {
    *          the processing context
    * @return the visitation result or {@code null} if no result was produced
    */
-  RESULT visitFunctionCall(@NonNull StaticFunctionCall expr, @NonNull CONTEXT context);
+  RESULT visitStaticFunctionCall(@NonNull StaticFunctionCall expr, @NonNull CONTEXT context);
+
+  /**
+   * Visit the CST node.
+   *
+   * @param expr
+   *          the CST node to visit
+   * @param context
+   *          the processing context
+   * @return the visitation result or {@code null} if no result was produced
+   */
+  RESULT visitDynamicFunctionCall(@NonNull DynamicFunctionCall expr, @NonNull CONTEXT context);
+
+  /**
+   * Visit the CST node.
+   *
+   * @param expr
+   *          the CST node to visit
+   * @param context
+   *          the processing context
+   * @return the visitation result or {@code null} if no result was produced
+   */
+  RESULT visitAnonymousFunctionCall(@NonNull AnonymousFunctionCall expr, @NonNull CONTEXT context);
 
   /**
    * Visit the CST node.

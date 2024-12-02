@@ -9,7 +9,6 @@ import gov.nist.secauto.metaschema.core.metapath.cst.items.ArraySequenceConstruc
 import gov.nist.secauto.metaschema.core.metapath.cst.items.ArraySquareConstructor;
 import gov.nist.secauto.metaschema.core.metapath.cst.items.DecimalLiteral;
 import gov.nist.secauto.metaschema.core.metapath.cst.items.EmptySequence;
-import gov.nist.secauto.metaschema.core.metapath.cst.items.FunctionCallAccessor;
 import gov.nist.secauto.metaschema.core.metapath.cst.items.IntegerLiteral;
 import gov.nist.secauto.metaschema.core.metapath.cst.items.Intersect;
 import gov.nist.secauto.metaschema.core.metapath.cst.items.MapConstructor;
@@ -210,7 +209,17 @@ public abstract class AbstractExpressionVisitor<RESULT, CONTEXT> implements IExp
   }
 
   @Override
-  public RESULT visitFunctionCall(StaticFunctionCall expr, CONTEXT context) {
+  public RESULT visitStaticFunctionCall(StaticFunctionCall expr, CONTEXT context) {
+    return visitChildren(expr, context);
+  }
+
+  @Override
+  public RESULT visitDynamicFunctionCall(DynamicFunctionCall expr, CONTEXT context) {
+    return visitChildren(expr, context);
+  }
+
+  @Override
+  public RESULT visitAnonymousFunctionCall(AnonymousFunctionCall expr, CONTEXT context) {
     return visitChildren(expr, context);
   }
 

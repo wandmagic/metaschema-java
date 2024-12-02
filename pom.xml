@@ -632,6 +632,16 @@
 				</plugin>
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-release-plugin</artifactId>
+					<configuration>
+						<projectVersionPolicyId>SemVerVersionPolicy</projectVersionPolicyId>
+						<tagNameFormat>v@{project.version}</tagNameFormat>
+						<preparationGoals>clean verify</preparationGoals>
+						<autoVersionSubmodules>true</autoVersionSubmodules>
+					</configuration>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-deploy-plugin</artifactId>
 					<configuration>
 						<deployAtEnd>true</deployAtEnd>
