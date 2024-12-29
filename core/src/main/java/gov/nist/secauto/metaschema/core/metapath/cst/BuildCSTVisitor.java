@@ -393,7 +393,11 @@ public class BuildCSTVisitor
 
   @Override
   public IExpression visitNamedfunctionref(Metapath10.NamedfunctionrefContext ctx) {
-    throw new UnsupportedOperationException("expression not supported");
+    // Ensure that the default function namespace is used, if needed
+    IEnhancedQName qname = getContext().parseFunctionName(ObjectUtils.notNull(ctx.eqname().getText()));
+    int arity = IIntegerItem.valueOf(ObjectUtils.requireNonNull(ctx.IntegerLiteral().getText()))
+        .asInteger().intValueExact();
+    return new NamedFunctionReference(qname, arity);
   }
 
   // ==============================================
