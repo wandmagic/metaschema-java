@@ -15,13 +15,15 @@ import java.util.List;
 import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
- * An immutable binary expression that supports arithmetic evaluation. The
- * result type is determined through static analysis of the sub-expressions,
+ * An immutable binary expression that supports arithmetic evaluation.
+ * <p>
+ * The result type is determined through static analysis of the sub-expressions,
  * which may result in a more specific type that is a sub-class of the base
  * result type.
  *
  * @param <RESULT_TYPE>
- *          the base result of evaluating the arithmetic expression
+ *          the base result type of the arithmetic evaluation, representing the
+ *          atomic value produced by this expression
  */
 public abstract class AbstractArithmeticExpression<RESULT_TYPE extends IAnyAtomicItem>
     extends AbstractBinaryExpression<IExpression, IExpression> {

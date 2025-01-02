@@ -17,9 +17,19 @@ import java.util.UUID;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 
+/**
+ * A mocking factory that uses Mockito to produce mock objects with
+ * CALLS_REAL_METHODS as the default answer behavior.
+ */
 public class AbstractMockitoFactory
     implements IMockFactory {
 
+  /**
+   * Protected constructor to enforce the factory pattern.
+   * <p>
+   * Subclasses should provide specific factory methods for creating domain
+   * objects.
+   */
   protected AbstractMockitoFactory() {
     // allow construction by extending classes
   }

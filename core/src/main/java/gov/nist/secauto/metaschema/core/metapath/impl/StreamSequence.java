@@ -6,13 +6,13 @@
 package gov.nist.secauto.metaschema.core.metapath.impl;
 
 import gov.nist.secauto.metaschema.core.metapath.item.IItem;
+import gov.nist.secauto.metaschema.core.metapath.item.ISequence;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -44,33 +44,31 @@ public class StreamSequence<ITEM extends IItem>
     this.stream = stream;
   }
 
-  @Override
-  public Object[] toArray() {
-    return getValue().toArray();
-  }
-
-  @Override
-  public <T> T[] toArray(T[] array) {
-    return getValue().toArray(array);
-  }
-
   @SuppressWarnings("PMD.NullAssignment")
   @Override
-  public List<ITEM> getValue() {
+  protected List<ITEM> asList() {
     instanceLock.lock();
     try {
       if (list == null) {
         if (stream == null) {
-          throw new IllegalStateException("stream is already consumed");
+          throw new IllegalStateException(
+              "Unable to collect items into a list because the stream was already consumed.");
         }
         list = stream.collect(Collectors.toUnmodifiableList());
         stream = null;
       }
-      assert list != null;
-      return list;
     } finally {
       instanceLock.unlock();
     }
+    assert list != null;
+    return list;
+  }
+
+  @Override
+  public ISequence<ITEM> reusable() {
+    // force the stream to be backed by a list
+    asList();
+    return this;
   }
 
   @Override
@@ -82,7 +80,7 @@ public class StreamSequence<ITEM extends IItem>
     try {
       if (list == null) {
         if (stream == null) {
-          throw new IllegalStateException("stream is already consumed");
+          throw new IllegalStateException("The stream is already consumed.");
         }
         assert stream != null;
         retval = stream;
@@ -94,10 +92,5 @@ public class StreamSequence<ITEM extends IItem>
       instanceLock.unlock();
     }
     return retval;
-  }
-
-  @Override
-  public void forEach(Consumer<? super ITEM> action) {
-    stream().forEachOrdered(action);
   }
 }

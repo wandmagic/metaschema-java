@@ -17,6 +17,11 @@ import gov.nist.secauto.metaschema.core.metapath.item.atomic.INumericItem;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 
+/**
+ * An XPath 3.1
+ * <a href="https://www.w3.org/TR/xpath-31/#id-arithmetic">arithmetic
+ * expression</a> supporting integer division.
+ */
 public class IntegerDivision
     extends AbstractArithmeticExpression<IIntegerItem> {
 
@@ -46,9 +51,9 @@ public class IntegerDivision
   @Override
   public ISequence<? extends IIntegerItem> accept(DynamicContext dynamicContext, ISequence<?> focus) {
     INumericItem dividend = FunctionUtils.toNumericOrNull(
-        getFirstDataItem(getLeft().accept(dynamicContext, focus), true));
+        ISequence.of(getLeft().accept(dynamicContext, focus).atomize()).getFirstItem(true));
     INumericItem divisor = FunctionUtils.toNumericOrNull(
-        getFirstDataItem(getRight().accept(dynamicContext, focus), true));
+        ISequence.of(getRight().accept(dynamicContext, focus).atomize()).getFirstItem(true));
 
     return resultOrEmpty(dividend, divisor);
   }

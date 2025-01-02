@@ -7,21 +7,58 @@ package gov.nist.secauto.metaschema.core.metapath.cst.math;
 
 import gov.nist.secauto.metaschema.core.metapath.cst.IExpression;
 import gov.nist.secauto.metaschema.core.metapath.cst.IExpressionVisitor;
-import gov.nist.secauto.metaschema.core.metapath.function.FunctionUtils;
 import gov.nist.secauto.metaschema.core.metapath.function.impl.OperationFunctions;
-import gov.nist.secauto.metaschema.core.metapath.item.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IAnyAtomicItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IDateItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IDateTimeItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IDayTimeDurationItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.INumericItem;
+import gov.nist.secauto.metaschema.core.metapath.item.atomic.ITimeItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IYearMonthDurationItem;
-import gov.nist.secauto.metaschema.core.metapath.type.InvalidTypeMetapathException;
+import gov.nist.secauto.metaschema.core.util.CollectionUtil;
+import gov.nist.secauto.metaschema.core.util.ObjectUtils;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
+/**
+ * Implements the '-' operator for Metapath subtraction operations.
+ * <p>
+ * An XPath 3.1
+ * <a href="https://www.w3.org/TR/xpath-31/#id-arithmetic">arithmetic
+ * expression</a> supporting subtraction.
+ * <p>
+ * Supports subtraction operations between:
+ * <ul>
+ * <li>Numeric values
+ * <li>Dates (returning {@link IDayTimeDurationItem})
+ * <li>DateTimes (returning {@link IDayTimeDurationItem})
+ * <li>Times (returning {@link IDayTimeDurationItem})
+ * <li>Date/DateTime - {@link IYearMonthDurationItem}
+ * <li>Date/DateTime/Time - {@link IDayTimeDurationItem}
+ * <li>{@link IYearMonthDurationItem} - {@link IYearMonthDurationItem}
+ * <li>{@link IDayTimeDurationItem} - {@link IDayTimeDurationItem}
+ * </ul>
+ * <p>
+ * Example Metapath usage:
+ *
+ * <pre>
+ * // Numeric subtraction
+ * 5 - 3 → 2
+ * // Date subtraction
+ * date('2024-01-01') - date('2023-01-01') → duration('P1Y')
+ * // DateTime - Duration
+ * date-time('2024-01-01T00:00:00') - duration('P1D') → date-time('2023-12-31T00:00:00')
+ * </pre>
+ */
 public class Subtraction
     extends AbstractBasicArithmeticExpression {
+  @NonNull
+  private static final Map<
+      Class<? extends IAnyAtomicItem>,
+      Map<Class<? extends IAnyAtomicItem>, OperationStrategy>> SUBTRACTION_STRATEGIES = generateStrategies();
 
   /**
    * An expression that gets the difference of two atomic data items.
@@ -40,77 +77,91 @@ public class Subtraction
     return visitor.visitSubtraction(this, context);
   }
 
-  /**
-   * Get the difference of two atomic items.
-   *
-   * @param minuend
-   *          the item being subtracted from
-   * @param subtrahend
-   *          the item being subtracted
-   * @return the difference of the items or an empty {@link ISequence} if either
-   *         item is {@code null}
-   */
   @Override
-  @NonNull
-  protected IAnyAtomicItem operation(@NonNull IAnyAtomicItem minuend, @NonNull IAnyAtomicItem subtrahend) {
-    return subtract(minuend, subtrahend);
+  protected Map<Class<? extends IAnyAtomicItem>, Map<Class<? extends IAnyAtomicItem>, OperationStrategy>>
+      getStrategies() {
+    return SUBTRACTION_STRATEGIES;
   }
 
-  /**
-   * Get the difference of two atomic items.
-   *
-   * @param minuend
-   *          the item being subtracted from
-   * @param subtrahend
-   *          the item being subtracted
-   * @return the difference of the items
-   */
+  @Override
+  protected INumericItem operationAsNumeric(INumericItem left, INumericItem right) {
+    // Default to numeric subtraction
+    return OperationFunctions.opNumericSubtract(left, right);
+  }
+
+  @Override
+  protected String unsupportedMessage(String left, String right) {
+    return ObjectUtils.notNull(String.format("Subtraction of '%s' by '%s' is not supported.", left, right));
+  }
+
+  @SuppressWarnings("PMD.UseConcurrentHashMap")
   @NonNull
-  public static IAnyAtomicItem subtract(@NonNull IAnyAtomicItem minuend, // NOPMD - intentional
-      @NonNull IAnyAtomicItem subtrahend) {
+  private static Map<
+      Class<? extends IAnyAtomicItem>,
+      Map<Class<? extends IAnyAtomicItem>, OperationStrategy>> generateStrategies() {
+    // Date strategies
+    Map<Class<? extends IAnyAtomicItem>, OperationStrategy> typeStrategies = new HashMap<>();
+    typeStrategies.put(IDateItem.class,
+        (minuend, subtrahend) -> OperationFunctions.opSubtractDates(
+            (IDateItem) minuend,
+            (IDateItem) subtrahend));
+    typeStrategies.put(IYearMonthDurationItem.class,
+        (minuend, subtrahend) -> OperationFunctions.opSubtractYearMonthDurationFromDate(
+            (IDateItem) minuend,
+            (IYearMonthDurationItem) subtrahend));
+    typeStrategies.put(IDayTimeDurationItem.class,
+        (minuend, subtrahend) -> OperationFunctions.opSubtractDayTimeDurationFromDate(
+            (IDateItem) minuend,
+            (IDayTimeDurationItem) subtrahend));
+    Map<
+        Class<? extends IAnyAtomicItem>,
+        Map<Class<? extends IAnyAtomicItem>, OperationStrategy>> strategies = new HashMap<>();
+    strategies.put(IDateItem.class, CollectionUtil.unmodifiableMap(typeStrategies));
 
-    IAnyAtomicItem retval = null;
-    if (minuend instanceof IDateItem) {
-      IDateItem left = (IDateItem) minuend;
+    // DateTime strategies
+    typeStrategies = new HashMap<>();
+    typeStrategies.put(IDateTimeItem.class,
+        (minuend, subtrahend) -> OperationFunctions.opSubtractDateTimes(
+            (IDateTimeItem) minuend,
+            (IDateTimeItem) subtrahend));
+    typeStrategies.put(IYearMonthDurationItem.class,
+        (minuend, subtrahend) -> OperationFunctions.opSubtractYearMonthDurationFromDateTime(
+            (IDateTimeItem) minuend,
+            (IYearMonthDurationItem) subtrahend));
+    typeStrategies.put(IDayTimeDurationItem.class,
+        (minuend, subtrahend) -> OperationFunctions.opSubtractDayTimeDurationFromDateTime(
+            (IDateTimeItem) minuend,
+            (IDayTimeDurationItem) subtrahend));
+    strategies.put(IDateTimeItem.class, CollectionUtil.unmodifiableMap(typeStrategies));
 
-      if (subtrahend instanceof IDateItem) {
-        retval = OperationFunctions.opSubtractDates(left, (IDateItem) subtrahend);
-      } else if (subtrahend instanceof IYearMonthDurationItem) {
-        retval = OperationFunctions.opSubtractYearMonthDurationFromDate(left, (IYearMonthDurationItem) subtrahend);
-      } else if (subtrahend instanceof IDayTimeDurationItem) {
-        retval = OperationFunctions.opSubtractDayTimeDurationFromDate(left, (IDayTimeDurationItem) subtrahend);
-      }
-    } else if (minuend instanceof IDateTimeItem) {
-      IDateTimeItem left = (IDateTimeItem) minuend;
-      if (subtrahend instanceof IDateTimeItem) {
-        retval = OperationFunctions.opSubtractDateTimes(left, (IDateTimeItem) subtrahend);
-      } else if (subtrahend instanceof IYearMonthDurationItem) {
-        retval = OperationFunctions.opSubtractYearMonthDurationFromDateTime(left, (IYearMonthDurationItem) subtrahend);
-      } else if (subtrahend instanceof IDayTimeDurationItem) {
-        retval = OperationFunctions.opSubtractDayTimeDurationFromDateTime(left, (IDayTimeDurationItem) subtrahend);
-      }
-    } else if (minuend instanceof IYearMonthDurationItem) {
-      IYearMonthDurationItem left = (IYearMonthDurationItem) minuend;
-      if (subtrahend instanceof IYearMonthDurationItem) {
-        retval = OperationFunctions.opSubtractYearMonthDurations(left, (IYearMonthDurationItem) subtrahend);
-      }
-    } else if (minuend instanceof IDayTimeDurationItem) {
-      IDayTimeDurationItem left = (IDayTimeDurationItem) minuend;
-      if (subtrahend instanceof IDayTimeDurationItem) {
-        retval = OperationFunctions.opSubtractDayTimeDurations(left, (IDayTimeDurationItem) subtrahend);
-      }
-    } else {
-      // handle as numeric
-      INumericItem left = FunctionUtils.toNumeric(minuend);
-      INumericItem right = FunctionUtils.toNumeric(subtrahend);
-      retval = OperationFunctions.opNumericSubtract(left, right);
-    }
-    if (retval == null) {
-      throw new InvalidTypeMetapathException(
-          null,
-          String.format("The expression '%s - %s' is not supported", minuend.getClass().getName(),
-              subtrahend.getClass().getName()));
-    }
-    return retval;
+    // Time strategies
+    typeStrategies = new HashMap<>();
+    typeStrategies.put(ITimeItem.class,
+        (minuend, subtrahend) -> OperationFunctions.opSubtractTimes(
+            (ITimeItem) minuend,
+            (ITimeItem) subtrahend));
+    typeStrategies.put(IDayTimeDurationItem.class,
+        (minuend, subtrahend) -> OperationFunctions.opSubtractDayTimeDurationFromTime(
+            (ITimeItem) minuend,
+            (IDayTimeDurationItem) subtrahend));
+    strategies.put(ITimeItem.class, CollectionUtil.unmodifiableMap(typeStrategies));
+
+    // YearMonthDuration strategies
+    typeStrategies = new HashMap<>();
+    typeStrategies.put(IYearMonthDurationItem.class,
+        (minuend, subtrahend) -> OperationFunctions.opSubtractYearMonthDurations(
+            (IYearMonthDurationItem) minuend,
+            (IYearMonthDurationItem) subtrahend));
+    strategies.put(IYearMonthDurationItem.class, CollectionUtil.unmodifiableMap(typeStrategies));
+
+    // DayTimeDuration strategies
+    typeStrategies = new HashMap<>();
+    typeStrategies.put(IDayTimeDurationItem.class,
+        (minuend, subtrahend) -> OperationFunctions.opSubtractDayTimeDurations(
+            (IDayTimeDurationItem) minuend,
+            (IDayTimeDurationItem) subtrahend));
+    strategies.put(IDayTimeDurationItem.class, CollectionUtil.unmodifiableMap(typeStrategies));
+
+    return CollectionUtil.unmodifiableMap(strategies);
   }
 }

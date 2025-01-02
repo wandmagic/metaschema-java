@@ -17,6 +17,14 @@ import java.util.List;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
+/**
+ * An XPath 3.1
+ * <a href="https://www.w3.org/TR/xpath-31/#id-paren-expressions">empty
+ * parenthesized expression</a>.
+ *
+ * @param <RESULT_TYPE>
+ *          the Java type of the literal result
+ */
 public final class EmptySequence<RESULT_TYPE extends IItem>
     extends AbstractExpression {
   @NonNull
@@ -25,6 +33,9 @@ public final class EmptySequence<RESULT_TYPE extends IItem>
   /**
    * Get a singleton CST node instance representing an expression that returns an
    * empty sequence.
+   * <p>
+   * This class implements the singleton pattern and is thread-safe. The singleton
+   * instance can be obtained using {@link #instance()}.
    *
    * @param <T>
    *          the Java type of the resulting empty sequence
@@ -56,5 +67,4 @@ public final class EmptySequence<RESULT_TYPE extends IItem>
   public <RESULT, CONTEXT> RESULT accept(IExpressionVisitor<RESULT, CONTEXT> visitor, CONTEXT context) {
     return visitor.visitEmptySequence(this, context);
   }
-
 }

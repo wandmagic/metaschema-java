@@ -15,13 +15,27 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.xml.namespace.QName;
-
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import nl.talsmasoftware.lazy4j.Lazy;
 
-final class QNameCache {
+/**
+ * Provides a cache for managing commonly reused qualified names, represented
+ * using the {@link IEnhancedQName} interface.
+ * <p>
+ * The cache operations provided by this cache are thread safe.
+ * <p>
+ * A unique integer index value is assigned for each namespace and localname
+ * pair. This index value can be used to retrieve the qualified name using the
+ * {@link #get(int)} method. This allows the index value to be used in place of
+ * the actual qualified name.
+ * <p>
+ * The {@link IEnhancedQName#getIndexPosition()} method can be used to get the
+ * index value of a given qualified name.
+ */
+// FIXME: Consider the implications of this cache in a long running process.
+// Using a global shared instance may result in a very large cache.
+public final class QNameCache {
 
   private static final Comparator<IEnhancedQName> COMPARATOR
       = Comparator.comparingInt(IEnhancedQName::getIndexPosition);
@@ -34,6 +48,7 @@ final class QNameCache {
 
   private final Map<Integer, QNameRecord> indexToQName = new ConcurrentHashMap<>();
   private final Map<Integer, Map<String, QNameRecord>> nsIndexToLocalNameToIndex = new ConcurrentHashMap<>();
+
   /**
    * The next available qualified-name index position.
    */
@@ -63,10 +78,21 @@ final class QNameCache {
     return namespaceCache;
   }
 
+  /**
+   * Get a cached qualified name based on the provided namespace and name.
+   * <p>
+   * The qualified name will be added to the cache if it doesn't already exist.
+   *
+   * @param namespace
+   *          the namespace for the new qualified name
+   * @param name
+   *          the local name for the new qualified name
+   * @return the new cached qualified name or the existing cached name if it
+   *         already exists in the cache
+   */
   @SuppressWarnings("PMD.ShortMethodName")
   @NonNull
-  IEnhancedQName of(@NonNull String namespace, @NonNull String name) {
-
+  public IEnhancedQName cachedQNameFor(@NonNull String namespace, @NonNull String name) {
     int namespacePosition = namespaceCache.indexOf(namespace);
 
     Map<String, QNameRecord> namespaceNames = nsIndexToLocalNameToIndex
@@ -80,15 +106,19 @@ final class QNameCache {
     }));
   }
 
-  @Nullable
-  IEnhancedQName get(@NonNull QName qname) {
-    return get(
-        ObjectUtils.notNull(qname.getNamespaceURI()),
-        ObjectUtils.notNull(qname.getLocalPart()));
-  }
-
-  @Nullable
-  IEnhancedQName get(@NonNull String namespace, @NonNull String name) {
+  /**
+   * Get an existing qualified name from the cache based on the provided namespace
+   * and name.
+   *
+   * @param namespace
+   *          the namespace for the qualified name
+   * @param name
+   *          the local name for the qualified name
+   * @return an optional containing the cached qualified name or a {@code null}
+   *         value if the name does not exist in the cache
+   */
+  @NonNull
+  Optional<IEnhancedQName> get(@NonNull String namespace, @NonNull String name) {
     Optional<Integer> nsPosition = namespaceCache.get(namespace);
     if (!nsPosition.isPresent()) {
       throw new IllegalArgumentException(
@@ -96,13 +126,27 @@ final class QNameCache {
     }
 
     Map<String, QNameRecord> namespaceNames = nsIndexToLocalNameToIndex.get(nsPosition.get());
-    return namespaceNames == null
-        ? null
-        : namespaceNames.get(name);
+    return ObjectUtils.notNull(Optional.ofNullable(
+        namespaceNames == null
+            ? null
+            : namespaceNames.get(name)));
   }
 
+  /**
+   * Get an existing qualified name from the cache that is assigned to the
+   * provided index value.
+   * <p>
+   * Note: There is a chance that an entry associated index value may not exist at
+   * first, but subsequent calls may find an associated value in the future if one
+   * is created with that value.
+   *
+   * @param index
+   *          the index value for the qualified name
+   * @return the cached qualified name or {@code null} if a cache entry does not
+   *         exist for the index value
+   */
   @Nullable
-  IEnhancedQName get(int index) {
+  public IEnhancedQName get(int index) {
     return indexToQName.get(index);
   }
 

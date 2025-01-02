@@ -41,7 +41,6 @@ import gov.nist.secauto.metaschema.core.metapath.function.ComparisonFunctions;
 import gov.nist.secauto.metaschema.core.metapath.function.IFunction;
 import gov.nist.secauto.metaschema.core.metapath.item.IItem;
 import gov.nist.secauto.metaschema.core.metapath.item.ISequence;
-import gov.nist.secauto.metaschema.core.metapath.item.atomic.IAnyAtomicItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IBooleanItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IStringItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IUuidItem;
@@ -141,7 +140,7 @@ class BuildCstVisitorTest {
 
     // evaluate
     ISequence<IFieldNodeItem> result = expr.evaluate(field);
-    assertThat(result.getValue(), contains(
+    assertThat(result, contains(
         allOf(
             where(IFieldNodeItem::getQName, equalTo(FIELD2))))); // NOPMD
   }
@@ -213,7 +212,7 @@ class BuildCstVisitorTest {
 
     // evaluate
     ISequence<IAssemblyNodeItem> result = expr.evaluate(document);
-    assertThat(result.getValue(), contains(
+    assertThat(result, contains(
         allOf(
             instanceOf(IRootAssemblyNodeItem.class),
             where(IAssemblyNodeItem::getQName, equalTo(ROOT))))); // NOPMD
@@ -234,7 +233,7 @@ class BuildCstVisitorTest {
 
     // evaluate
     ISequence<IFlagNodeItem> result = expr.evaluate(field);
-    assertThat(result.getValue(), contains(
+    assertThat(result, contains(
         allOf(
             instanceOf(IFlagNodeItem.class),
             where(IFlagNodeItem::getQName, equalTo(FLAG)))));
@@ -255,7 +254,7 @@ class BuildCstVisitorTest {
 
     // evaluate
     ISequence<IFieldNodeItem> result = expr.evaluate(root);
-    assertThat(result.getValue(), contains(
+    assertThat(result, contains(
         allOf(
             instanceOf(IFieldNodeItem.class),
             where(IFieldNodeItem::getQName, equalTo(FIELD1))), // NOPMD
@@ -311,21 +310,21 @@ class BuildCstVisitorTest {
 
   static Stream<Arguments> testNamedFunctionRefCall() {
     return Stream.of(
-        Arguments.of("fn:string#1(1)", string(String.valueOf(1))));
+        Arguments.of("fn:string#1(1)", string("1")));
   }
 
   @ParameterizedTest
   @MethodSource("testNamedFunctionRefCall")
   void testNamedFunctionRefCall(
-    @NonNull String metapath,
-    @NonNull IItem expectedResult) {
-  StaticContext staticContext = StaticContext.builder().build();
-  DynamicContext dynamicContext = new DynamicContext(staticContext);
+      @NonNull String metapath,
+      @NonNull IItem expectedResult) {
+    StaticContext staticContext = StaticContext.builder().build();
+    DynamicContext dynamicContext = new DynamicContext(staticContext);
 
-  IItem result = IMetapathExpression.compile(metapath, staticContext)
-      .evaluateAs(null, IMetapathExpression.ResultType.ITEM, dynamicContext);
-  assertEquals(expectedResult, result);
-}
+    IItem result = IMetapathExpression.compile(metapath, staticContext)
+        .evaluateAs(null, IMetapathExpression.ResultType.ITEM, dynamicContext);
+    assertEquals(expectedResult, result);
+  }
 
   static Stream<Arguments> testComparison() {
     return Stream.of(

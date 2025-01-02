@@ -3,11 +3,11 @@
  * SPDX-License-Identifier: CC0-1.0
  */
 
-package gov.nist.secauto.metaschema.core.metapath.function.impl; // NOPMD - intentional
+package gov.nist.secauto.metaschema.core.metapath.function.impl;
 
 import gov.nist.secauto.metaschema.core.metapath.function.ArithmeticFunctionException;
+import gov.nist.secauto.metaschema.core.metapath.function.CastFunctionException;
 import gov.nist.secauto.metaschema.core.metapath.function.DateTimeFunctionException;
-import gov.nist.secauto.metaschema.core.metapath.function.FunctionUtils;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IAnyAtomicItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IAnyUriItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IBase64BinaryItem;
@@ -22,23 +22,37 @@ import gov.nist.secauto.metaschema.core.metapath.item.atomic.IDurationItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IIntegerItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.INumericItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IStringItem;
+import gov.nist.secauto.metaschema.core.metapath.item.atomic.ITimeItem;
+import gov.nist.secauto.metaschema.core.metapath.item.atomic.ITimeWithTimeZoneItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IUntypedAtomicItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IYearMonthDurationItem;
 import gov.nist.secauto.metaschema.core.metapath.type.InvalidTypeMetapathException;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 
-import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.time.Duration;
+import java.time.OffsetTime;
 import java.time.Period;
 import java.time.ZonedDateTime;
+import java.time.temporal.Temporal;
 import java.time.temporal.TemporalAmount;
 import java.util.Set;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 
-public final class OperationFunctions { // NOPMD - intentional
+/**
+ * Implementations of the XPath 3.1 operation functions.
+ */
+@SuppressWarnings({
+    // FIXME: break out methods into separate classes organized as in XPath
+    "PMD.CouplingBetweenObjects",
+    "PMD.ExcessivePublicCount",
+    "PMD.CyclomaticComplexity"
+})
+public final class OperationFunctions {
+  /**
+   * Identifies the types and substypes that support aggregation.
+   */
   @NonNull
   public static final Set<Class<? extends IAnyAtomicItem>> AGGREGATE_MATH_TYPES = ObjectUtils.notNull(Set.of(
       IDayTimeDurationItem.class,
@@ -114,7 +128,7 @@ public final class OperationFunctions { // NOPMD - intentional
     try {
       result = duration1.plus(duration2);
     } catch (ArithmeticException ex) {
-      throw new ArithmeticFunctionException(ArithmeticFunctionException.OVERFLOW_UNDERFLOW_ERROR, ex);
+      throw new DateTimeFunctionException(DateTimeFunctionException.DURATION_OVERFLOW_UNDERFLOW_ERROR, ex);
     }
     assert result != null;
     return IYearMonthDurationItem.valueOf(result);
@@ -141,7 +155,7 @@ public final class OperationFunctions { // NOPMD - intentional
     try {
       result = duration1.plus(duration2);
     } catch (ArithmeticException ex) {
-      throw new ArithmeticFunctionException(ArithmeticFunctionException.OVERFLOW_UNDERFLOW_ERROR, ex);
+      throw new DateTimeFunctionException(DateTimeFunctionException.DURATION_OVERFLOW_UNDERFLOW_ERROR, ex);
     }
     assert result != null;
     return IDayTimeDurationItem.valueOf(result);
@@ -197,6 +211,30 @@ public final class OperationFunctions { // NOPMD - intentional
 
   /**
    * Based on XPath 3.1 <a href=
+   * "https://www.w3.org/TR/xpath-functions-31/#func-add-dayTimeDuration-to-time">op:add-dayTimeDuration-to-time</a>.
+   *
+   * @param instant
+   *          a point in time
+   * @param duration
+   *          the duration to add
+   * @return the result of adding the duration to the date
+   */
+  @NonNull
+  public static ITimeItem opAddDayTimeDurationToTime(
+      @NonNull ITimeItem instant,
+      @NonNull IDayTimeDurationItem duration) {
+    OffsetTime result;
+    try {
+      result = instant.asOffsetTime().plus(duration.asDuration());
+    } catch (ArithmeticException ex) {
+      throw new ArithmeticFunctionException(ArithmeticFunctionException.OVERFLOW_UNDERFLOW_ERROR, ex);
+    }
+    assert result != null;
+    return ITimeWithTimeZoneItem.valueOf(result);
+  }
+
+  /**
+   * Based on XPath 3.1 <a href=
    * "https://www.w3.org/TR/xpath-functions-31/#func-subtract-dates">op:subtract-dates</a>.
    *
    * @param date1
@@ -207,7 +245,7 @@ public final class OperationFunctions { // NOPMD - intentional
    */
   @NonNull
   public static IDayTimeDurationItem opSubtractDates(@NonNull IDateItem date1, @NonNull IDateItem date2) {
-    return between(date1.asZonedDateTime(), date2.asZonedDateTime());
+    return between(date2.asZonedDateTime(), date1.asZonedDateTime());
   }
 
   /**
@@ -248,8 +286,41 @@ public final class OperationFunctions { // NOPMD - intentional
   private static IDateItem subtractDurationFromDate(
       @NonNull ZonedDateTime dateTime,
       @NonNull TemporalAmount duration) {
-    return IDateWithTimeZoneItem.valueOf(
-        ObjectUtils.notNull(dateTime.minus(duration)));
+    return IDateWithTimeZoneItem.valueOf(ObjectUtils.notNull(dateTime.minus(duration)));
+  }
+
+  /**
+   * Based on XPath 3.1 <a href=
+   * "https://www.w3.org/TR/xpath-functions-31/#func-subtract-dayTimeDuration-from-time">op:subtract-dayTimeDuration-from-time</a>.
+   *
+   * @param time
+   *          a point in time
+   * @param duration
+   *          the duration to subtract
+   * @return the result of subtracting the duration from the time
+   */
+  @NonNull
+  public static ITimeItem opSubtractDayTimeDurationFromTime(
+      @NonNull ITimeItem time,
+      @NonNull IDayTimeDurationItem duration) {
+    return ITimeWithTimeZoneItem.valueOf(ObjectUtils.notNull(time.asOffsetTime().minus(duration.asDuration())));
+  }
+
+  /**
+   * Based on XPath 3.1 <a href=
+   * "https://www.w3.org/TR/xpath-functions-31/#func-subtract-times">op:subtract-times</a>.
+   *
+   * @param arg1
+   *          the first duration
+   * @param arg2
+   *          the second duration
+   * @return the result of subtracting the second duration from the first
+   */
+  @NonNull
+  public static IDayTimeDurationItem opSubtractTimes(
+      @NonNull ITimeItem arg1,
+      @NonNull ITimeItem arg2) {
+    return between(arg2.asOffsetTime(), arg1.asOffsetTime());
   }
 
   /**
@@ -269,8 +340,13 @@ public final class OperationFunctions { // NOPMD - intentional
     Period duration1 = arg1.asPeriod();
     Period duration2 = arg2.asPeriod();
 
-    return IYearMonthDurationItem.valueOf(
-        ObjectUtils.notNull(duration1.minus(duration2)));
+    Period result;
+    try {
+      result = ObjectUtils.notNull(duration1.minus(duration2));
+    } catch (ArithmeticException ex) {
+      throw new DateTimeFunctionException(DateTimeFunctionException.DURATION_OVERFLOW_UNDERFLOW_ERROR, ex);
+    }
+    return IYearMonthDurationItem.valueOf(result);
   }
 
   /**
@@ -290,8 +366,13 @@ public final class OperationFunctions { // NOPMD - intentional
     Duration duration1 = arg1.asDuration();
     Duration duration2 = arg2.asDuration();
 
-    return IDayTimeDurationItem.valueOf(
-        ObjectUtils.notNull(duration1.minus(duration2)));
+    Duration result;
+    try {
+      result = ObjectUtils.notNull(duration1.minus(duration2));
+    } catch (ArithmeticException ex) {
+      throw new DateTimeFunctionException(DateTimeFunctionException.DURATION_OVERFLOW_UNDERFLOW_ERROR, ex);
+    }
+    return IDayTimeDurationItem.valueOf(result);
   }
 
   /**
@@ -306,12 +387,14 @@ public final class OperationFunctions { // NOPMD - intentional
    */
   @NonNull
   public static IDayTimeDurationItem opSubtractDateTimes(@NonNull IDateTimeItem time1, @NonNull IDateTimeItem time2) {
-    return between(time1.asZonedDateTime(), time2.asZonedDateTime());
+    return between(time2.asZonedDateTime(), time1.asZonedDateTime());
   }
 
   /**
    * Based on XPath 3.1 <a href=
-   * "https://www.w3.org/TR/xpath-functions-31/#func-subtract-dateTimes">op:subtract-dateTimes</a>.
+   * "https://www.w3.org/TR/xpath-functions-31/#func-subtract-dateTimes">op:subtract-dateTimes</a>
+   * and <a href=
+   * "https://www.w3.org/TR/xpath-functions-31/#func-subtract-times">op:subtract-times</a>.
    *
    * @param time1
    *          the first point in time
@@ -320,9 +403,8 @@ public final class OperationFunctions { // NOPMD - intentional
    * @return the duration the occurred between the two points in time
    */
   @NonNull
-  private static IDayTimeDurationItem between(@NonNull ZonedDateTime time1, @NonNull ZonedDateTime time2) {
-    return IDayTimeDurationItem.valueOf(
-        ObjectUtils.notNull(Duration.between(time1, time2)));
+  private static IDayTimeDurationItem between(@NonNull Temporal time1, @NonNull Temporal time2) {
+    return IDayTimeDurationItem.valueOf(ObjectUtils.notNull(Duration.between(time1, time2)));
   }
 
   /**
@@ -371,20 +453,24 @@ public final class OperationFunctions { // NOPMD - intentional
    *          the number to multiply by
    * @return the result of multiplying a {@link IYearMonthDurationItem} by a
    *         number
+   * @throws DateTimeFunctionException
+   *           with the code
+   *           {@link DateTimeFunctionException#DURATION_OVERFLOW_UNDERFLOW_ERROR}
+   *           if arithmetic overflow occurs
    */
   @NonNull
   public static IYearMonthDurationItem opMultiplyYearMonthDuration(
       @NonNull IYearMonthDurationItem arg1,
       @NonNull INumericItem arg2) {
-    int arg2Int;
+    IDecimalItem months = IDecimalItem.valueOf(arg1.asMonths());
+    INumericItem result = months.multiply(arg2);
+    Period period;
     try {
-      arg2Int = FunctionUtils.asInteger(arg2.round());
-    } catch (ArithmeticException ex) {
-      throw new ArithmeticFunctionException(ArithmeticFunctionException.OVERFLOW_UNDERFLOW_ERROR, ex);
+      period = Period.ofMonths(result.round().toIntValueExact());
+    } catch (CastFunctionException ex) {
+      throw new DateTimeFunctionException(DateTimeFunctionException.DURATION_OVERFLOW_UNDERFLOW_ERROR, ex);
     }
-
-    return IYearMonthDurationItem.valueOf(
-        ObjectUtils.notNull(arg1.asPeriod().multipliedBy(arg2Int)));
+    return IYearMonthDurationItem.valueOf(ObjectUtils.notNull(period));
   }
 
   /**
@@ -401,14 +487,15 @@ public final class OperationFunctions { // NOPMD - intentional
   public static IDayTimeDurationItem opMultiplyDayTimeDuration(
       @NonNull IDayTimeDurationItem arg1,
       @NonNull INumericItem arg2) {
-    long arg2Long;
+    IDecimalItem seconds = IDecimalItem.valueOf(arg1.asSeconds());
+    INumericItem result = seconds.multiply(arg2);
+    Duration duration;
     try {
-      arg2Long = FunctionUtils.asLong(arg2.round());
-    } catch (ArithmeticException ex) {
-      throw new ArithmeticFunctionException(ArithmeticFunctionException.OVERFLOW_UNDERFLOW_ERROR, ex);
+      duration = Duration.ofSeconds(result.round().toIntValueExact());
+    } catch (CastFunctionException ex) {
+      throw new DateTimeFunctionException(DateTimeFunctionException.DURATION_OVERFLOW_UNDERFLOW_ERROR, ex);
     }
-    return IDayTimeDurationItem.valueOf(
-        ObjectUtils.notNull(arg1.asDuration().multipliedBy(arg2Long)));
+    return IDayTimeDurationItem.valueOf(ObjectUtils.notNull(duration));
   }
 
   /**
@@ -425,18 +512,32 @@ public final class OperationFunctions { // NOPMD - intentional
   public static IYearMonthDurationItem opDivideYearMonthDuration(
       @NonNull IYearMonthDurationItem arg1,
       @NonNull INumericItem arg2) {
-    IIntegerItem totalMonths = IIntegerItem.valueOf(arg1.asPeriod().toTotalMonths());
-    IIntegerItem result = opNumericIntegerDivide(totalMonths, arg2);
-    int months;
-    try {
-      months = FunctionUtils.asInteger(result.asInteger());
-    } catch (ArithmeticException ex) {
-      throw new DateTimeFunctionException(DateTimeFunctionException.DURATION_OVERFLOW_UNDERFLOW_ERROR,
-          "Overflow/underflow in duration operation.", ex);
-    }
-    int years = months / 12;
-    months = months % 12;
-    return IYearMonthDurationItem.valueOf(years, months);
+    IDecimalItem months = IDecimalItem.valueOf(arg1.asMonths());
+    INumericItem result = months.divide(arg2);
+
+    Period period = Period.ofMonths(result.round().toIntValueExact());
+    return IYearMonthDurationItem.valueOf(ObjectUtils.notNull(period));
+  }
+
+  /**
+   * Based on XPath 3.1 <a href=
+   * "https://www.w3.org/TR/xpath-functions-31/#func-divide-yearMonthDuration-by-yearMonthDuration">op:divide-yearMonthDuration-by-yearMonthDuration</a>.
+   *
+   * @param arg1
+   *          the first duration value
+   * @param arg2
+   *          the second duration value
+   * @return the result of dividing a the first duration value by the second
+   *         duration value
+   */
+  @NonNull
+  public static IDecimalItem opDivideYearMonthDurationByYearMonthDuration(
+      @NonNull IYearMonthDurationItem arg1,
+      @NonNull IYearMonthDurationItem arg2) {
+    IIntegerItem totalMonths1 = IIntegerItem.valueOf(arg1.asMonths());
+    IIntegerItem totalMonths2 = IIntegerItem.valueOf(arg2.asMonths());
+
+    return totalMonths1.divide(totalMonths2);
   }
 
   /**
@@ -453,12 +554,11 @@ public final class OperationFunctions { // NOPMD - intentional
   public static IDayTimeDurationItem opDivideDayTimeDuration(
       @NonNull IDayTimeDurationItem arg1,
       @NonNull INumericItem arg2) {
-    try {
-      return IDayTimeDurationItem.valueOf(
-          ObjectUtils.notNull(arg1.asDuration().dividedBy(FunctionUtils.asLong(arg2.round()))));
-    } catch (ArithmeticException ex) {
-      throw new ArithmeticFunctionException(ArithmeticFunctionException.DIVISION_BY_ZERO, "Division by zero", ex);
-    }
+    IDecimalItem seconds = IDecimalItem.valueOf(arg1.asSeconds());
+    INumericItem result = seconds.divide(arg2);
+
+    Duration duration = Duration.ofSeconds(result.round().toIntValueExact());
+    return IDayTimeDurationItem.valueOf(ObjectUtils.notNull(duration));
   }
 
   /**
@@ -593,11 +693,8 @@ public final class OperationFunctions { // NOPMD - intentional
   public static IBooleanItem opYearMonthDurationGreaterThan(
       @NonNull IYearMonthDurationItem arg1,
       @NonNull IYearMonthDurationItem arg2) {
-    Period p1 = arg1.asPeriod();
-    Period p2 = arg2.asPeriod();
-
     // this is only an approximation
-    return IBooleanItem.valueOf(p1.toTotalMonths() > p2.toTotalMonths());
+    return IBooleanItem.valueOf(arg1.compareTo(arg2) > 0);
   }
 
   /**
@@ -684,13 +781,11 @@ public final class OperationFunctions { // NOPMD - intentional
    *         second, or {@code false} otherwise
    */
   @NonNull
-  public static IBooleanItem opYearMonthDurationLessThan(@NonNull IYearMonthDurationItem arg1,
+  public static IBooleanItem opYearMonthDurationLessThan(
+      @NonNull IYearMonthDurationItem arg1,
       @NonNull IYearMonthDurationItem arg2) {
-    Period p1 = arg1.asPeriod();
-    Period p2 = arg2.asPeriod();
-
     // this is only an approximation
-    return IBooleanItem.valueOf(p1.toTotalMonths() < p2.toTotalMonths());
+    return IBooleanItem.valueOf(arg1.compareTo(arg2) < 0);
   }
 
   /**
@@ -729,89 +824,115 @@ public final class OperationFunctions { // NOPMD - intentional
     return IBooleanItem.valueOf(arg1.compareTo(arg2) < 0);
   }
 
+  @NonNull
+  private static <R extends INumericItem> R performArithmeticOperation(
+      @NonNull INumericItem left,
+      @NonNull INumericItem right,
+      @NonNull ArithmeticOperation<IIntegerItem, IIntegerItem, R> integerOp,
+      @NonNull ArithmeticOperation<IDecimalItem, IDecimalItem, R> decimalOp) {
+    R retval;
+    if (left instanceof IIntegerItem && right instanceof IIntegerItem) {
+      retval = integerOp.apply((IIntegerItem) left, (IIntegerItem) right);
+    } else {
+      retval = decimalOp.apply((IDecimalItem) left, (IDecimalItem) right);
+    }
+    return retval;
+  }
+
   /**
+   * Represents an arithmetic operation performed using two arguments.
+   *
+   * @param <T>
+   *          the Java type of the first argument to the function
+   * @param <U>
+   *          the Java type of the second argument to the function
+   * @param <R>
+   *          the Java type of the result of the function
+   */
+  @FunctionalInterface
+  private interface ArithmeticOperation<T, U, R> {
+    /**
+     * Perform the operation.
+     *
+     * @param left
+     *          the left side of the operation
+     * @param right
+     *          the right side of the operation
+     * @return the operation result
+     */
+    @NonNull
+    R apply(@NonNull T left, @NonNull U right);
+  }
+
+  /**
+   * Create a new sum by adding first provided addend value to the second provided
+   * addend value.
+   * <p>
    * Based on XPath 3.1 <a href=
    * "https://www.w3.org/TR/xpath-functions-31/#func-numeric-add">op:numeric-add</a>.
    *
-   * @param left
-   *          the first number
-   * @param right
-   *          the second number
+   * @param addend1
+   *          the first addend
+   * @param addend2
+   *          the second addend
    * @return the result of adding the second number to the first number
    */
   @NonNull
-  public static INumericItem opNumericAdd(@NonNull INumericItem left, @NonNull INumericItem right) {
-    INumericItem retval;
-    if (left instanceof IIntegerItem || right instanceof IIntegerItem) {
-      // create an integer result
-      BigInteger integerLeft = left.asInteger();
-      BigInteger integerRight = right.asInteger();
-      retval = IIntegerItem.valueOf(
-          ObjectUtils.notNull(integerLeft.add(integerRight)));
-    } else {
-      // create a decimal result
-      BigDecimal decimalLeft = left.asDecimal();
-      BigDecimal decimalRight = right.asDecimal();
-      retval = IDecimalItem.valueOf(
-          ObjectUtils.notNull(decimalLeft.add(decimalRight, FunctionUtils.MATH_CONTEXT)));
-    }
-    return retval;
+  public static INumericItem opNumericAdd(@NonNull INumericItem addend1, @NonNull INumericItem addend2) {
+    return performArithmeticOperation(
+        addend1,
+        addend2,
+        IIntegerItem::add,
+        IDecimalItem::add);
   }
 
   /**
+   * Determine the difference by subtracting the provided subtrahend value from
+   * the provided minuend value.
+   * <p>
    * Based on XPath 3.1 <a href=
    * "https://www.w3.org/TR/xpath-functions-31/#func-numeric-subtract">op:numeric-subtract</a>.
    *
-   * @param left
-   *          the first number
-   * @param right
-   *          the second number
-   * @return the result of subtracting the second number from the first number
+   * @param minuend
+   *          the value to subtract from
+   * @param subtrahend
+   *          the value to subtract
+   * @return a new value resulting from subtracting the subtrahend from the
+   *         minuend
    */
   @NonNull
-  public static INumericItem opNumericSubtract(@NonNull INumericItem left, @NonNull INumericItem right) {
-    INumericItem retval;
-    if (left instanceof IIntegerItem || right instanceof IIntegerItem) {
-      // create an integer result
-      BigInteger integerLeft = left.asInteger();
-      BigInteger integerRight = right.asInteger();
-      retval = IIntegerItem.valueOf(
-          ObjectUtils.notNull(integerLeft.subtract(integerRight)));
-    } else {
-      // create a decimal result
-      BigDecimal decimalLeft = left.asDecimal();
-      BigDecimal decimalRight = right.asDecimal();
-      retval = IDecimalItem.valueOf(
-          ObjectUtils.notNull(decimalLeft.subtract(decimalRight, FunctionUtils.MATH_CONTEXT)));
-    }
-    return retval;
+  public static INumericItem opNumericSubtract(
+      @NonNull INumericItem minuend,
+      @NonNull INumericItem subtrahend) {
+    return performArithmeticOperation(
+        minuend,
+        subtrahend,
+        IIntegerItem::subtract,
+        IDecimalItem::subtract);
   }
 
   /**
+   * Multiply the provided multiplicand value by the provided multiplier value.
+   * <p>
    * Based on XPath 3.1 <a href=
    * "https://www.w3.org/TR/xpath-functions-31/#func-numeric-multiply">op:numeric-multiply</a>.
    *
-   * @param left
-   *          the first number
-   * @param right
-   *          the second number
-   * @return the result of multiplying the first number by the second number
+   * @param multiplicand
+   *          the value to multiply
+   * @param multiplier
+   *          the value to multiply by
+   * @return a new value resulting from multiplying the multiplicand by the
+   *         multiplier
    */
   @NonNull
-  public static INumericItem opNumericMultiply(@NonNull INumericItem left, @NonNull INumericItem right) {
-    INumericItem retval;
-    if (left instanceof IIntegerItem || right instanceof IIntegerItem) {
-      // create an integer result
-      retval = IIntegerItem.valueOf(
-          ObjectUtils.notNull(left.asInteger().multiply(right.asInteger())));
-    } else {
-      // create a decimal result
-      BigDecimal decimalLeft = left.asDecimal();
-      BigDecimal decimalRight = right.asDecimal();
-      retval = IDecimalItem.valueOf(
-          ObjectUtils.notNull(decimalLeft.multiply(decimalRight, FunctionUtils.MATH_CONTEXT)));
-    }
-    return retval;
+  public static INumericItem opNumericMultiply(
+      @NonNull INumericItem multiplicand,
+      @NonNull INumericItem multiplier) {
+    return performArithmeticOperation(
+        multiplicand,
+        multiplier,
+        IIntegerItem::multiply,
+        IDecimalItem::multiply);
   }
 
   /**
@@ -823,20 +944,13 @@ public final class OperationFunctions { // NOPMD - intentional
    * @param divisor
    *          the number to divide by
    * @return the quotient
+   * @throws ArithmeticFunctionException
+   *           with the code {@link ArithmeticFunctionException#DIVISION_BY_ZERO}
+   *           if the divisor is zero
    */
   @NonNull
   public static IDecimalItem opNumericDivide(@NonNull INumericItem dividend, @NonNull INumericItem divisor) {
-    // create a decimal result
-    BigDecimal decimalDivisor = divisor.asDecimal();
-
-    if (BigDecimal.ZERO.equals(decimalDivisor)) {
-      throw new ArithmeticFunctionException(ArithmeticFunctionException.DIVISION_BY_ZERO,
-          ArithmeticFunctionException.DIVISION_BY_ZERO_MESSAGE);
-    }
-
-    BigDecimal decimalDividend = dividend.asDecimal();
-    return IDecimalItem.valueOf(
-        ObjectUtils.notNull(decimalDividend.divide(decimalDivisor, FunctionUtils.MATH_CONTEXT)));
+    return ((IDecimalItem) dividend).divide((IDecimalItem) divisor);
   }
 
   /**
@@ -850,33 +964,14 @@ public final class OperationFunctions { // NOPMD - intentional
    * @return the quotient
    */
   @NonNull
-  public static IIntegerItem opNumericIntegerDivide(@NonNull INumericItem dividend, @NonNull INumericItem divisor) {
-    IIntegerItem retval;
-    if (dividend instanceof IIntegerItem || divisor instanceof IIntegerItem) {
-      // create an integer result
-      BigInteger integerDivisor = divisor.asInteger();
-
-      if (BigInteger.ZERO.equals(integerDivisor)) {
-        throw new ArithmeticFunctionException(ArithmeticFunctionException.DIVISION_BY_ZERO,
-            ArithmeticFunctionException.DIVISION_BY_ZERO_MESSAGE);
-      }
-      retval = IIntegerItem.valueOf(
-          ObjectUtils.notNull(dividend.asInteger().divide(integerDivisor)));
-    } else {
-      // create a decimal result
-      BigDecimal decimalDivisor = divisor.asDecimal();
-
-      if (BigDecimal.ZERO.equals(decimalDivisor)) {
-        throw new ArithmeticFunctionException(ArithmeticFunctionException.DIVISION_BY_ZERO,
-            ArithmeticFunctionException.DIVISION_BY_ZERO_MESSAGE);
-      }
-
-      BigDecimal decimalDividend = dividend.asDecimal();
-      retval = IIntegerItem.valueOf(
-          ObjectUtils.notNull(decimalDividend
-              .divideToIntegralValue(decimalDivisor, FunctionUtils.MATH_CONTEXT).toBigInteger()));
-    }
-    return retval;
+  public static IIntegerItem opNumericIntegerDivide(
+      @NonNull INumericItem dividend,
+      @NonNull INumericItem divisor) {
+    return performArithmeticOperation(
+        dividend,
+        divisor,
+        IIntegerItem::integerDivide,
+        IDecimalItem::integerDivide);
   }
 
   /**
@@ -891,23 +986,11 @@ public final class OperationFunctions { // NOPMD - intentional
    */
   @NonNull
   public static INumericItem opNumericMod(@NonNull INumericItem dividend, @NonNull INumericItem divisor) {
-    BigDecimal decimalDivisor = divisor.asDecimal();
-
-    if (BigDecimal.ZERO.equals(decimalDivisor)) {
-      throw new ArithmeticFunctionException(ArithmeticFunctionException.DIVISION_BY_ZERO,
-          ArithmeticFunctionException.DIVISION_BY_ZERO_MESSAGE);
-    }
-
-    BigDecimal decimalDividend = dividend.asDecimal();
-
-    INumericItem retval;
-    if (BigDecimal.ZERO.equals(decimalDividend)) {
-      retval = dividend;
-    } else {
-      retval = IDecimalItem.valueOf(
-          ObjectUtils.notNull(decimalDividend.remainder(decimalDivisor, FunctionUtils.MATH_CONTEXT)));
-    }
-    return retval;
+    return performArithmeticOperation(
+        dividend,
+        divisor,
+        IIntegerItem::mod,
+        IDecimalItem::mod);
   }
 
   /**
@@ -922,15 +1005,9 @@ public final class OperationFunctions { // NOPMD - intentional
   public static INumericItem opNumericUnaryMinus(@NonNull INumericItem item) {
     INumericItem retval;
     if (item instanceof IIntegerItem) {
-      // create a decimal result
-      BigInteger integer = item.asInteger();
-      retval = IIntegerItem.valueOf(
-          ObjectUtils.notNull(integer.negate()));
+      retval = ((IIntegerItem) item).negate();
     } else if (item instanceof IDecimalItem) {
-      // create a decimal result
-      BigDecimal decimal = item.asDecimal();
-      retval = IDecimalItem.valueOf(
-          ObjectUtils.notNull(decimal.negate(FunctionUtils.MATH_CONTEXT)));
+      retval = ((IDecimalItem) item).negate();
     } else {
       throw new InvalidTypeMetapathException(item);
     }
@@ -953,7 +1030,7 @@ public final class OperationFunctions { // NOPMD - intentional
     IBooleanItem retval;
     if (arg1 == null || arg2 == null) {
       retval = IBooleanItem.FALSE;
-    } else if (arg1 instanceof IIntegerItem || arg2 instanceof IIntegerItem) {
+    } else if (arg1 instanceof IIntegerItem && arg2 instanceof IIntegerItem) {
       retval = IBooleanItem.valueOf(arg1.asInteger().equals(arg2.asInteger()));
     } else {
       retval = IBooleanItem.valueOf(arg1.asDecimal().equals(arg2.asDecimal()));
@@ -977,7 +1054,7 @@ public final class OperationFunctions { // NOPMD - intentional
     IBooleanItem retval;
     if (arg1 == null || arg2 == null) {
       retval = IBooleanItem.FALSE;
-    } else if (arg1 instanceof IIntegerItem || arg2 instanceof IIntegerItem) {
+    } else if (arg1 instanceof IIntegerItem && arg2 instanceof IIntegerItem) {
       int result = arg1.asInteger().compareTo(arg2.asInteger());
       retval = IBooleanItem.valueOf(result > 0);
     } else {
@@ -1003,7 +1080,7 @@ public final class OperationFunctions { // NOPMD - intentional
     IBooleanItem retval;
     if (arg1 == null || arg2 == null) {
       retval = IBooleanItem.FALSE;
-    } else if (arg1 instanceof IIntegerItem || arg2 instanceof IIntegerItem) {
+    } else if (arg1 instanceof IIntegerItem && arg2 instanceof IIntegerItem) {
       int result = arg1.asInteger().compareTo(arg2.asInteger());
       retval = IBooleanItem.valueOf(result < 0);
     } else {
@@ -1070,6 +1147,17 @@ public final class OperationFunctions { // NOPMD - intentional
     return IBooleanItem.valueOf(!left && right);
   }
 
+  /**
+   * Based on XPath 3.1 <a href=
+   * "https://www.w3.org/TR/xpath-functions-31/#func-same-key">op:same-key</a>.
+   *
+   * @param k1
+   *          the first key to compare
+   * @param k2
+   *          the second key to compare
+   * @return {@code true} if the compared keys are the same, or {@code false}
+   *         otherwise
+   */
   public static boolean opSameKey(@NonNull IAnyAtomicItem k1, @NonNull IAnyAtomicItem k2) {
     boolean retval;
     if ((k1 instanceof IStringItem || k1 instanceof IAnyUriItem || k1 instanceof IUntypedAtomicItem)

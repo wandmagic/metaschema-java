@@ -27,6 +27,15 @@ import java.util.Locale;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
+/**
+ * A collection of comparison functions supporting value and general
+ * comparisons.
+ * <p>
+ * Based on the XPath 3.1
+ * <a href="https://www.w3.org/TR/xpath-31/#id-comparisons">comparison
+ * expressions</a> syntax.
+ */
+// FIXME: Add unit tests
 @SuppressWarnings({ "PMD.GodClass", "PMD.CyclomaticComplexity" })
 public final class ComparisonFunctions {
   /**
@@ -98,9 +107,9 @@ public final class ComparisonFunctions {
       @NonNull ISequence<? extends IAnyAtomicItem> rightItems) {
 
     IBooleanItem retval = IBooleanItem.FALSE;
-    for (IAnyAtomicItem left : leftItems.getValue()) {
+    for (IAnyAtomicItem left : leftItems) {
       assert left != null;
-      for (IAnyAtomicItem right : rightItems.getValue()) {
+      for (IAnyAtomicItem right : rightItems) {
         assert right != null;
         IAnyAtomicItem leftCast;
         IAnyAtomicItem rightCast;

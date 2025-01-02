@@ -47,8 +47,8 @@ public class Range
 
   @Override
   public ISequence<IIntegerItem> accept(DynamicContext dynamicContext, ISequence<?> focus) {
-    IAnyAtomicItem leftItem = getFirstDataItem(getLeft().accept(dynamicContext, focus), true);
-    IAnyAtomicItem rightItem = getFirstDataItem(getRight().accept(dynamicContext, focus), true);
+    IAnyAtomicItem leftItem = ISequence.of(getLeft().accept(dynamicContext, focus).atomize()).getFirstItem(true);
+    IAnyAtomicItem rightItem = ISequence.of(getRight().accept(dynamicContext, focus).atomize()).getFirstItem(true);
 
     IIntegerItem left = leftItem == null ? null : IIntegerItem.cast(leftItem);
     IIntegerItem right = rightItem == null ? null : IIntegerItem.cast(rightItem);
@@ -58,7 +58,7 @@ public class Range
       retval = ISequence.empty();
     } else {
 
-      BigInteger min = right.asInteger();
+      BigInteger min = left.asInteger();
       BigInteger max = right.asInteger();
 
       List<IIntegerItem> range = new ArrayList<>(max.subtract(min).add(BigInteger.ONE).intValueExact());

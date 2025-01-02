@@ -11,10 +11,16 @@ import gov.nist.secauto.metaschema.core.metapath.cst.IExpressionVisitor;
 import gov.nist.secauto.metaschema.core.metapath.item.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.item.node.INodeItem;
 
-import java.util.stream.Stream;
-
 import edu.umd.cs.findbugs.annotations.NonNull;
 
+/**
+ * An expression that finds an ancestor of the {@code left} expression using the
+ * {@code right} expression.
+ * <p>
+ * Based on the XPath 3.1 <a href=
+ * "https://www.w3.org/TR/xpath-31/#id-relative-path-expressions">relative path
+ * expressions</a>.
+ */
 public class RelativeDoubleSlashPath
     extends AbstractRelativePathExpression {
 
@@ -43,7 +49,6 @@ public class RelativeDoubleSlashPath
     ISequence<?> leftResult = getLeft().accept(dynamicContext, focus);
 
     // evaluate the right path in the context of the left
-    Stream<? extends INodeItem> result = search(getRight(), dynamicContext, leftResult);
-    return ISequence.of(result);
+    return ISequence.of(search(getRight(), dynamicContext, leftResult));
   }
 }

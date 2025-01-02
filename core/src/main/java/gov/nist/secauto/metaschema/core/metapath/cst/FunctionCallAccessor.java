@@ -6,17 +6,10 @@
 package gov.nist.secauto.metaschema.core.metapath.cst;
 
 import gov.nist.secauto.metaschema.core.metapath.DynamicContext;
-import gov.nist.secauto.metaschema.core.metapath.StaticMetapathException;
 import gov.nist.secauto.metaschema.core.metapath.function.IFunction;
-import gov.nist.secauto.metaschema.core.metapath.function.library.ArrayGet;
-import gov.nist.secauto.metaschema.core.metapath.function.library.MapGet;
-import gov.nist.secauto.metaschema.core.metapath.item.ICollectionValue;
 import gov.nist.secauto.metaschema.core.metapath.item.IItem;
 import gov.nist.secauto.metaschema.core.metapath.item.ISequence;
-import gov.nist.secauto.metaschema.core.metapath.item.atomic.IAnyAtomicItem;
-import gov.nist.secauto.metaschema.core.metapath.item.atomic.IIntegerItem;
-import gov.nist.secauto.metaschema.core.metapath.item.function.IArrayItem;
-import gov.nist.secauto.metaschema.core.metapath.item.function.IMapItem;
+import gov.nist.secauto.metaschema.core.metapath.type.InvalidTypeMetapathException;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 
 import java.util.List;
@@ -25,7 +18,13 @@ import java.util.stream.Stream;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
-public class FunctionCallAccessor implements IExpression {
+/**
+ * An implementation of the XPATH 3.1
+ * <a href="https://www.w3.org/TR/xpath-31/#id-eval-function-call">function call
+ * accessor</a>.
+ */
+public class FunctionCallAccessor
+    extends AbstractExpression {
   @NonNull
   private final IExpression base;
   @NonNull
@@ -78,41 +77,13 @@ public class FunctionCallAccessor implements IExpression {
     ISequence<?> target = getBase().accept(dynamicContext, focus);
     IItem collection = target.getFirstItem(true);
 
-    if (collection instanceof AnonymousFunctionCall) {
-      return ((AnonymousFunctionCall) collection).execute(
-          ObjectUtils.notNull(getArguments().stream()
-              .map(expr -> expr.accept(dynamicContext, focus))
-              .collect(Collectors.toUnmodifiableList())),
-          dynamicContext,
-          focus);
-    }
-    if (collection instanceof IFunction) {
-      return ((IFunction) collection).execute(ObjectUtils.notNull(getArguments().stream()
-          .map(expr -> expr.accept(dynamicContext, focus))
-          .collect(Collectors.toUnmodifiableList())), dynamicContext, focus);
+    if (!(collection instanceof IFunction)) {
+      throw new InvalidTypeMetapathException(collection, "The base expression did not evaluate to a function.");
     }
 
-    // the value to find, which will be the key for a map or the index for an array
-    IExpression argument = getArguments().stream().findFirst()
-        .orElseThrow(() -> new StaticMetapathException(
-            StaticMetapathException.NO_FUNCTION_MATCH,
-            "No key provided for array or map lookup"));
-
-    IAnyAtomicItem key = ISequence.of(argument.accept(dynamicContext, focus).atomize())
-        .getFirstItem(false);
-    if (key == null) {
-      throw new StaticMetapathException(StaticMetapathException.NO_FUNCTION_MATCH,
-          "No key provided for functional call lookup");
-    }
-
-    ICollectionValue retval = null;
-    if (collection instanceof IArrayItem) {
-      retval = ArrayGet.get((IArrayItem<?>) collection, IIntegerItem.cast(key));
-    } else if (collection instanceof IMapItem) {
-      retval = MapGet.get((IMapItem<?>) collection, key);
-    }
-
-    return retval == null ? ISequence.empty() : retval.toSequence();
+    return ((IFunction) collection).execute(ObjectUtils.notNull(getArguments().stream()
+        .map(expr -> expr.accept(dynamicContext, focus))
+        .collect(Collectors.toUnmodifiableList())), dynamicContext, focus);
   }
 
   @Override

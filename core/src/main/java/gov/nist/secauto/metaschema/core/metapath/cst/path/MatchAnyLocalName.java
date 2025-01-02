@@ -3,17 +3,20 @@
  * SPDX-License-Identifier: CC0-1.0
  */
 
-package gov.nist.secauto.metaschema.core.metapath.cst.type;
+package gov.nist.secauto.metaschema.core.metapath.cst.path;
 
-import gov.nist.secauto.metaschema.core.metapath.cst.path.IWildcardMatcher;
 import gov.nist.secauto.metaschema.core.metapath.item.node.IDefinitionNodeItem;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
  * A wildcard matcher that matches any local name in a specific namespace.
+ * <p>
+ * This matcher implements the namespace:* pattern where it matches any node
+ * whose namespace exactly matches the specified namespace, regardless of the
+ * local name.
  */
-public class MatchAnyLocalName implements IWildcardMatcher {
+class MatchAnyLocalName implements IWildcardMatcher {
   @NonNull
   private final String namespace;
 

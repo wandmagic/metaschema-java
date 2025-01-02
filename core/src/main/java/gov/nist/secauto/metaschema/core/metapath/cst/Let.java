@@ -21,7 +21,8 @@ import edu.umd.cs.findbugs.annotations.NonNull;
  * expression</a> supporting variable value binding.
  */
 @SuppressWarnings("PMD.ShortClassName")
-public class Let implements IExpression {
+public class Let
+    extends AbstractExpression {
   @NonNull
   private final VariableDeclaration variable;
   @NonNull
@@ -141,11 +142,9 @@ public class Let implements IExpression {
         @NonNull ISequence<?> focus,
         @NonNull DynamicContext boundDynamicContext) {
 
-      ISequence<?> result = getBoundExpression().accept(evaluationDynamicContext, focus);
-
-      // ensure this sequence is list backed
-      result.getValue();
-
+      ISequence<?> result = getBoundExpression().accept(evaluationDynamicContext, focus)
+          // ensure this sequence is list backed
+          .reusable();
       boundDynamicContext.bindVariableValue(getName(), result);
     }
   }

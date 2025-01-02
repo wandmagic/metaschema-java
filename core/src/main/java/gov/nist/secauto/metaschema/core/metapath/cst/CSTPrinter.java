@@ -9,22 +9,22 @@ import gov.nist.secauto.metaschema.core.metapath.cst.items.ArraySequenceConstruc
 import gov.nist.secauto.metaschema.core.metapath.cst.items.ArraySquareConstructor;
 import gov.nist.secauto.metaschema.core.metapath.cst.items.DecimalLiteral;
 import gov.nist.secauto.metaschema.core.metapath.cst.items.EmptySequence;
+import gov.nist.secauto.metaschema.core.metapath.cst.items.Except;
 import gov.nist.secauto.metaschema.core.metapath.cst.items.IntegerLiteral;
 import gov.nist.secauto.metaschema.core.metapath.cst.items.Intersect;
 import gov.nist.secauto.metaschema.core.metapath.cst.items.MapConstructor;
 import gov.nist.secauto.metaschema.core.metapath.cst.items.PostfixLookup;
 import gov.nist.secauto.metaschema.core.metapath.cst.items.Quantified;
 import gov.nist.secauto.metaschema.core.metapath.cst.items.Range;
+import gov.nist.secauto.metaschema.core.metapath.cst.items.SequenceExpression;
 import gov.nist.secauto.metaschema.core.metapath.cst.items.SimpleMap;
 import gov.nist.secauto.metaschema.core.metapath.cst.items.StringConcat;
 import gov.nist.secauto.metaschema.core.metapath.cst.items.StringLiteral;
 import gov.nist.secauto.metaschema.core.metapath.cst.items.UnaryLookup;
 import gov.nist.secauto.metaschema.core.metapath.cst.items.Union;
 import gov.nist.secauto.metaschema.core.metapath.cst.logic.And;
-import gov.nist.secauto.metaschema.core.metapath.cst.logic.Except;
 import gov.nist.secauto.metaschema.core.metapath.cst.logic.GeneralComparison;
 import gov.nist.secauto.metaschema.core.metapath.cst.logic.If;
-import gov.nist.secauto.metaschema.core.metapath.cst.logic.Negate;
 import gov.nist.secauto.metaschema.core.metapath.cst.logic.Or;
 import gov.nist.secauto.metaschema.core.metapath.cst.logic.PredicateExpression;
 import gov.nist.secauto.metaschema.core.metapath.cst.logic.ValueComparison;
@@ -33,12 +33,13 @@ import gov.nist.secauto.metaschema.core.metapath.cst.math.Division;
 import gov.nist.secauto.metaschema.core.metapath.cst.math.IntegerDivision;
 import gov.nist.secauto.metaschema.core.metapath.cst.math.Modulo;
 import gov.nist.secauto.metaschema.core.metapath.cst.math.Multiplication;
+import gov.nist.secauto.metaschema.core.metapath.cst.math.Negate;
 import gov.nist.secauto.metaschema.core.metapath.cst.math.Subtraction;
 import gov.nist.secauto.metaschema.core.metapath.cst.path.Axis;
 import gov.nist.secauto.metaschema.core.metapath.cst.path.ContextItem;
-import gov.nist.secauto.metaschema.core.metapath.cst.path.Flag;
+import gov.nist.secauto.metaschema.core.metapath.cst.path.FlagStep;
 import gov.nist.secauto.metaschema.core.metapath.cst.path.KindNodeTest;
-import gov.nist.secauto.metaschema.core.metapath.cst.path.ModelInstance;
+import gov.nist.secauto.metaschema.core.metapath.cst.path.ModelInstanceStep;
 import gov.nist.secauto.metaschema.core.metapath.cst.path.NameNodeTest;
 import gov.nist.secauto.metaschema.core.metapath.cst.path.RelativeDoubleSlashPath;
 import gov.nist.secauto.metaschema.core.metapath.cst.path.RelativeSlashPath;
@@ -55,6 +56,10 @@ import gov.nist.secauto.metaschema.core.metapath.cst.type.Treat;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 
+/**
+ * Supports the generation of a human-readable representation of a Metapath
+ * compact syntax tree (CST).
+ */
 @SuppressWarnings("PMD.CouplingBetweenObjects")
 public final class CSTPrinter {
   private CSTPrinter() {
@@ -187,8 +192,8 @@ public final class CSTPrinter {
     }
 
     @Override
-    public String visitFlag(Flag expr, State context) {
-      return appendNode(expr, super.visitFlag(expr, context), context);
+    public String visitFlagStep(FlagStep expr, State context) {
+      return appendNode(expr, super.visitFlagStep(expr, context), context);
     }
 
     @Override
@@ -222,7 +227,7 @@ public final class CSTPrinter {
     }
 
     @Override
-    public String visitMetapath(Metapath expr, State context) {
+    public String visitMetapath(SequenceExpression expr, State context) {
       return appendNode(expr, super.visitMetapath(expr, context), context);
     }
 
@@ -232,8 +237,8 @@ public final class CSTPrinter {
     }
 
     @Override
-    public String visitModelInstance(ModelInstance expr, State context) {
-      return appendNode(expr, super.visitModelInstance(expr, context), context);
+    public String visitModelInstanceStep(ModelInstanceStep expr, State context) {
+      return appendNode(expr, super.visitModelInstanceStep(expr, context), context);
     }
 
     @Override
