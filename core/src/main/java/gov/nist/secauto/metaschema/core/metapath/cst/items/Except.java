@@ -5,28 +5,28 @@
 
 package gov.nist.secauto.metaschema.core.metapath.cst.items;
 
-import gov.nist.secauto.metaschema.core.metapath.cst.IExpression;
+import gov.nist.secauto.metaschema.core.metapath.IExpression;
 import gov.nist.secauto.metaschema.core.metapath.cst.IExpressionVisitor;
-import gov.nist.secauto.metaschema.core.metapath.cst.logic.AbstractFilterExpression;
 import gov.nist.secauto.metaschema.core.metapath.item.IItem;
 import gov.nist.secauto.metaschema.core.metapath.item.ISequence;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
- * The CST node for a Metapath
- * <a href="https://www.w3.org/TR/xpath-31/#combining_seq">except
+ * The CST node for a Metapath <a href="https://www.w3.org/TR/xpath-31/#combining_seq">except
  * expression</a>.
  */
 public class Except
     extends AbstractFilterExpression {
 
   /**
-   * Construct a except filter expression, which removes the items resulting from
-   * the filter expression from the items expression.
+   * Construct a except filter expression, which removes the items resulting from the filter
+   * expression from the items expression.
    *
    * @param text
    *          the parsed text of the expression
@@ -44,8 +44,9 @@ public class Except
 
   @Override
   protected ISequence<?> applyFilterTo(@NonNull List<? extends IItem> source, @NonNull List<? extends IItem> items) {
+    Set<IItem> filterSet = new HashSet<>(items);
     return ISequence.of(ObjectUtils.notNull(source.stream()
-        .filter(item -> !items.contains(item))));
+        .filter(item -> !filterSet.contains(item))));
   }
 
   @Override
