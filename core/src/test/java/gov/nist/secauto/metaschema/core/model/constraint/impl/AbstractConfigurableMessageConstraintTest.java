@@ -13,12 +13,12 @@ import gov.nist.secauto.metaschema.core.metapath.DynamicContext;
 import gov.nist.secauto.metaschema.core.metapath.ExpressionTestBase;
 import gov.nist.secauto.metaschema.core.metapath.IMetapathExpression;
 import gov.nist.secauto.metaschema.core.metapath.StaticContext;
-import gov.nist.secauto.metaschema.core.metapath.function.library.impl.MockedDocumentGenerator;
 import gov.nist.secauto.metaschema.core.metapath.item.node.IDocumentNodeItem;
 import gov.nist.secauto.metaschema.core.model.ISource;
 import gov.nist.secauto.metaschema.core.model.constraint.DefaultConstraintValidator;
 import gov.nist.secauto.metaschema.core.model.constraint.FindingCollectingConstraintValidationHandler;
 import gov.nist.secauto.metaschema.core.model.constraint.IExpectConstraint;
+import gov.nist.secauto.metaschema.core.testing.model.mocking.MockedDocumentGenerator;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 
 import org.junit.jupiter.api.Test;

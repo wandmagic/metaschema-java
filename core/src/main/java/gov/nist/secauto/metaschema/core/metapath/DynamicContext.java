@@ -328,7 +328,7 @@ public class DynamicContext { // NOPMD - intentional data class
   public void popExecutionStack(@NonNull IExpression expression) {
     IExpression popped = this.sharedState.executionStack.pop();
     if (!expression.equals(popped)) {
-        throw new IllegalStateException("Popped expression does not match expected expression");
+      throw new IllegalStateException("Popped expression does not match expected expression");
     }
   }
 
