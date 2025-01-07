@@ -56,6 +56,11 @@ public interface IStringItem extends IAnyAtomicItem {
     }
   }
 
+  default IBase64BinaryItem encode() {
+    // Encode the string to Base64
+    return IBase64BinaryItem.encode(asString());
+  }
+
   /**
    * Cast the provided type to this item type.
    *
