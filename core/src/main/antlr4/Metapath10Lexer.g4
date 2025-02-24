@@ -61,7 +61,8 @@ KW_DESCENDANT             : 'descendant';
 KW_DESCENDANT_OR_SELF     : 'descendant-or-self';
 KW_DIV                    : 'div';
 KW_DOCUMENT_NODE          : 'document-node';
-KW_ELEMENT                : 'element';
+KW_FIELD                  : 'field';
+KW_ASSEMBLY               : 'assembly';
 KW_ELSE                   : 'else';
 KW_EMPTY_SEQUENCE         : 'empty-sequence';
 KW_EQ                     : 'eq';
@@ -116,7 +117,7 @@ DecimalLiteral   : '.' FragDigits | FragDigits '.' [0-9]*;
 DoubleLiteral    : ('.' FragDigits | FragDigits ('.' [0-9]*)?) [eE] [+-]? FragDigits;
 StringLiteral    : '"' (~["] | FragEscapeQuot)* '"' | '\'' (~['] | FragEscapeApos)* '\'';
 URIQualifiedName : BracedURILiteral NCName;
-BracedURILiteral : 'Q' '{' [^{}]* '}';
+BracedURILiteral : 'Q' '{' ~[{}]* '}';
 // Error in spec: EscapeQuot and EscapeApos are not terminals!
 fragment FragEscapeQuot : '""';
 fragment FragEscapeApos : '\'\'';

@@ -13,23 +13,22 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import gov.nist.secauto.metaschema.core.metapath.DynamicContext;
-import gov.nist.secauto.metaschema.core.metapath.ISequence;
-import gov.nist.secauto.metaschema.core.metapath.MetapathExpression;
+import gov.nist.secauto.metaschema.core.metapath.IMetapathExpression;
 import gov.nist.secauto.metaschema.core.metapath.StaticContext;
+import gov.nist.secauto.metaschema.core.metapath.item.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.item.node.IDocumentNodeItem;
 import gov.nist.secauto.metaschema.core.model.IConstraintLoader;
 import gov.nist.secauto.metaschema.core.model.MetaschemaException;
 import gov.nist.secauto.metaschema.core.model.constraint.IConstraintSet;
+import gov.nist.secauto.metaschema.core.qname.IEnhancedQName;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 import gov.nist.secauto.metaschema.databind.IBindingContext;
-import gov.nist.secauto.metaschema.databind.io.BindingException;
 import gov.nist.secauto.metaschema.databind.model.metaschema.IBindingMetaschemaModule;
 
 import org.junit.jupiter.api.Test;
 import org.junit.platform.commons.util.ReflectionUtils;
 
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Paths;
 import java.util.Iterator;
@@ -37,13 +36,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.xml.namespace.QName;
-
 class BasicMetaschemaTest
     extends AbstractMetaschemaTest {
 
   @Test
-  void testSimpleMetaschema() throws MetaschemaException, IOException, ClassNotFoundException, BindingException {
+  void testSimpleMetaschema() throws MetaschemaException, IOException, ClassNotFoundException {
     runTests("simple", "gov.nist.csrc.ns.metaschema.testing.simple.TopLevel", ObjectUtils.notNull(generationDir));
     // runTests("simple", "gov.nist.csrc.ns.metaschema.testing.simple.TopLevel",
     // generationDir, (obj) ->
@@ -58,7 +55,7 @@ class BasicMetaschemaTest
 
   @Test
   void testSimpleUuidMetaschema()
-      throws MetaschemaException, IOException, ClassNotFoundException, BindingException {
+      throws MetaschemaException, IOException, ClassNotFoundException {
     runTests(
         "simple_with_uuid",
         "gov.nist.csrc.ns.metaschema.testing.simple.with.uuid.TopLevel",
@@ -74,7 +71,7 @@ class BasicMetaschemaTest
 
   @Test
   void testSimpleWithFieldMetaschema()
-      throws MetaschemaException, IOException, ClassNotFoundException, BindingException {
+      throws MetaschemaException, IOException, ClassNotFoundException {
     runTests(
         "simple_with_field",
         "gov.nist.csrc.ns.metaschema.testing.simple.with.field.TopLevel",
@@ -87,7 +84,7 @@ class BasicMetaschemaTest
 
   @Test
   void testFieldsWithFlagMetaschema()
-      throws MetaschemaException, IOException, ClassNotFoundException, BindingException {
+      throws MetaschemaException, IOException, ClassNotFoundException {
     runTests(
         "fields_with_flags",
         "gov.nist.csrc.ns.metaschema.testing.fields.with.flags.TopLevel",
@@ -158,7 +155,7 @@ class BasicMetaschemaTest
 
   @Test
   void testAssemblyMetaschema()
-      throws MetaschemaException, IOException, ClassNotFoundException, BindingException {
+      throws MetaschemaException, IOException, ClassNotFoundException {
     runTests(
         "assembly",
         "gov.nist.itl.metaschema.codegen.xml.example.assembly.TopLevel",
@@ -174,7 +171,7 @@ class BasicMetaschemaTest
 
   @Test
   void testLocalDefinitionsMetaschema()
-      throws MetaschemaException, IOException, ClassNotFoundException, BindingException {
+      throws MetaschemaException, IOException, ClassNotFoundException {
     runTests(
         "local-definitions",
         "gov.nist.csrc.ns.metaschema.testing.local.definitions.TopLevel",
@@ -182,7 +179,7 @@ class BasicMetaschemaTest
   }
 
   @Test
-  void testExistsWithVariable() throws IOException, URISyntaxException, MetaschemaException {
+  void testExistsWithVariable() throws IOException, MetaschemaException {
     IBindingContext bindingContext = newBindingContext();
 
     IBindingMetaschemaModule module = bindingContext.loadMetaschema(
@@ -205,20 +202,18 @@ class BasicMetaschemaTest
 
     // ISequence<?> imports = importsMetapath.evaluate(moduleItem, dynamicContext);
 
-    MetapathExpression allImportsExpression = MetapathExpression.compile(
+    IMetapathExpression allImportsExpression = IMetapathExpression.compile(
         "recurse-depth(/METASCHEMA,'for $import in ./import return doc(resolve-uri($import/@href))/METASCHEMA')",
         staticContext);
 
-    ISequence<?> allImports = allImportsExpression.evaluate(moduleItem, dynamicContext);
-    allImports.getValue();
-
-    MetapathExpression path = MetapathExpression.compile("exists($all-imports/define-assembly/root-name)",
+    ISequence<?> allImports = allImportsExpression.evaluate(moduleItem, dynamicContext).reusable();
+    IMetapathExpression path = IMetapathExpression.compile("exists($all-imports/define-assembly/root-name)",
         staticContext);
 
     boolean result = ObjectUtils.requireNonNull(path.evaluateAs(
         moduleItem,
-        MetapathExpression.ResultType.BOOLEAN,
-        dynamicContext.subContext().bindVariableValue(new QName("all-imports"), allImports)));
+        IMetapathExpression.ResultType.BOOLEAN,
+        dynamicContext.subContext().bindVariableValue(IEnhancedQName.of("all-imports"), allImports)));
 
     assertTrue(result, "no root");
   }

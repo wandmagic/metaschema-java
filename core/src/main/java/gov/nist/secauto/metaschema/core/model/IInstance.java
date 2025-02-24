@@ -40,11 +40,11 @@ public interface IInstance extends IModelElement {
    *
    * A coordinate consists of the element's:
    * <ul>
-   * <li>containing Metaschema module's short name</li>
-   * <li>model type</li>
-   * <li>name</li>
-   * <li>hash code</li>
-   * <li>the hash code of the definition</li>
+   * <li>containing Metaschema module's short name
+   * <li>model type
+   * <li>name
+   * <li>hash code
+   * <li>the hash code of the definition
    * </ul>
    *
    * @return the coordinate

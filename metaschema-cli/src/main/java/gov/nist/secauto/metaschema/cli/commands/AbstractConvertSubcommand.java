@@ -10,7 +10,6 @@ import gov.nist.secauto.metaschema.cli.processor.ExitCode;
 import gov.nist.secauto.metaschema.cli.processor.command.AbstractCommandExecutor;
 import gov.nist.secauto.metaschema.cli.processor.command.AbstractTerminalCommand;
 import gov.nist.secauto.metaschema.cli.processor.command.CommandExecutionException;
-import gov.nist.secauto.metaschema.cli.processor.command.DefaultExtraArgument;
 import gov.nist.secauto.metaschema.cli.processor.command.ExtraArgument;
 import gov.nist.secauto.metaschema.core.util.AutoCloser;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
@@ -48,8 +47,8 @@ public abstract class AbstractConvertSubcommand
   private static final String COMMAND = "convert";
   @NonNull
   private static final List<ExtraArgument> EXTRA_ARGUMENTS = ObjectUtils.notNull(List.of(
-      new DefaultExtraArgument("source-file-or-URL", true),
-      new DefaultExtraArgument("destination-file", false)));
+      ExtraArgument.newInstance("source-file-or-URL", true),
+      ExtraArgument.newInstance("destination-file", false)));
 
   @Override
   public String getName() {
@@ -114,6 +113,7 @@ public abstract class AbstractConvertSubcommand
         destination = MetaschemaCommands.handleDestination(ObjectUtils.requireNonNull(extraArgs.get(1)), cmdLine);
       }
 
+      @SuppressWarnings("synthetic-access")
       URI source = MetaschemaCommands.handleSource(
           ObjectUtils.requireNonNull(extraArgs.get(0)),
           ObjectUtils.notNull(getCurrentWorkingDirectory().toUri()));

@@ -35,7 +35,7 @@ import edu.umd.cs.findbugs.annotations.NonNull;
  * with a non-null {@link #typeAdapter()}.
  * <li>A type or a collection whose item value is a type based on a class with a
  * {@link MetaschemaField} annotation, with a property annotated with
- * {@link BoundFieldValue}.</li>
+ * {@link BoundFieldValue}.
  * </ol>
  */
 @Documented

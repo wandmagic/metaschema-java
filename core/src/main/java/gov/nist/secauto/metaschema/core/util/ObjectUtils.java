@@ -12,6 +12,9 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
+/**
+ * A collection of utilities for checking and managing Java objects.
+ */
 public final class ObjectUtils {
   private ObjectUtils() {
     // disable construction

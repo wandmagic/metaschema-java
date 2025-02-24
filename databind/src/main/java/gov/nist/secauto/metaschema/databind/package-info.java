@@ -12,7 +12,7 @@
  * ({@link gov.nist.secauto.metaschema.databind.model}) using annotations
  * ({@link gov.nist.secauto.metaschema.databind.model.annotations}). The
  * {@link gov.nist.secauto.metaschema.databind.DefaultBindingContext} is used to
- * load a bound Java class.</li>
+ * load a bound Java class.
  * <li>A metaschema-specific binding, based on the first method, that is capable
  * of representing a Metaschema module
  * ({@link gov.nist.secauto.metaschema.databind.model.metaschema.binding}). The

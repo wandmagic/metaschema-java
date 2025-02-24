@@ -6,6 +6,9 @@
 package gov.nist.secauto.metaschema.databind.model.impl;
 
 import gov.nist.secauto.metaschema.core.model.IBoundObject;
+import gov.nist.secauto.metaschema.core.model.ISource;
+import gov.nist.secauto.metaschema.core.model.util.ModuleUtils;
+import gov.nist.secauto.metaschema.core.qname.IEnhancedQName;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 import gov.nist.secauto.metaschema.databind.IBindingContext;
 import gov.nist.secauto.metaschema.databind.io.BindingException;
@@ -15,8 +18,6 @@ import gov.nist.secauto.metaschema.databind.model.IBoundModule;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
-
-import javax.xml.namespace.QName;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
@@ -33,9 +34,9 @@ public abstract class AbstractBoundDefinitionModelComplex<A extends Annotation>
   @NonNull
   private final IBoundModule module;
   @NonNull
-  private final Lazy<QName> qname;
+  private final Lazy<IEnhancedQName> qname;
   @NonNull
-  private final Lazy<QName> definitionQName;
+  private final Lazy<IEnhancedQName> definitionQName;
   @Nullable
   private final Method beforeDeserializeMethod;
   @Nullable
@@ -50,8 +51,12 @@ public abstract class AbstractBoundDefinitionModelComplex<A extends Annotation>
     this.annotation = annotation;
     this.bindingContext = bindingContext;
     this.module = module;
-    this.qname = ObjectUtils.notNull(Lazy.lazy(() -> getContainingModule().toModelQName(getEffectiveName())));
-    this.definitionQName = ObjectUtils.notNull(Lazy.lazy(() -> getContainingModule().toModelQName(getName())));
+    this.qname = ObjectUtils.notNull(Lazy.lazy(() -> ModuleUtils.parseModelName(
+        getContainingModule(),
+        getEffectiveName())));
+    this.definitionQName = ObjectUtils.notNull(Lazy.lazy(() -> ModuleUtils.parseModelName(
+        getContainingModule(),
+        getName())));
     this.beforeDeserializeMethod = ClassIntrospector.getMatchingMethod(
         clazz,
         "beforeDeserialize",
@@ -79,6 +84,11 @@ public abstract class AbstractBoundDefinitionModelComplex<A extends Annotation>
   }
 
   @Override
+  public ISource getSource() {
+    return getContainingModule().getSource();
+  }
+
+  @Override
   @NonNull
   public IBindingContext getBindingContext() {
     return bindingContext;
@@ -86,13 +96,13 @@ public abstract class AbstractBoundDefinitionModelComplex<A extends Annotation>
 
   @SuppressWarnings("null")
   @Override
-  public final QName getXmlQName() {
+  public final IEnhancedQName getQName() {
     return qname.get();
   }
 
   @SuppressWarnings("null")
   @Override
-  public final QName getDefinitionQName() {
+  public final IEnhancedQName getDefinitionQName() {
     return definitionQName.get();
   }
 

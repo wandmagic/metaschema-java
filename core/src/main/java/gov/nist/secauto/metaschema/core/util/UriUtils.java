@@ -16,6 +16,13 @@ import java.util.regex.Pattern;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
+/**
+ * A collection of methods for manipulating uniform resource identifiers (URIs),
+ * providing functionality for URI resolution, relativization, and path
+ * manipulation.
+ * <p>
+ * This utility class supports both local file paths and remote URIs.
+ */
 public final class UriUtils {
   private static final Pattern URI_SEPERATOR_PATTERN = Pattern.compile("\\/");
   private static final String URI_SEPERATOR = "/";
@@ -49,8 +56,8 @@ public final class UriUtils {
         // try to parse the location as a local file path
         Path path = Paths.get(location);
         asUri = path.toUri();
-      } catch (InvalidPathException ex2) {
-        // not a local file path, so rethrow the original URI expection
+      } catch (@SuppressWarnings("unused") InvalidPathException ex2) {
+        // not a local file path, so rethrow the original URI exception
         throw ex;
       }
     }
@@ -72,10 +79,11 @@ public final class UriUtils {
    * @throws URISyntaxException
    *           if any of the URIs are malformed
    */
+  @NonNull
   public static URI relativize(URI base, URI other, boolean prepend) throws URISyntaxException {
     URI normBase = Objects.requireNonNull(base).normalize();
     URI normOther = Objects.requireNonNull(other).normalize();
-    URI retval = normBase.relativize(normOther);
+    URI retval = ObjectUtils.notNull(normBase.relativize(normOther));
 
     if (prepend && !normBase.isOpaque() && !retval.isOpaque() && hasSameSchemeAndAuthority(normBase, retval)) {
       // the URIs are not opaque and they share the same scheme and authority
@@ -85,7 +93,6 @@ public final class UriUtils {
 
       retval = new URI(null, null, newPath, normOther.getQuery(), normOther.getFragment());
     }
-
     return retval;
   }
 

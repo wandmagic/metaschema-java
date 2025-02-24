@@ -5,73 +5,58 @@
 
 package gov.nist.secauto.metaschema.core.datatype.adapter;
 
-import com.fasterxml.jackson.databind.jsonFormatVisitors.JsonFormatTypes;
-
-import gov.nist.secauto.metaschema.core.datatype.AbstractDataTypeAdapter;
 import gov.nist.secauto.metaschema.core.metapath.MetapathConstants;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IBase64BinaryItem;
+import gov.nist.secauto.metaschema.core.qname.EQNameFactory;
+import gov.nist.secauto.metaschema.core.qname.IEnhancedQName;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 
-import java.nio.ByteBuffer;
-import java.util.Base64;
-import java.util.List;
+import org.apache.commons.codec.BinaryDecoder;
+import org.apache.commons.codec.BinaryEncoder;
+import org.apache.commons.codec.binary.Base64;
 
-import javax.xml.namespace.QName;
+import java.nio.ByteBuffer;
+import java.util.List;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
+/**
+ * Maintains a byte buffer backed representation of a byte stream parsed from a
+ * BASE64 encoded string.
+ * <p>
+ * Provides support for the Metaschema <a href=
+ * "https://pages.nist.gov/metaschema/specification/datatypes/#BASE64">BASE64</a>
+ * data type.
+ */
 public class Base64Adapter
-    extends AbstractDataTypeAdapter<ByteBuffer, IBase64BinaryItem> {
+    extends AbstractBinaryAdapter<IBase64BinaryItem> {
   @NonNull
-  private static final List<QName> NAMES = ObjectUtils.notNull(
+  private static final List<IEnhancedQName> NAMES = ObjectUtils.notNull(
       List.of(
-          new QName(MetapathConstants.NS_METAPATH.toASCIIString(), "base64"),
+          EQNameFactory.instance().newQName(MetapathConstants.NS_METAPATH, "base64"),
           // for backwards compatibility with original type name
-          new QName(MetapathConstants.NS_METAPATH.toASCIIString(), "base64Binary")));
+          EQNameFactory.instance().newQName(MetapathConstants.NS_METAPATH, "base64Binary")));
+
+  @NonNull
+  private static final Base64 BASE64 = ObjectUtils.notNull(Base64.builder().get());
 
   Base64Adapter() {
-    super(ByteBuffer.class);
+    super(IBase64BinaryItem.class, IBase64BinaryItem::cast);
   }
 
   @Override
-  public List<QName> getNames() {
+  protected BinaryEncoder getEncoder() {
+    return BASE64;
+  }
+
+  @Override
+  protected BinaryDecoder getDecoder() {
+    return BASE64;
+  }
+
+  @Override
+  public List<IEnhancedQName> getNames() {
     return NAMES;
-  }
-
-  @Override
-  public JsonFormatTypes getJsonRawType() {
-    return JsonFormatTypes.STRING;
-  }
-
-  @SuppressWarnings("null")
-  @Override
-  public ByteBuffer parse(String value) {
-    Base64.Decoder decoder = Base64.getDecoder();
-    byte[] result = decoder.decode(value);
-    return ByteBuffer.wrap(result);
-  }
-
-  @Override
-  public ByteBuffer copy(Object obj) {
-    ByteBuffer buffer = (ByteBuffer) obj;
-    final ByteBuffer clone
-        = buffer.isDirect() ? ByteBuffer.allocateDirect(buffer.capacity()) : ByteBuffer.allocate(buffer.capacity());
-    final ByteBuffer readOnlyCopy = buffer.asReadOnlyBuffer();
-    readOnlyCopy.flip();
-    clone.put(readOnlyCopy);
-    return clone;
-  }
-
-  @SuppressWarnings("null")
-  @Override
-  public String asString(Object value) {
-    Base64.Encoder encoder = Base64.getEncoder();
-    return encoder.encodeToString(((ByteBuffer) value).array());
-  }
-
-  @Override
-  public Class<IBase64BinaryItem> getItemClass() {
-    return IBase64BinaryItem.class;
   }
 
   @Override
@@ -79,5 +64,4 @@ public class Base64Adapter
     ByteBuffer item = toValue(value);
     return IBase64BinaryItem.valueOf(item);
   }
-
 }

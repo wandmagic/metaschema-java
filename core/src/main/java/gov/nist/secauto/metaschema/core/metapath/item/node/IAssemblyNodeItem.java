@@ -1,7 +1,13 @@
 
 package gov.nist.secauto.metaschema.core.metapath.item.node;
 
+import gov.nist.secauto.metaschema.core.metapath.StaticContext;
 import gov.nist.secauto.metaschema.core.metapath.format.IPathFormatter;
+import gov.nist.secauto.metaschema.core.metapath.function.InvalidTypeFunctionException;
+import gov.nist.secauto.metaschema.core.metapath.item.ICollectionValue;
+import gov.nist.secauto.metaschema.core.metapath.item.atomic.IAnyAtomicItem;
+import gov.nist.secauto.metaschema.core.metapath.type.IItemType;
+import gov.nist.secauto.metaschema.core.metapath.type.IKindTest;
 import gov.nist.secauto.metaschema.core.model.IAssemblyDefinition;
 import gov.nist.secauto.metaschema.core.model.IAssemblyInstance;
 
@@ -14,9 +20,33 @@ import edu.umd.cs.findbugs.annotations.Nullable;
  * A Metapath node valued item representing a Metaschema module assembly.
  */
 public interface IAssemblyNodeItem extends IModelNodeItem<IAssemblyDefinition, IAssemblyInstance> {
+  /**
+   * Get the static type information of the node item.
+   *
+   * @return the item type
+   */
+  @NonNull
+  static IItemType type() {
+    return IItemType.assembly();
+  }
+
   @Override
-  default NodeItemType getNodeItemType() {
-    return NodeItemType.ASSEMBLY;
+  default IKindTest<IAssemblyNodeItem> getType() {
+    StaticContext staticContext = getStaticContext();
+    return IItemType.assembly(
+        getQName(),
+        getDefinition().getDefinitionQName().toEQName(staticContext),
+        staticContext);
+  }
+
+  @Override
+  default NodeItemKind getNodeItemKind() {
+    return NodeItemKind.ASSEMBLY;
+  }
+
+  @Override
+  default NodeType getNodeType() {
+    return NodeType.ASSEMBLY;
   }
 
   @Override
@@ -37,7 +67,18 @@ public interface IAssemblyNodeItem extends IModelNodeItem<IAssemblyDefinition, I
   }
 
   @Override
+  default IAnyAtomicItem toAtomicItem() {
+    throw new InvalidTypeFunctionException(InvalidTypeFunctionException.DATA_ITEM_IS_FUNCTION, this);
+  }
+
+  @Override
   default <CONTEXT, RESULT> RESULT accept(@NonNull INodeItemVisitor<CONTEXT, RESULT> visitor, CONTEXT context) {
     return visitor.visitAssembly(this, context);
+  }
+
+  @Override
+  default boolean deepEquals(ICollectionValue other) {
+    return other instanceof IAssemblyNodeItem
+        && NodeComparators.compareNodeItem(this, (IAssemblyNodeItem) other) == 0;
   }
 }

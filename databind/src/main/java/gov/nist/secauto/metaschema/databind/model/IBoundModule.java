@@ -15,8 +15,6 @@ import java.net.URI;
 import java.util.Collection;
 import java.util.List;
 
-import javax.xml.namespace.QName;
-
 import edu.umd.cs.findbugs.annotations.NonNull;
 
 public interface IBoundModule
@@ -65,11 +63,11 @@ public interface IBoundModule
   Collection<IBoundDefinitionModelAssembly> getAssemblyDefinitions();
 
   @Override
-  IBoundDefinitionModelAssembly getAssemblyDefinitionByName(@NonNull QName name);
+  IBoundDefinitionModelAssembly getAssemblyDefinitionByName(@NonNull Integer name);
 
   @Override
   Collection<IBoundDefinitionModelField<?>> getFieldDefinitions();
 
   @Override
-  IBoundDefinitionModelField<?> getFieldDefinitionByName(@NonNull QName name);
+  IBoundDefinitionModelField<?> getFieldDefinitionByName(@NonNull Integer name);
 }

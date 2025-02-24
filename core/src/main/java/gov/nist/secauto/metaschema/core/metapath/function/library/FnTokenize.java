@@ -6,7 +6,6 @@
 package gov.nist.secauto.metaschema.core.metapath.function.library;
 
 import gov.nist.secauto.metaschema.core.metapath.DynamicContext;
-import gov.nist.secauto.metaschema.core.metapath.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.MetapathConstants;
 import gov.nist.secauto.metaschema.core.metapath.function.FunctionUtils;
 import gov.nist.secauto.metaschema.core.metapath.function.IArgument;
@@ -14,6 +13,7 @@ import gov.nist.secauto.metaschema.core.metapath.function.IFunction;
 import gov.nist.secauto.metaschema.core.metapath.function.regex.RegexUtil;
 import gov.nist.secauto.metaschema.core.metapath.function.regex.RegularExpressionMetapathException;
 import gov.nist.secauto.metaschema.core.metapath.item.IItem;
+import gov.nist.secauto.metaschema.core.metapath.item.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IStringItem;
 import gov.nist.secauto.metaschema.core.util.CollectionUtil;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
@@ -45,10 +45,10 @@ public final class FnTokenize {
       .focusIndependent()
       .argument(IArgument.builder()
           .name("input")
-          .type(IStringItem.class)
+          .type(IStringItem.type())
           .zeroOrOne()
           .build())
-      .returnType(IStringItem.class)
+      .returnType(IStringItem.type())
       .returnZeroOrMore()
       .functionHandler(FnTokenize::executeOneArg)
       .build();
@@ -61,15 +61,15 @@ public final class FnTokenize {
       .focusIndependent()
       .argument(IArgument.builder()
           .name("input")
-          .type(IStringItem.class)
+          .type(IStringItem.type())
           .zeroOrOne()
           .build())
       .argument(IArgument.builder()
           .name("pattern")
-          .type(IStringItem.class)
+          .type(IStringItem.type())
           .one()
           .build())
-      .returnType(IStringItem.class)
+      .returnType(IStringItem.type())
       .returnZeroOrMore()
       .functionHandler(FnTokenize::executeTwoArg)
       .build();
@@ -83,20 +83,20 @@ public final class FnTokenize {
       .focusIndependent()
       .argument(IArgument.builder()
           .name("input")
-          .type(IStringItem.class)
+          .type(IStringItem.type())
           .zeroOrOne()
           .build())
       .argument(IArgument.builder()
           .name("pattern")
-          .type(IStringItem.class)
+          .type(IStringItem.type())
           .one()
           .build())
       .argument(IArgument.builder()
           .name("flags")
-          .type(IStringItem.class)
+          .type(IStringItem.type())
           .one()
           .build())
-      .returnType(IStringItem.class)
+      .returnType(IStringItem.type())
       .returnZeroOrMore()
       .functionHandler(FnTokenize::executeThreeArg)
       .build();

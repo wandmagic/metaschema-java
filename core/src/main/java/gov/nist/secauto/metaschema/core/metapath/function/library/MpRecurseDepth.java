@@ -6,15 +6,15 @@
 package gov.nist.secauto.metaschema.core.metapath.function.library;
 
 import gov.nist.secauto.metaschema.core.metapath.DynamicContext;
-import gov.nist.secauto.metaschema.core.metapath.ISequence;
+import gov.nist.secauto.metaschema.core.metapath.IMetapathExpression;
 import gov.nist.secauto.metaschema.core.metapath.MetapathConstants;
 import gov.nist.secauto.metaschema.core.metapath.MetapathException;
-import gov.nist.secauto.metaschema.core.metapath.MetapathExpression;
 import gov.nist.secauto.metaschema.core.metapath.StaticMetapathException;
 import gov.nist.secauto.metaschema.core.metapath.function.FunctionUtils;
 import gov.nist.secauto.metaschema.core.metapath.function.IArgument;
 import gov.nist.secauto.metaschema.core.metapath.function.IFunction;
 import gov.nist.secauto.metaschema.core.metapath.item.IItem;
+import gov.nist.secauto.metaschema.core.metapath.item.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IStringItem;
 import gov.nist.secauto.metaschema.core.metapath.item.node.INodeItem;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
@@ -40,10 +40,10 @@ public final class MpRecurseDepth {
       .focusDependent()
       .argument(IArgument.builder()
           .name("recursePath")
-          .type(IStringItem.class)
+          .type(IStringItem.type())
           .one()
           .build())
-      .returnType(INodeItem.class)
+      .returnType(INodeItem.type())
       .returnZeroOrMore()
       .functionHandler(MpRecurseDepth::executeOneArg)
       .build();
@@ -57,15 +57,15 @@ public final class MpRecurseDepth {
       .focusIndependent()
       .argument(IArgument.builder()
           .name("context")
-          .type(INodeItem.class)
+          .type(INodeItem.type())
           .zeroOrMore()
           .build())
       .argument(IArgument.builder()
           .name("recursePath")
-          .type(IStringItem.class)
+          .type(IStringItem.type())
           .one()
           .build())
-      .returnType(INodeItem.class)
+      .returnType(INodeItem.type())
       .returnZeroOrMore()
       .functionHandler(MpRecurseDepth::executeTwoArg)
       .build();
@@ -111,9 +111,9 @@ public final class MpRecurseDepth {
       @NonNull ISequence<INodeItem> initialContext,
       @NonNull IStringItem recursionPath,
       @NonNull DynamicContext dynamicContext) {
-    MetapathExpression recursionMetapath;
+    IMetapathExpression recursionMetapath;
     try {
-      recursionMetapath = MetapathExpression.compile(recursionPath.asString(), dynamicContext.getStaticContext());
+      recursionMetapath = IMetapathExpression.compile(recursionPath.asString(), dynamicContext.getStaticContext());
     } catch (MetapathException ex) {
       throw new StaticMetapathException(StaticMetapathException.INVALID_PATH_GRAMMAR, ex.getMessage(), ex);
     }
@@ -138,17 +138,18 @@ public final class MpRecurseDepth {
   @NonNull
   public static ISequence<INodeItem> recurseDepth(
       @NonNull ISequence<INodeItem> initialContext,
-      @NonNull MetapathExpression recursionMetapath,
+      @NonNull IMetapathExpression recursionMetapath,
       @NonNull DynamicContext dynamicContext) {
 
     return ISequence.of(ObjectUtils.notNull(initialContext.stream()
         .flatMap(item -> {
           @NonNull
           ISequence<INodeItem> metapathResult = recursionMetapath.evaluate(item, dynamicContext);
-          // ensure this is list backed
-          metapathResult.getValue();
-
-          ISequence<INodeItem> result = recurseDepth(metapathResult, recursionMetapath, dynamicContext);
+          ISequence<INodeItem> result = recurseDepth(
+              // ensure the sequence is list backed
+              metapathResult.reusable(),
+              recursionMetapath,
+              dynamicContext);
           return ObjectUtils.notNull(Stream.concat(Stream.of(item), result.stream()));
         })));
   }

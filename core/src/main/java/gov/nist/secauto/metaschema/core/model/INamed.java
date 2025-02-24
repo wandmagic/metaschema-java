@@ -5,8 +5,9 @@
 
 package gov.nist.secauto.metaschema.core.model;
 
+import gov.nist.secauto.metaschema.core.qname.IEnhancedQName;
+
 import javax.xml.XMLConstants;
-import javax.xml.namespace.QName;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
@@ -54,19 +55,6 @@ public interface INamed {
   }
 
   /**
-   * Retrieve the XML namespace for this instance.
-   * <p>
-   * Multiple calls to this method are expected to produce the same, deterministic
-   * return value.
-   *
-   * @return the XML namespace or {@code null} if no namespace is defined
-   */
-  @Nullable
-  default String getXmlNamespace() {
-    return getXmlQName().getNamespaceURI();
-  }
-
-  /**
    * Get the unique XML qualified name for this model element.
    * <p>
    * The qualified name is considered to be unique relative to all sibling
@@ -78,17 +66,16 @@ public interface INamed {
    * Multiple calls to this method are expected to produce the same, deterministic
    * return value.
    * <p>
-   * If {@link #getXmlNamespace()} is {@code null}, the the resulting QName will
-   * have the namespace {@link XMLConstants#NULL_NS_URI}.
+   * If the namespace is not specified, then the resulting QName will have the
+   * namespace {@link XMLConstants#NULL_NS_URI}.
    * <p>
    * This implementation may be overridden by implementation that cache the QName
    * or provide for a more efficient method for QName creation.
    *
    * @return the XML qualified name, or {@code null} if there isn't one
    */
-  // REFACTOR: rename to getQName
   @NonNull
-  QName getXmlQName();
+  IEnhancedQName getQName();
 
   /**
    * Retrieve the index value to use for binary naming.

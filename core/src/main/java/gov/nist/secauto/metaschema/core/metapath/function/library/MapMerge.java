@@ -6,14 +6,14 @@
 package gov.nist.secauto.metaschema.core.metapath.function.library;
 
 import gov.nist.secauto.metaschema.core.metapath.DynamicContext;
-import gov.nist.secauto.metaschema.core.metapath.ICollectionValue;
-import gov.nist.secauto.metaschema.core.metapath.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.MetapathConstants;
 import gov.nist.secauto.metaschema.core.metapath.function.FunctionUtils;
 import gov.nist.secauto.metaschema.core.metapath.function.IArgument;
 import gov.nist.secauto.metaschema.core.metapath.function.IFunction;
 import gov.nist.secauto.metaschema.core.metapath.function.JsonFunctionException;
+import gov.nist.secauto.metaschema.core.metapath.item.ICollectionValue;
 import gov.nist.secauto.metaschema.core.metapath.item.IItem;
+import gov.nist.secauto.metaschema.core.metapath.item.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IAnyAtomicItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IStringItem;
 import gov.nist.secauto.metaschema.core.metapath.item.function.IMapItem;
@@ -52,10 +52,10 @@ public final class MapMerge {
       .focusIndependent()
       .argument(IArgument.builder()
           .name("maps")
-          .type(IMapItem.class)
+          .type(IMapItem.type())
           .zeroOrMore()
           .build())
-      .returnType(IMapItem.class)
+      .returnType(IMapItem.type())
       .returnOne()
       .functionHandler(MapMerge::executeOneArg)
       .build();
@@ -69,15 +69,15 @@ public final class MapMerge {
       .focusIndependent()
       .argument(IArgument.builder()
           .name("maps")
-          .type(IMapItem.class)
+          .type(IMapItem.type())
           .zeroOrMore()
           .build())
       .argument(IArgument.builder()
           .name("options")
-          .type(IMapItem.class)
+          .type(IMapItem.type())
           .one()
           .build())
-      .returnType(IMapItem.class)
+      .returnType(IMapItem.type())
       .returnOne()
       .functionHandler(MapMerge::executeTwoArg)
       .build();
@@ -95,8 +95,8 @@ public final class MapMerge {
     @SuppressWarnings("checkstyle:Indentation")
     COMBINE(
         "combine",
-        (key, v1, v2) -> Stream.concat(v1.asSequence().stream(), v2.asSequence().stream())
-            .collect(ISequence.toSequence()));
+        (key, v1, v2) -> Stream.concat(v1.toSequence().stream(), v2.toSequence().stream())
+            .collect(CustomCollectors.toSequence()));
 
     private static final Map<String, Duplicates> BY_NAME;
 
@@ -188,7 +188,7 @@ public final class MapMerge {
       duplicates = Duplicates.USE_FIRST;
     } else {
       // resolve the provided option
-      IAnyAtomicItem atomicValue = FnData.fnData(duplicatesOption.asSequence()).getFirstItem(true);
+      IAnyAtomicItem atomicValue = ISequence.of(duplicatesOption.toSequence().atomize()).getFirstItem(true);
       if (atomicValue == null) {
         throw new JsonFunctionException(
             JsonFunctionException.INVALID_OPTION,

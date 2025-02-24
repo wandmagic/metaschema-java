@@ -5,7 +5,7 @@
 
 package gov.nist.secauto.metaschema.core.metapath.item;
 
-import gov.nist.secauto.metaschema.core.metapath.ISequence;
+import gov.nist.secauto.metaschema.core.metapath.function.IFunction;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IAnyAtomicItem;
 import gov.nist.secauto.metaschema.core.metapath.item.function.IArrayItem;
 import gov.nist.secauto.metaschema.core.metapath.item.function.IMapItem;
@@ -13,6 +13,9 @@ import gov.nist.secauto.metaschema.core.metapath.item.node.INodeItem;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
+/**
+ * Supports writing different types of items using a visitor pattern.
+ */
 public interface IItemWriter extends AutoCloseable {
   /**
    * Write the provided sequence instance.
@@ -53,4 +56,12 @@ public interface IItemWriter extends AutoCloseable {
    *          the instance to write
    */
   void writeAtomicValue(@NonNull IAnyAtomicItem item);
+
+  /**
+   * Write the provided function item instance.
+   *
+   * @param function
+   *          the instance to write
+   */
+  void writeFunction(@NonNull IFunction function);
 }

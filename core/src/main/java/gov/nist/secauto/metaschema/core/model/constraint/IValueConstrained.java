@@ -5,10 +5,11 @@
 
 package gov.nist.secauto.metaschema.core.model.constraint;
 
+import gov.nist.secauto.metaschema.core.model.ISource;
+import gov.nist.secauto.metaschema.core.qname.IEnhancedQName;
+
 import java.util.List;
 import java.util.Map;
-
-import javax.xml.namespace.QName;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
@@ -16,14 +17,30 @@ import edu.umd.cs.findbugs.annotations.NonNull;
  * Represents a container of rules constraining the effective model of a
  * Metaschema field or flag data instance.
  */
-public interface IValueConstrained extends IConstrained {
+public interface IValueConstrained {
+  /**
+   * Get information about the resource the constraints were loaded from.
+   *
+   * @return the source information
+   */
+  @NonNull
+  ISource getSource();
+
+  /**
+   * Retrieve the ordered collection of constraints.
+   *
+   * @return the constraints or an empty list
+   */
+  @NonNull
+  List<? extends IConstraint> getConstraints();
+
   /**
    * Get the collection of let expressions, if any.
    *
    * @return the constraints or an empty list
    */
   @NonNull
-  Map<QName, ILet> getLetExpressions();
+  Map<IEnhancedQName, ILet> getLetExpressions();
 
   /**
    * Get the collection of allowed value constraints, if any.

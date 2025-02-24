@@ -252,7 +252,6 @@ public final class MetaschemaCommands {
    *           if the format option was not provided or was an invalid choice
    * @since 2.0.0
    */
-  @SuppressWarnings("PMD.PreserveStackTrace")
   @NonNull
   public static Format getFormat(
       @NonNull CommandLine commandLine,
@@ -278,7 +277,8 @@ public final class MetaschemaCommands {
                   : "-" + option.getOpt(),
               Arrays.stream(Format.values())
                   .map(Enum::name)
-                  .collect(CustomCollectors.joiningWithOxfordComma("or"))));
+                  .collect(CustomCollectors.joiningWithOxfordComma("or"))),
+          ex);
     }
   }
 

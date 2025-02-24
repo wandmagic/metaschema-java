@@ -14,8 +14,7 @@ import gov.nist.secauto.metaschema.core.metapath.function.library.DefaultFunctio
  * @provides IFunctionLibrary for core built-in Metapath functions
  * @uses IDataTypeProvider to discover data types implementing
  *       {@link gov.nist.secauto.metaschema.core.datatype.IDataTypeAdapter}
- * @uses IFunctionLibrary to discover collections of Metapath functions
- *       implementing
+ * @uses IFunctionLibrary to discover collections of Metapath functions implementing
  *       {@link gov.nist.secauto.metaschema.core.metapath.function.IFunction}
  */
 module gov.nist.secauto.metaschema.core {
@@ -35,6 +34,7 @@ module gov.nist.secauto.metaschema.core {
   requires transitive inet.ipaddr;
   requires nl.talsmasoftware.lazy4j;
   requires org.antlr.antlr4.runtime;
+  requires org.apache.commons.codec;
   requires org.apache.commons.lang3;
   requires org.apache.commons.text;
   requires org.apache.logging.log4j;
@@ -78,11 +78,13 @@ module gov.nist.secauto.metaschema.core {
   exports gov.nist.secauto.metaschema.core.metapath.item.atomic;
   exports gov.nist.secauto.metaschema.core.metapath.item.function;
   exports gov.nist.secauto.metaschema.core.metapath.item.node;
+  exports gov.nist.secauto.metaschema.core.metapath.type;
   exports gov.nist.secauto.metaschema.core.model;
   exports gov.nist.secauto.metaschema.core.model.constraint;
   exports gov.nist.secauto.metaschema.core.model.util;
   exports gov.nist.secauto.metaschema.core.model.validation;
   exports gov.nist.secauto.metaschema.core.model.xml;
+  exports gov.nist.secauto.metaschema.core.qname;
   exports gov.nist.secauto.metaschema.core.util;
 
   exports gov.nist.secauto.metaschema.core.datatype.markup.flexmark

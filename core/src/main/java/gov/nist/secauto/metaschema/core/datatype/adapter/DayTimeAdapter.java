@@ -10,28 +10,34 @@ import com.fasterxml.jackson.databind.jsonFormatVisitors.JsonFormatTypes;
 import gov.nist.secauto.metaschema.core.datatype.AbstractDataTypeAdapter;
 import gov.nist.secauto.metaschema.core.metapath.MetapathConstants;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IDayTimeDurationItem;
+import gov.nist.secauto.metaschema.core.qname.EQNameFactory;
+import gov.nist.secauto.metaschema.core.qname.IEnhancedQName;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 
 import java.time.Duration;
 import java.time.format.DateTimeParseException;
 import java.util.List;
 
-import javax.xml.namespace.QName;
-
 import edu.umd.cs.findbugs.annotations.NonNull;
 
+/**
+ * Support for the Metaschema <a href=
+ * "https://pages.nist.gov/metaschema/specification/datatypes/#day-time-duration">day-time-duration</a>
+ * data type.
+ */
 public class DayTimeAdapter
     extends AbstractDataTypeAdapter<Duration, IDayTimeDurationItem> {
   @NonNull
-  private static final List<QName> NAMES = ObjectUtils.notNull(
-      List.of(new QName(MetapathConstants.NS_METAPATH.toASCIIString(), "day-time-duration")));
+  private static final List<IEnhancedQName> NAMES = ObjectUtils.notNull(
+      List.of(
+          EQNameFactory.instance().newQName(MetapathConstants.NS_METAPATH, "day-time-duration")));
 
   DayTimeAdapter() {
-    super(Duration.class);
+    super(Duration.class, IDayTimeDurationItem.class, IDayTimeDurationItem::cast);
   }
 
   @Override
-  public List<QName> getNames() {
+  public List<IEnhancedQName> getNames() {
     return NAMES;
   }
 
@@ -54,11 +60,6 @@ public class DayTimeAdapter
     } catch (DateTimeParseException ex) {
       throw new IllegalArgumentException(ex.getLocalizedMessage(), ex);
     }
-  }
-
-  @Override
-  public Class<IDayTimeDurationItem> getItemClass() {
-    return IDayTimeDurationItem.class;
   }
 
   @Override

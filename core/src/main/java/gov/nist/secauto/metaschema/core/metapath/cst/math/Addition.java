@@ -5,33 +5,72 @@
 
 package gov.nist.secauto.metaschema.core.metapath.cst.math;
 
-import gov.nist.secauto.metaschema.core.metapath.ISequence;
-import gov.nist.secauto.metaschema.core.metapath.cst.IExpression;
+import gov.nist.secauto.metaschema.core.metapath.IExpression;
 import gov.nist.secauto.metaschema.core.metapath.cst.IExpressionVisitor;
-import gov.nist.secauto.metaschema.core.metapath.function.FunctionUtils;
-import gov.nist.secauto.metaschema.core.metapath.function.OperationFunctions;
+import gov.nist.secauto.metaschema.core.metapath.function.impl.OperationFunctions;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IAnyAtomicItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IDateItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IDateTimeItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IDayTimeDurationItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.INumericItem;
+import gov.nist.secauto.metaschema.core.metapath.item.atomic.ITimeItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IYearMonthDurationItem;
+import gov.nist.secauto.metaschema.core.util.CollectionUtil;
+import gov.nist.secauto.metaschema.core.util.ObjectUtils;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
+/**
+ * Implements the '+' operator for Metapath addition operations.
+ * <p>
+ * An XPath 3.1
+ * <a href="https://www.w3.org/TR/xpath-31/#id-arithmetic">arithmetic
+ * expression</a> supporting addition.
+ * <p>
+ * Supports addition operations between:
+ * <ul>
+ * <li>Numeric values
+ * <li>Date/DateTime + {@link IYearMonthDurationItem}
+ * <li>Date/DateTime/Time + {@link IDayTimeDurationItem}
+ * <li>Date/Time arithmetic (adding durations to dates/times)
+ * <li>{@link IYearMonthDurationItem} + {@link IYearMonthDurationItem}
+ * <li>{@link IDayTimeDurationItem} + {@link IDayTimeDurationItem}
+ * </ul>
+ * <p>
+ * Example Metapath usage:
+ *
+ * <pre>
+ * // Numeric addition
+ * 1 + 2 → 3
+ * // Date/Time arithmetic
+ * date + yearMonthDuration
+ * dateTime + dayTimeDuration
+ * </pre>
+ */
 public class Addition
     extends AbstractBasicArithmeticExpression {
+  @NonNull
+  private static final Map<Class<? extends IAnyAtomicItem>,
+      Map<Class<? extends IAnyAtomicItem>, OperationStrategy>> ADDITION_STRATEGIES = generateStrategies();
 
   /**
    * An expression that sums two atomic data items.
    *
+   * @param text
+   *          the parsed text of the expression
    * @param left
    *          an expression whose result is summed
    * @param right
    *          an expression whose result is summed
    */
-  public Addition(@NonNull IExpression left, @NonNull IExpression right) {
-    super(left, right);
+  public Addition(
+      @NonNull String text,
+      @NonNull IExpression left,
+      @NonNull IExpression right) {
+    super(text, left, right);
   }
 
   @Override
@@ -39,79 +78,100 @@ public class Addition
     return visitor.visitAddition(this, context);
   }
 
-  /**
-   * Get the sum of two atomic items.
-   *
-   * @param left
-   *          the first item to sum
-   * @param right
-   *          the second item to sum
-   * @return the sum of both items or an empty {@link ISequence} if either item is
-   *         {@code null}
-   */
   @Override
-  protected IAnyAtomicItem operation(@NonNull IAnyAtomicItem left, @NonNull IAnyAtomicItem right) {
-    return sum(left, right);
+  protected Map<
+      Class<? extends IAnyAtomicItem>,
+      Map<Class<? extends IAnyAtomicItem>, OperationStrategy>> getStrategies() {
+    return ADDITION_STRATEGIES;
   }
 
-  /**
-   * Get the sum of two atomic items.
-   *
-   * @param leftItem
-   *          the first item to sum
-   * @param rightItem
-   *          the second item to sum
-   * @return the sum of both items
-   */
-  @SuppressWarnings({ "PMD.CyclomaticComplexity", "PMD.CognitiveComplexity" })
+  @Override
+  protected String unsupportedMessage(String left, String right) {
+    return ObjectUtils.notNull(String.format("Addition of '%s' and '%s' is not supported.", left, right));
+  }
+
+  @Override
+  protected INumericItem operationAsNumeric(INumericItem left, INumericItem right) {
+    // Default to numeric addition
+    return OperationFunctions.opNumericAdd(left, right);
+  }
+
+  @SuppressWarnings("PMD.UseConcurrentHashMap")
   @NonNull
-  public static IAnyAtomicItem sum(
-      @NonNull IAnyAtomicItem leftItem, // NOPMD - intentional
-      @NonNull IAnyAtomicItem rightItem) {
-    IAnyAtomicItem retval = null;
-    if (leftItem instanceof IDateItem) {
-      IDateItem left = (IDateItem) leftItem;
-      if (rightItem instanceof IYearMonthDurationItem) {
-        retval = OperationFunctions.opAddYearMonthDurationToDate(left, (IYearMonthDurationItem) rightItem);
-      } else if (rightItem instanceof IDayTimeDurationItem) {
-        retval = OperationFunctions.opAddDayTimeDurationToDate(left, (IDayTimeDurationItem) rightItem);
-      }
-    } else if (leftItem instanceof IDateTimeItem) {
-      IDateTimeItem left = (IDateTimeItem) leftItem;
-      if (rightItem instanceof IYearMonthDurationItem) {
-        retval = OperationFunctions.opAddYearMonthDurationToDateTime(left, (IYearMonthDurationItem) rightItem);
-      } else if (rightItem instanceof IDayTimeDurationItem) {
-        retval = OperationFunctions.opAddDayTimeDurationToDateTime(left, (IDayTimeDurationItem) rightItem);
-      }
-    } else if (leftItem instanceof IYearMonthDurationItem) {
-      IYearMonthDurationItem left = (IYearMonthDurationItem) leftItem;
-      if (rightItem instanceof IDateItem) {
-        retval = OperationFunctions.opAddYearMonthDurationToDate((IDateItem) rightItem, left);
-      } else if (rightItem instanceof IDateTimeItem) {
-        retval = OperationFunctions.opAddYearMonthDurationToDateTime((IDateTimeItem) rightItem, left);
-      } else if (rightItem instanceof IYearMonthDurationItem) {
-        retval = OperationFunctions.opSubtractYearMonthDurations(left, (IYearMonthDurationItem) rightItem);
-      }
-    } else if (leftItem instanceof IDayTimeDurationItem) {
-      IDayTimeDurationItem left = (IDayTimeDurationItem) leftItem;
-      if (rightItem instanceof IDateItem) {
-        retval = OperationFunctions.opAddDayTimeDurationToDate((IDateItem) rightItem, left);
-      } else if (rightItem instanceof IDateTimeItem) {
-        retval = OperationFunctions.opAddDayTimeDurationToDateTime((IDateTimeItem) rightItem, left);
-      } else if (rightItem instanceof IDayTimeDurationItem) {
-        retval = OperationFunctions.opAddDayTimeDurations(left, (IDayTimeDurationItem) rightItem);
-      }
-    } else {
-      // handle as numeric
-      INumericItem left = FunctionUtils.toNumeric(leftItem);
-      INumericItem right = FunctionUtils.toNumeric(rightItem);
-      retval = OperationFunctions.opNumericAdd(left, right);
-    }
-    if (retval == null) {
-      throw new UnsupportedOperationException(
-          String.format("The expression '%s + %s' is not supported", leftItem.getClass().getName(),
-              rightItem.getClass().getName()));
-    }
-    return retval;
+  private static Map<
+      Class<? extends IAnyAtomicItem>,
+      Map<Class<? extends IAnyAtomicItem>, OperationStrategy>> generateStrategies() {
+    Map<Class<? extends IAnyAtomicItem>, Map<Class<? extends IAnyAtomicItem>, OperationStrategy>> strategies
+        = new LinkedHashMap<>();
+
+    // Date strategies
+    Map<Class<? extends IAnyAtomicItem>, OperationStrategy> typeStrategies = new LinkedHashMap<>();
+    typeStrategies.put(IYearMonthDurationItem.class,
+        (left, right) -> OperationFunctions.opAddYearMonthDurationToDate(
+            (IDateItem) left,
+            (IYearMonthDurationItem) right));
+    typeStrategies.put(IDayTimeDurationItem.class,
+        (left, right) -> OperationFunctions.opAddDayTimeDurationToDate(
+            (IDateItem) left,
+            (IDayTimeDurationItem) right));
+    strategies.put(IDateItem.class, CollectionUtil.unmodifiableMap(typeStrategies));
+
+    // DateTime strategies
+    typeStrategies = new LinkedHashMap<>();
+    typeStrategies.put(IYearMonthDurationItem.class,
+        (left, right) -> OperationFunctions.opAddYearMonthDurationToDateTime(
+            (IDateTimeItem) left,
+            (IYearMonthDurationItem) right));
+    typeStrategies.put(IDayTimeDurationItem.class,
+        (left, right) -> OperationFunctions.opAddDayTimeDurationToDateTime(
+            (IDateTimeItem) left,
+            (IDayTimeDurationItem) right));
+    strategies.put(IDateTimeItem.class, CollectionUtil.unmodifiableMap(typeStrategies));
+
+    // time strategies
+    typeStrategies = new LinkedHashMap<>();
+    typeStrategies.put(IDayTimeDurationItem.class,
+        (left, right) -> OperationFunctions.opAddDayTimeDurationToTime(
+            (ITimeItem) left,
+            (IDayTimeDurationItem) right));
+    strategies.put(ITimeItem.class, CollectionUtil.unmodifiableMap(typeStrategies));
+
+    // YearMonthDuration strategies
+    typeStrategies = new LinkedHashMap<>();
+    typeStrategies.put(IDateItem.class,
+        (left, right) -> OperationFunctions.opAddYearMonthDurationToDate(
+            (IDateItem) right,
+            (IYearMonthDurationItem) left));
+    typeStrategies.put(IDateTimeItem.class,
+        (left, right) -> OperationFunctions.opAddYearMonthDurationToDateTime(
+            (IDateTimeItem) right,
+            (IYearMonthDurationItem) left));
+    typeStrategies.put(IYearMonthDurationItem.class,
+        (left, right) -> OperationFunctions.opAddYearMonthDurations(
+            (IYearMonthDurationItem) left,
+            (IYearMonthDurationItem) right));
+    strategies.put(IYearMonthDurationItem.class, CollectionUtil.unmodifiableMap(typeStrategies));
+
+    // DayTimeDuration strategies
+    typeStrategies = new LinkedHashMap<>();
+    typeStrategies.put(IDateItem.class,
+        (left, right) -> OperationFunctions.opAddDayTimeDurationToDate(
+            (IDateItem) right,
+            (IDayTimeDurationItem) left));
+    typeStrategies.put(IDateTimeItem.class,
+        (left, right) -> OperationFunctions.opAddDayTimeDurationToDateTime(
+            (IDateTimeItem) right,
+            (IDayTimeDurationItem) left));
+    typeStrategies.put(ITimeItem.class,
+        (left, right) -> OperationFunctions.opAddDayTimeDurationToTime(
+            (ITimeItem) right,
+            (IDayTimeDurationItem) left));
+    typeStrategies.put(IDayTimeDurationItem.class,
+        (left, right) -> OperationFunctions.opAddDayTimeDurations(
+            (IDayTimeDurationItem) left,
+            (IDayTimeDurationItem) right));
+    strategies.put(IDayTimeDurationItem.class, CollectionUtil.unmodifiableMap(typeStrategies));
+
+    return CollectionUtil.unmodifiableMap(strategies);
   }
 }

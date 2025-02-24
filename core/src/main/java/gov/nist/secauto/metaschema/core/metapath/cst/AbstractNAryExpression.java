@@ -5,6 +5,8 @@
 
 package gov.nist.secauto.metaschema.core.metapath.cst;
 
+import gov.nist.secauto.metaschema.core.metapath.IExpression;
+
 import java.util.List;
 import java.util.Objects;
 
@@ -21,10 +23,13 @@ public abstract class AbstractNAryExpression
   /**
    * Construct a new n-ary expression.
    *
+   * @param text
+   *          the parsed text of the expression
    * @param children
    *          the sub-expression children
    */
-  public AbstractNAryExpression(@NonNull List<IExpression> children) {
+  public AbstractNAryExpression(@NonNull String text, @NonNull List<IExpression> children) {
+    super(text);
     this.children = Objects.requireNonNull(children);
   }
 

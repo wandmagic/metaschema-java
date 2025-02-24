@@ -7,35 +7,29 @@ package gov.nist.secauto.metaschema.core.metapath.item.atomic;
 
 import gov.nist.secauto.metaschema.core.datatype.markup.IMarkupString;
 import gov.nist.secauto.metaschema.core.datatype.markup.MarkupDataTypeProvider;
-import gov.nist.secauto.metaschema.core.datatype.markup.MarkupLine;
-import gov.nist.secauto.metaschema.core.datatype.markup.MarkupMultiline;
 import gov.nist.secauto.metaschema.core.metapath.function.InvalidValueForCastFunctionException;
+import gov.nist.secauto.metaschema.core.metapath.type.IAtomicOrUnionType;
+import gov.nist.secauto.metaschema.core.metapath.type.InvalidTypeMetapathException;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
-public interface IMarkupItem extends IUntypedAtomicItem {
+/**
+ * An atomic Metapath item representing a Markup data value.
+ */
+public interface IMarkupItem extends IAnyAtomicItem {
   /**
-   * Construct a new item using the provided {@code value}.
+   * Get the type information for this item.
    *
-   * @param value
-   *          a line of markup
-   * @return the new item
+   * @return the type information
    */
   @NonNull
-  static IMarkupItem valueOf(@NonNull MarkupLine value) {
-    return new MarkupLineItemImpl(value);
+  static IAtomicOrUnionType<IMarkupItem> type() {
+    return MarkupDataTypeProvider.MARKUP_TYPE;
   }
 
-  /**
-   * Construct a new item using the provided {@code value}.
-   *
-   * @param value
-   *          multiple lines of markup
-   * @return the new item
-   */
-  @NonNull
-  static IMarkupItem valueOf(@NonNull MarkupMultiline value) {
-    return new MarkupMultiLineItemImpl(value);
+  @Override
+  default IAtomicOrUnionType<? extends IMarkupItem> getType() {
+    return type();
   }
 
   /**
@@ -50,7 +44,14 @@ public interface IMarkupItem extends IUntypedAtomicItem {
    */
   @NonNull
   static IMarkupItem cast(@NonNull IAnyAtomicItem item) {
-    return MarkupDataTypeProvider.MARKUP_MULTILINE.cast(item);
+    try {
+      return item instanceof IMarkupItem
+          ? (IMarkupItem) item
+          : IMarkupMultilineItem.valueOf(item.asString());
+    } catch (IllegalStateException | InvalidTypeMetapathException ex) {
+      // asString can throw IllegalStateException exception
+      throw new InvalidValueForCastFunctionException(ex);
+    }
   }
 
   /**

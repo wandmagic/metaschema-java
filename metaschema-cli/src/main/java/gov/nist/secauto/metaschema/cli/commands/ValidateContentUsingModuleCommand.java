@@ -92,6 +92,7 @@ class ValidateContentUsingModuleCommand
       return MetaschemaCommands.newBindingContextWithDynamicCompilation(constraintSets);
     }
 
+    @SuppressWarnings("synthetic-access")
     @Override
     protected IModule getModule(
         CommandLine commandLine,

@@ -6,42 +6,47 @@
 package gov.nist.secauto.metaschema.core.metapath.impl;
 
 import gov.nist.secauto.metaschema.core.metapath.DynamicContext;
-import gov.nist.secauto.metaschema.core.metapath.ICollectionValue;
-import gov.nist.secauto.metaschema.core.metapath.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.function.FunctionUtils;
 import gov.nist.secauto.metaschema.core.metapath.function.IArgument;
-import gov.nist.secauto.metaschema.core.metapath.function.ISequenceType;
-import gov.nist.secauto.metaschema.core.metapath.function.Occurrence;
 import gov.nist.secauto.metaschema.core.metapath.function.library.MapGet;
+import gov.nist.secauto.metaschema.core.metapath.item.ICollectionValue;
+import gov.nist.secauto.metaschema.core.metapath.item.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IAnyAtomicItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IIntegerItem;
 import gov.nist.secauto.metaschema.core.metapath.item.function.IMapItem;
 import gov.nist.secauto.metaschema.core.metapath.item.function.IMapKey;
+import gov.nist.secauto.metaschema.core.qname.IEnhancedQName;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 
-import java.util.EnumSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
-
-import javax.xml.namespace.QName;
+import java.util.stream.Collectors;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
+/**
+ * The base class for {@link IMapItem} implementations, that provide an
+ * implementation of common utility methods.
+ *
+ * @param <VALUE>
+ *          the Java type of the value items contained within the map
+ */
 public abstract class AbstractMapItem<VALUE extends ICollectionValue>
     extends ImmutableCollections.AbstractImmutableDelegatedMap<IMapKey, VALUE>
-    implements IMapItem<VALUE> {
+    implements IMapItem<VALUE>, IFeatureCollectionFunctionItem {
+  /**
+   * The function qualified name.
+   */
   @NonNull
-  public static final QName QNAME = new QName("map");
+  private static final IEnhancedQName QNAME = IEnhancedQName.of("map");
+  /**
+   * The function arguments.
+   */
   @NonNull
-  public static final Set<FunctionProperty> PROPERTIES = ObjectUtils.notNull(
-      EnumSet.of(FunctionProperty.DETERMINISTIC));
-  @NonNull
-  public static final List<IArgument> ARGUMENTS = ObjectUtils.notNull(List.of(
-      IArgument.builder().name("key").type(IAnyAtomicItem.class).one().build()));
-  @NonNull
-  public static final ISequenceType RESULT = ISequenceType.of(IAnyAtomicItem.class, Occurrence.ZERO_OR_ONE);
-
+  private static final List<IArgument> ARGUMENTS = ObjectUtils.notNull(List.of(
+      IArgument.builder().name("key").type(IAnyAtomicItem.type()).one().build()));
   @NonNull
   private static final IMapItem<?> EMPTY = new MapItemN<>();
 
@@ -60,6 +65,16 @@ public abstract class AbstractMapItem<VALUE extends ICollectionValue>
   }
 
   @Override
+  public IEnhancedQName getQName() {
+    return QNAME;
+  }
+
+  @Override
+  public List<IArgument> getArguments() {
+    return ARGUMENTS;
+  }
+
+  @Override
   public ISequence<?> execute(List<? extends ISequence<?>> arguments, DynamicContext dynamicContext,
       ISequence<?> focus) {
     ISequence<? extends IIntegerItem> arg = FunctionUtils.asType(
@@ -71,7 +86,7 @@ public abstract class AbstractMapItem<VALUE extends ICollectionValue>
     }
 
     ICollectionValue result = MapGet.get(this, key);
-    return result == null ? ISequence.empty() : result.asSequence();
+    return result == null ? ISequence.empty() : result.toSequence();
   }
 
   @Override
@@ -85,8 +100,43 @@ public abstract class AbstractMapItem<VALUE extends ICollectionValue>
         || other instanceof IMapItem && getValue().equals(((IMapItem<?>) other).getValue());
   }
 
+  @SuppressWarnings("PMD.OnlyOneReturn")
   @Override
-  public String asString() {
-    return ObjectUtils.notNull(toString());
+  public boolean deepEquals(ICollectionValue other) {
+    if (!(other instanceof IMapItem)) {
+      return false;
+    }
+
+    IMapItem<?> otherItem = (IMapItem<?>) other;
+    if (size() != otherItem.size()) {
+      return false;
+    }
+
+    Iterator<Map.Entry<IMapKey, VALUE>> thisIterator = entrySet().iterator();
+    Iterator<? extends Map.Entry<IMapKey, ? extends ICollectionValue>> otherIterator = otherItem.entrySet().iterator();
+    boolean retval = true;
+    while (thisIterator.hasNext() && otherIterator.hasNext()) {
+      Map.Entry<IMapKey, ? extends ICollectionValue> i1 = thisIterator.next();
+      Map.Entry<IMapKey, ? extends ICollectionValue> i2 = otherIterator.next();
+
+      retval = i1.getKey().equals(i2.getKey())
+          && i1.getValue().deepEquals(i2.getValue());
+      if (!retval) {
+        break;
+      }
+    }
+    return retval;
+  }
+
+  @Override
+  public String toSignature() {
+    return ObjectUtils.notNull(entrySet().stream()
+        .map(entry -> entry.getKey().getKey().toSignature() + "=" + entry.getValue().toSignature())
+        .collect(Collectors.joining(",", "[", "]")));
+  }
+
+  @Override
+  public String toString() {
+    return toSignature();
   }
 }

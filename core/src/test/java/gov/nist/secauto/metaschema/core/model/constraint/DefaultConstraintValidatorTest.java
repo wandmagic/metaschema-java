@@ -25,27 +25,28 @@ import gov.nist.secauto.metaschema.core.metapath.format.IPathFormatter;
 import gov.nist.secauto.metaschema.core.metapath.item.IItemVisitor;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IStringItem;
 import gov.nist.secauto.metaschema.core.metapath.item.node.IFlagNodeItem;
-import gov.nist.secauto.metaschema.core.metapath.item.node.MockNodeItemFactory;
 import gov.nist.secauto.metaschema.core.model.IFlagDefinition;
 import gov.nist.secauto.metaschema.core.model.ISource;
+import gov.nist.secauto.metaschema.core.qname.IEnhancedQName;
+import gov.nist.secauto.metaschema.core.testing.model.mocking.MockNodeItemFactory;
 import gov.nist.secauto.metaschema.core.util.CollectionUtil;
+import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 
 import org.junit.jupiter.api.Test;
 
 import java.net.URI;
 import java.util.List;
 
-import javax.xml.namespace.QName;
-
 import edu.umd.cs.findbugs.annotations.NonNull;
 
 @SuppressWarnings("PMD.TooManyStaticImports")
 class DefaultConstraintValidatorTest {
-  private static final String NS = URI.create("http://example.com/ns").toASCIIString();
+  @NonNull
+  private static final String NS = ObjectUtils.notNull(URI.create("http://example.com/ns").toASCIIString());
 
   @NonNull
-  private static QName qname(@NonNull String name) {
-    return new QName(NS, name);
+  private static IEnhancedQName qname(@NonNull String name) {
+    return IEnhancedQName.of(NS, name);
   }
 
   @SuppressWarnings("null")

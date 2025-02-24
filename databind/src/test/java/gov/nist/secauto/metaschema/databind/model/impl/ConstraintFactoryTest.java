@@ -9,9 +9,9 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import gov.nist.secauto.metaschema.core.datatype.markup.MarkupMultiline;
-import gov.nist.secauto.metaschema.core.metapath.StaticContext;
 import gov.nist.secauto.metaschema.core.model.ISource;
 import gov.nist.secauto.metaschema.core.model.constraint.ILet;
+import gov.nist.secauto.metaschema.core.qname.IEnhancedQName;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 import gov.nist.secauto.metaschema.databind.model.annotations.Let;
 
@@ -22,8 +22,6 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.net.URI;
 
-import javax.xml.namespace.QName;
-
 class ConstraintFactoryTest {
   @RegisterExtension
   final JUnit5Mockery context = new JUnit5Mockery();
@@ -31,9 +29,7 @@ class ConstraintFactoryTest {
   @SuppressWarnings("null")
   @Test
   void letExpressionTest() {
-    ISource source = ISource.externalSource(StaticContext.builder()
-        .baseUri(ObjectUtils.notNull(URI.create("https://example.com/")))
-        .build());
+    ISource source = ISource.externalSource(ObjectUtils.notNull(URI.create("https://example.com/")));
 
     String variable = "var1";
     String expression = "1 + 1";
@@ -53,11 +49,12 @@ class ConstraintFactoryTest {
     });
 
     ILet let = ConstraintFactory.newLetExpression(annotation, source);
+    MarkupMultiline letRemarks = let.getRemarks();
     assertAll(
-        () -> assertEquals(new QName(variable), let.getName()),
+        () -> assertEquals(IEnhancedQName.of(variable), let.getName()),
         () -> assertEquals(expression, let.getValueExpression().getPath()),
         () -> assertEquals(source, let.getSource()),
-        () -> assertEquals("Test", let.getRemarks().toMarkdown()));
+        () -> assertEquals("Test", letRemarks == null ? null : letRemarks.toMarkdown()));
   }
 
 }

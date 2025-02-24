@@ -12,7 +12,7 @@ import gov.nist.secauto.metaschema.core.datatype.IDataTypeAdapter;
 import gov.nist.secauto.metaschema.core.datatype.markup.MarkupLine;
 import gov.nist.secauto.metaschema.core.datatype.markup.MarkupMultiline;
 import gov.nist.secauto.metaschema.core.metapath.DynamicContext;
-import gov.nist.secauto.metaschema.core.metapath.ISequence;
+import gov.nist.secauto.metaschema.core.metapath.item.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.item.node.IAssemblyNodeItem;
 import gov.nist.secauto.metaschema.core.metapath.item.node.IDefinitionNodeItem;
 import gov.nist.secauto.metaschema.core.metapath.item.node.INodeItemFactory;
@@ -32,6 +32,7 @@ import gov.nist.secauto.metaschema.core.model.constraint.IKeyField;
 import gov.nist.secauto.metaschema.core.model.constraint.ILet;
 import gov.nist.secauto.metaschema.core.model.constraint.IMatchesConstraint;
 import gov.nist.secauto.metaschema.core.model.constraint.IUniqueConstraint;
+import gov.nist.secauto.metaschema.core.qname.IEnhancedQName;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 import gov.nist.secauto.metaschema.databind.model.annotations.AllowedValue;
 import gov.nist.secauto.metaschema.databind.model.annotations.AllowedValues;
@@ -54,8 +55,6 @@ import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
-
-import javax.xml.namespace.QName;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
@@ -89,11 +88,11 @@ public final class AnnotationGenerator {
     } catch (NoSuchMethodException ex) {
       throw new IllegalArgumentException(ex);
     }
-    Object retval;
+    Object retval = null;
     try {
       retval = method.getDefaultValue();
-    } catch (TypeNotPresentException ex) {
-      retval = null; // NOPMD readability
+    } catch (@SuppressWarnings("unused") TypeNotPresentException ex) {
+      // no default value found
     }
     return retval;
   }
@@ -117,7 +116,7 @@ public final class AnnotationGenerator {
 
     annotation.addMember("level", "$T.$L", IConstraint.Level.class, constraint.getLevel());
 
-    String target = constraint.getTarget();
+    String target = constraint.getTarget().getPath();
     if (!target.equals(getDefaultValue(annotationType, "target"))) {
       annotation.addMember("target", "$S", target);
     }
@@ -135,7 +134,7 @@ public final class AnnotationGenerator {
       @NonNull AnnotationSpec.Builder builder,
       @NonNull IFlagDefinition definition) {
 
-    Map<QName, ? extends ILet> lets = definition.getLetExpressions();
+    Map<IEnhancedQName, ? extends ILet> lets = definition.getLetExpressions();
     if (!lets.isEmpty() || !definition.getConstraints().isEmpty()) {
       AnnotationSpec.Builder annotation = AnnotationSpec.builder(ValueConstraints.class);
       assert annotation != null;
@@ -162,7 +161,7 @@ public final class AnnotationGenerator {
       @NonNull AnnotationSpec.Builder builder,
       @NonNull IModelDefinition definition) {
 
-    Map<QName, ? extends ILet> lets = definition.getLetExpressions();
+    Map<IEnhancedQName, ? extends ILet> lets = definition.getLetExpressions();
     List<? extends IAllowedValuesConstraint> allowedValues = definition.getAllowedValuesConstraints();
     List<? extends IIndexHasKeyConstraint> indexHasKey = definition.getIndexHasKeyConstraints();
     List<? extends IMatchesConstraint> matches = definition.getMatchesConstraints();
@@ -212,7 +211,7 @@ public final class AnnotationGenerator {
 
   private static void applyLetAssignments(
       @NonNull AnnotationSpec.Builder annotation,
-      @NonNull Map<QName, ? extends ILet> lets) {
+      @NonNull Map<IEnhancedQName, ? extends ILet> lets) {
     for (ILet let : lets.values()) {
       AnnotationSpec.Builder letAnnotation = AnnotationSpec.builder(Let.class);
       letAnnotation.addMember("name", "$S", let.getName());
@@ -292,7 +291,7 @@ public final class AnnotationGenerator {
     for (IKeyField key : keyFields) {
       AnnotationSpec.Builder keyAnnotation = AnnotationSpec.builder(KeyField.class);
 
-      String target = key.getTarget();
+      String target = key.getTarget().getPath();
       if (!target.equals(getDefaultValue(KeyField.class, "target"))) {
         keyAnnotation.addMember("target", "$S", target);
       }
@@ -349,7 +348,7 @@ public final class AnnotationGenerator {
 
       buildConstraint(Expect.class, constraintAnnotation, constraint);
 
-      constraintAnnotation.addMember("test", "$S", constraint.getTest());
+      constraintAnnotation.addMember("test", "$S", constraint.getTest().getPath());
 
       if (constraint.getMessage() != null) {
         constraintAnnotation.addMember("message", "$S", constraint.getMessage());
@@ -424,7 +423,7 @@ public final class AnnotationGenerator {
       @NonNull LogBuilder logBuilder) {
 
     LogBuilder warn = LOGGER.atWarn();
-    for (IDefinitionNodeItem<?, ?> item : instanceSet.getValue()) {
+    for (IDefinitionNodeItem<?, ?> item : instanceSet) {
       INamedInstance instance = item.getInstance();
       if (instance instanceof INamedModelInstanceAbsolute) {
         INamedModelInstanceAbsolute modelInstance = (INamedModelInstanceAbsolute) instance;
@@ -434,7 +433,9 @@ public final class AnnotationGenerator {
       } else {
         warn.log(String.format(
             "Definition '%s' has min-occurs=%d cardinality constraint targeting '%s' that is not a model instance",
-            definition.getName(), constraint.getMinOccurs(), constraint.getTarget()));
+            definition.getName(),
+            constraint.getMinOccurs(),
+            constraint.getTarget().getPath()));
       }
     }
   }
@@ -453,14 +454,18 @@ public final class AnnotationGenerator {
         logBuilder.log(String.format(
             "Definition '%s' has min-occurs=%d cardinality constraint targeting '%s' that is redundant with a"
                 + " targeted instance named '%s' that requires min-occurs=%d",
-            definition.getName(), minOccurs, constraint.getTarget(),
+            definition.getName(),
+            minOccurs,
+            constraint.getTarget().getPath(),
             modelInstance.getName(),
             modelInstance.getMinOccurs()));
       } else if (minOccurs < modelInstance.getMinOccurs()) {
         logBuilder.log(String.format(
             "Definition '%s' has min-occurs=%d cardinality constraint targeting '%s' that conflicts with a"
                 + " targeted instance named '%s' that requires min-occurs=%d",
-            definition.getName(), minOccurs, constraint.getTarget(),
+            definition.getName(),
+            minOccurs,
+            constraint.getTarget().getPath(),
             modelInstance.getName(),
             modelInstance.getMinOccurs()));
       }
@@ -481,14 +486,18 @@ public final class AnnotationGenerator {
         logBuilder.log(String.format(
             "Definition '%s' has max-occurs=%d cardinality constraint targeting '%s' that is redundant with a"
                 + " targeted instance named '%s' that requires max-occurs=%d",
-            definition.getName(), maxOccurs, constraint.getTarget(),
+            definition.getName(),
+            maxOccurs,
+            constraint.getTarget().getPath(),
             modelInstance.getName(),
             modelInstance.getMaxOccurs()));
       } else if (maxOccurs < modelInstance.getMaxOccurs()) {
         logBuilder.log(String.format(
             "Definition '%s' has max-occurs=%d cardinality constraint targeting '%s' that conflicts with a"
                 + " targeted instance named '%s' that requires max-occurs=%d",
-            definition.getName(), maxOccurs, constraint.getTarget(),
+            definition.getName(),
+            maxOccurs,
+            constraint.getTarget().getPath(),
             modelInstance.getName(),
             modelInstance.getMaxOccurs()));
       }

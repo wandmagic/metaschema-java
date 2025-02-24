@@ -8,6 +8,8 @@ package gov.nist.secauto.metaschema.databind.model.metaschema.impl;
 import gov.nist.secauto.metaschema.core.datatype.IDataTypeAdapter;
 import gov.nist.secauto.metaschema.core.datatype.markup.MarkupLine;
 import gov.nist.secauto.metaschema.core.datatype.markup.MarkupMultiline;
+import gov.nist.secauto.metaschema.core.metapath.IMetapathExpression;
+import gov.nist.secauto.metaschema.core.metapath.StaticContext;
 import gov.nist.secauto.metaschema.core.model.ISource;
 import gov.nist.secauto.metaschema.core.model.constraint.AbstractConfigurableMessageConstraintBuilder;
 import gov.nist.secauto.metaschema.core.model.constraint.AbstractConstraintBuilder;
@@ -49,8 +51,6 @@ import gov.nist.secauto.metaschema.databind.model.metaschema.binding.TargetedMat
 import java.math.BigInteger;
 import java.util.List;
 import java.util.regex.Pattern;
-
-import javax.xml.namespace.QName;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
@@ -189,6 +189,8 @@ public final class ConstraintBindingSupport {
       @NonNull IValueConstrained constraintSet,
       @NonNull IValueConstraintsBase constraints,
       @NonNull ISource source) {
+    StaticContext staticContext = source.getStaticContext();
+
     // parse let expressions
     constraints.getLets().stream()
         .map(letObj -> {
@@ -199,7 +201,7 @@ public final class ConstraintBindingSupport {
           }
 
           return ILet.of(
-              ObjectUtils.requireNonNull(new QName(letObj.getVar())),
+              staticContext.parseVariableName(ObjectUtils.requireNonNull(letObj.getVar())),
               ObjectUtils.requireNonNull(letObj.getExpression()),
               source,
               remarks);
@@ -242,7 +244,7 @@ public final class ConstraintBindingSupport {
       @NonNull FlagExpect obj,
       @NonNull ISource source) {
     IExpectConstraint.Builder builder = IExpectConstraint.builder()
-        .test(target(ObjectUtils.requireNonNull(obj.getTest())));
+        .test(metapath(ObjectUtils.requireNonNull(obj.getTest()), source));
     applyConfigurableCommonValues(obj, null, source, builder);
 
     String message = obj.getMessage();
@@ -258,7 +260,7 @@ public final class ConstraintBindingSupport {
       @NonNull TargetedExpectConstraint obj,
       @NonNull ISource source) {
     IExpectConstraint.Builder builder = IExpectConstraint.builder()
-        .test(target(ObjectUtils.requireNonNull(obj.getTest())));
+        .test(metapath(ObjectUtils.requireNonNull(obj.getTest()), source));
     applyConfigurableCommonValues(obj, obj.getTarget(), source, builder);
 
     return builder.build();
@@ -273,10 +275,9 @@ public final class ConstraintBindingSupport {
       assert value != null;
 
       IKeyField keyField = IKeyField.of(
-          target(ObjectUtils.requireNonNull(value.getTarget())),
+          metapath(ObjectUtils.requireNonNull(value.getTarget()), source),
           pattern(value.getPattern()),
-          ModelSupport.remarks(value.getRemarks()),
-          source);
+          ModelSupport.remarks(value.getRemarks()));
       builder.keyField(keyField);
     }
     return builder;
@@ -316,7 +317,9 @@ public final class ConstraintBindingSupport {
 
     String dataType = obj.getDatatype();
     if (dataType != null) {
-      IDataTypeAdapter<?> javaTypeAdapter = ModelSupport.dataType(obj.getDatatype());
+      IDataTypeAdapter<?> javaTypeAdapter = ModelSupport.dataType(
+          obj.getDatatype(),
+          source);
       builder.datatype(javaTypeAdapter);
     }
 
@@ -337,7 +340,9 @@ public final class ConstraintBindingSupport {
 
     String dataType = obj.getDatatype();
     if (dataType != null) {
-      IDataTypeAdapter<?> javaTypeAdapter = ModelSupport.dataType(obj.getDatatype());
+      IDataTypeAdapter<?> javaTypeAdapter = ModelSupport.dataType(
+          obj.getDatatype(),
+          source);
       builder.datatype(javaTypeAdapter);
     }
 
@@ -432,17 +437,21 @@ public final class ConstraintBindingSupport {
       builder.remarks(ObjectUtils.notNull(remarks.getRemark()));
     }
 
-    builder.target(target(target));
+    builder.target(metapath(target, source));
     builder.level(level(constraint.getLevel()));
     builder.source(source);
     return builder;
   }
 
   @NonNull
-  private static String target(@Nullable String target) {
-    return target == null
+  private static IMetapathExpression metapath(
+      @Nullable String metapath,
+      @NonNull ISource source) {
+    return metapath == null
         ? IConstraint.DEFAULT_TARGET_METAPATH
-        : target;
+        : IMetapathExpression.lazyCompile(
+            metapath,
+            source.getStaticContext());
   }
 
   @NonNull

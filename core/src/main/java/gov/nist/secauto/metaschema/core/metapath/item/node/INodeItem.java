@@ -6,7 +6,9 @@ import gov.nist.secauto.metaschema.core.metapath.format.IPathFormatter;
 import gov.nist.secauto.metaschema.core.metapath.format.IPathSegment;
 import gov.nist.secauto.metaschema.core.metapath.item.IItem;
 import gov.nist.secauto.metaschema.core.metapath.item.IItemVisitor;
+import gov.nist.secauto.metaschema.core.metapath.type.IItemType;
 import gov.nist.secauto.metaschema.core.model.IResourceLocation;
+import gov.nist.secauto.metaschema.core.qname.IEnhancedQName;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 
 import java.net.URI;
@@ -14,15 +16,42 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Stream;
 
-import javax.xml.namespace.QName;
-
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 
 /**
- * Represents a queryable Metapath model node.
+ * Represents a Metapath model node.
  */
 public interface INodeItem extends IItem, IPathSegment, INodeItemVisitable {
+  /**
+   * The type of node.
+   */
+  enum NodeType {
+    MODULE,
+    DOCUMENT,
+    ASSEMBLY,
+    FIELD,
+    FLAG;
+  }
+
+  /**
+   * Get the node type for the node item.
+   *
+   * @return the node type
+   */
+  @NonNull
+  NodeType getNodeType();
+
+  /**
+   * Get the static type information of the node item.
+   *
+   * @return the item type
+   */
+  @NonNull
+  static IItemType type() {
+    return IItemType.node();
+  }
+
   /**
    * Retrieve the relative position of this node relative to sibling nodes.
    * <p>
@@ -91,22 +120,22 @@ public interface INodeItem extends IItem, IPathSegment, INodeItemVisitable {
   IModelNodeItem<?, ?> getParentContentNodeItem();
 
   /**
-   * Get the type of node item this is.
+   * Get the kind of node item this is.
    *
-   * @return the node item's type
+   * @return the node item's kind
    */
   @NonNull
-  NodeItemType getNodeItemType();
+  NodeItemKind getNodeItemKind();
 
   /**
    * Retrieve the base URI of this node.
    * <p>
    * The base URI of a node will be in order of preference:
    * <ol>
-   * <li>the base URI defined on the node</li>
-   * <li>the base URI defined on the nearest ancestor node</li>
-   * <li>the base URI defined on the document node</li>
-   * <li>{@code null} if the document node is unknown</li>
+   * <li>the base URI defined on the node
+   * <li>the base URI defined on the nearest ancestor node
+   * <li>the base URI defined on the document node
+   * <li>{@code null} if the document node is unknown
    * </ol>
    *
    * @return the base URI or {@code null} if it is unknown
@@ -149,12 +178,12 @@ public interface INodeItem extends IItem, IPathSegment, INodeItemVisitable {
    */
   @NonNull
   default Stream<? extends INodeItem> ancestorOrSelf() {
-    return ObjectUtils.notNull(Stream.concat(Stream.of(this), ancestor()));
+    return ObjectUtils.notNull(Stream.concat(ancestor(), Stream.of(this)));
   }
 
   /**
    * Get a stream of the ancestors of the provided {@code item}. The stream is
-   * ordered from the closest to farthest ancestor.
+   * ordered from the farthest ancestor to the closest.
    *
    * @param item
    *          the target item to get ancestors for
@@ -164,7 +193,7 @@ public interface INodeItem extends IItem, IPathSegment, INodeItemVisitable {
   @NonNull
   static Stream<? extends INodeItem> ancestorsOf(@NonNull INodeItem item) {
     INodeItem parent = item.getParentNodeItem();
-    return ObjectUtils.notNull(parent == null ? Stream.empty() : Stream.concat(Stream.of(parent), ancestorsOf(parent)));
+    return ObjectUtils.notNull(parent == null ? Stream.empty() : Stream.concat(ancestorsOf(parent), Stream.of(parent)));
   }
 
   /**
@@ -268,12 +297,12 @@ public interface INodeItem extends IItem, IPathSegment, INodeItemVisitable {
    * Lookup a flag and value data on this node by it's effective qualified name.
    *
    * @param name
-   *          the effective name of the flag
+   *          the effective qualified name of the flag
    * @return the flag with the matching effective name or {@code null} if no match
    *         was found
    */
   @Nullable
-  IFlagNodeItem getFlagByName(@NonNull QName name);
+  IFlagNodeItem getFlagByName(@NonNull IEnhancedQName name);
 
   /**
    * Get the flags and value data associated with this node as a stream.
@@ -314,7 +343,7 @@ public interface INodeItem extends IItem, IPathSegment, INodeItemVisitable {
    *         empty list if an instance with that name is not present
    */
   @NonNull
-  List<? extends IModelNodeItem<?, ?>> getModelItemsByName(@NonNull QName name);
+  List<? extends IModelNodeItem<?, ?>> getModelItemsByName(@NonNull IEnhancedQName name);
 
   /**
    * Get the model items (i.e., fields, assemblies) and value data associated this

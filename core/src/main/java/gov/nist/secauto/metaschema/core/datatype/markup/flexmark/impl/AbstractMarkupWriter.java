@@ -43,7 +43,6 @@ import com.vladsch.flexmark.util.sequence.BasedSequence;
 import com.vladsch.flexmark.util.sequence.Escaping;
 
 import gov.nist.secauto.metaschema.core.datatype.markup.flexmark.HtmlQuoteTagExtension.DoubleQuoteNode;
-import gov.nist.secauto.metaschema.core.datatype.markup.flexmark.IMarkupWriter;
 import gov.nist.secauto.metaschema.core.datatype.markup.flexmark.InsertAnchorExtension.InsertAnchorNode;
 import gov.nist.secauto.metaschema.core.util.CollectionUtil;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
@@ -373,6 +372,7 @@ public abstract class AbstractMarkupWriter<T, E extends Throwable> // NOPMD not 
     Map<String, String> attributes = new LinkedHashMap<>(); // NOPMD local use; thread-safe
     String href = Escaping.percentEncodeUrl(node.getUrl().unescape());
     try {
+      // ensure URI is valid
       attributes.put("href", new URI(href).toASCIIString());
     } catch (URISyntaxException ex) {
       throw new IllegalStateException(ex);
@@ -400,6 +400,7 @@ public abstract class AbstractMarkupWriter<T, E extends Throwable> // NOPMD not 
 
     String href = Escaping.percentEncodeUrl(node.getText().unescape());
     try {
+      // ensure URI is valid
       attributes.put("href", new URI("mailto:" + href).toASCIIString());
     } catch (URISyntaxException ex) {
       throw new IllegalStateException(ex);
@@ -419,6 +420,7 @@ public abstract class AbstractMarkupWriter<T, E extends Throwable> // NOPMD not 
 
     String href = Escaping.percentEncodeUrl(node.getUrl().unescape());
     try {
+      // ensure URI is valid
       attributes.put("href", new URI(href).toASCIIString());
     } catch (URISyntaxException ex) {
       throw new IllegalStateException(ex);
@@ -549,6 +551,7 @@ public abstract class AbstractMarkupWriter<T, E extends Throwable> // NOPMD not 
     Map<String, String> attributes = new LinkedHashMap<>(); // NOPMD local use; thread-safe
     String href = ObjectUtils.requireNonNull(Escaping.percentEncodeUrl(node.getUrl().unescape()));
     try {
+      // ensure URI is valid
       attributes.put("src", new URI(href).toASCIIString());
     } catch (URISyntaxException ex) {
       throw new IllegalStateException(ex);

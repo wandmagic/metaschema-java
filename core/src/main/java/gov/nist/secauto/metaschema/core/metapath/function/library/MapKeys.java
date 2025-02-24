@@ -6,12 +6,12 @@
 package gov.nist.secauto.metaschema.core.metapath.function.library;
 
 import gov.nist.secauto.metaschema.core.metapath.DynamicContext;
-import gov.nist.secauto.metaschema.core.metapath.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.MetapathConstants;
 import gov.nist.secauto.metaschema.core.metapath.function.FunctionUtils;
 import gov.nist.secauto.metaschema.core.metapath.function.IArgument;
 import gov.nist.secauto.metaschema.core.metapath.function.IFunction;
 import gov.nist.secauto.metaschema.core.metapath.item.IItem;
+import gov.nist.secauto.metaschema.core.metapath.item.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IAnyAtomicItem;
 import gov.nist.secauto.metaschema.core.metapath.item.function.IMapItem;
 import gov.nist.secauto.metaschema.core.metapath.item.function.IMapKey;
@@ -39,10 +39,10 @@ public final class MapKeys {
       .focusIndependent()
       .argument(IArgument.builder()
           .name("map")
-          .type(IMapItem.class)
+          .type(IMapItem.type())
           .one()
           .build())
-      .returnType(IAnyAtomicItem.class)
+      .returnType(IAnyAtomicItem.type())
       .returnZeroOrMore()
       .functionHandler(MapKeys::execute)
       .build();

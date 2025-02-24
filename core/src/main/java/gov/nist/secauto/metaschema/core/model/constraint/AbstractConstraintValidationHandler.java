@@ -7,9 +7,8 @@ package gov.nist.secauto.metaschema.core.model.constraint;
 
 import gov.nist.secauto.metaschema.core.datatype.IDataTypeAdapter;
 import gov.nist.secauto.metaschema.core.metapath.DynamicContext;
-import gov.nist.secauto.metaschema.core.metapath.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.format.IPathFormatter;
-import gov.nist.secauto.metaschema.core.metapath.function.library.FnData;
+import gov.nist.secauto.metaschema.core.metapath.item.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.item.node.INodeItem;
 import gov.nist.secauto.metaschema.core.util.CustomCollectors;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
@@ -88,7 +87,7 @@ public abstract class AbstractConstraintValidationHandler implements IConstraint
             "The cardinality '%d' is below the required minimum '%d' for items matching '%s'.",
             testedItems.size(),
             constraint.getMinOccurs(),
-            constraint.getTarget()))
+            constraint.getTarget().getPath()))
         : constraint.generateMessage(target, dynamicContext);
   }
 
@@ -285,7 +284,7 @@ public abstract class AbstractConstraintValidationHandler implements IConstraint
       @NonNull DynamicContext dynamicContext) {
     return constraint.getMessage() == null
         ? ObjectUtils.notNull(String.format("Expect constraint '%s' did not match the data at path '%s'",
-            constraint.getTest(),
+            constraint.getTest().getPath(),
             toPath(target)))
         : constraint.generateMessage(target, dynamicContext);
   }
@@ -312,7 +311,7 @@ public abstract class AbstractConstraintValidationHandler implements IConstraint
         .collect(CustomCollectors.joiningWithOxfordComma("or"));
 
     return ObjectUtils.notNull(String.format("Value '%s' doesn't match one of '%s' at path '%s'",
-        FnData.fnDataItem(target).asString(),
+        target.toAtomicItem().asString(),
         allowedValues,
         toPath(target)));
   }

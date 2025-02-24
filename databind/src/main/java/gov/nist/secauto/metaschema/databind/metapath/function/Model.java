@@ -6,12 +6,12 @@
 package gov.nist.secauto.metaschema.databind.metapath.function;
 
 import gov.nist.secauto.metaschema.core.metapath.DynamicContext;
-import gov.nist.secauto.metaschema.core.metapath.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.MetapathConstants;
 import gov.nist.secauto.metaschema.core.metapath.function.FunctionUtils;
 import gov.nist.secauto.metaschema.core.metapath.function.IArgument;
 import gov.nist.secauto.metaschema.core.metapath.function.IFunction;
 import gov.nist.secauto.metaschema.core.metapath.item.IItem;
+import gov.nist.secauto.metaschema.core.metapath.item.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.item.node.IDefinitionNodeItem;
 import gov.nist.secauto.metaschema.core.metapath.item.node.INodeItem;
 import gov.nist.secauto.metaschema.core.model.IDefinition;
@@ -30,10 +30,10 @@ public final class Model {
       .namespace(MetapathConstants.NS_METAPATH_FUNCTIONS_EXTENDED)
       .argument(IArgument.builder()
           .name("node")
-          .type(INodeItem.class)
+          .type(INodeItem.type())
           .one()
           .build())
-      .returnType(INodeItem.class)
+      .returnType(INodeItem.type())
       .focusIndependent()
       .contextIndependent()
       .deterministic()

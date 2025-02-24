@@ -6,12 +6,12 @@
 package gov.nist.secauto.metaschema.core.metapath.function.library;
 
 import gov.nist.secauto.metaschema.core.metapath.DynamicContext;
-import gov.nist.secauto.metaschema.core.metapath.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.MetapathConstants;
 import gov.nist.secauto.metaschema.core.metapath.function.FunctionUtils;
 import gov.nist.secauto.metaschema.core.metapath.function.IArgument;
 import gov.nist.secauto.metaschema.core.metapath.function.IFunction;
 import gov.nist.secauto.metaschema.core.metapath.item.IItem;
+import gov.nist.secauto.metaschema.core.metapath.item.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IDecimalItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IStringItem;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
@@ -36,15 +36,15 @@ public final class FnSubstring {
       .focusIndependent()
       .argument(IArgument.builder()
           .name("sourceString")
-          .type(IStringItem.class)
+          .type(IStringItem.type())
           .zeroOrOne()
           .build())
       .argument(IArgument.builder()
           .name("start")
-          .type(IDecimalItem.class)
+          .type(IDecimalItem.type())
           .one()
           .build())
-      .returnType(IStringItem.class)
+      .returnType(IStringItem.type())
       .returnOne()
       .functionHandler(FnSubstring::executeTwoArg)
       .build();
@@ -58,20 +58,20 @@ public final class FnSubstring {
       .focusIndependent()
       .argument(IArgument.builder()
           .name("sourceString")
-          .type(IStringItem.class)
+          .type(IStringItem.type())
           .zeroOrOne()
           .build())
       .argument(IArgument.builder()
           .name("start")
-          .type(IDecimalItem.class)
+          .type(IDecimalItem.type())
           .one()
           .build())
       .argument(IArgument.builder()
           .name("length")
-          .type(IDecimalItem.class)
+          .type(IDecimalItem.type())
           .one()
           .build())
-      .returnType(IStringItem.class)
+      .returnType(IStringItem.type())
       .returnOne()
       .functionHandler(FnSubstring::executeThreeArg)
       .build();
@@ -96,13 +96,13 @@ public final class FnSubstring {
 
     IDecimalItem start = FunctionUtils.asType(ObjectUtils.requireNonNull(arguments.get(1).getFirstItem(true)));
 
-    int startIndex = start.round().asInteger().intValue();
+    int startIndex = start.round().toIntValueExact();
 
     return ISequence.of(IStringItem.valueOf(
         fnSubstring(
             sourceString.asString(),
             startIndex,
-            sourceString.toString().length() - Math.max(startIndex, 1) + 1)));
+            sourceString.asString().length() - Math.max(startIndex, 1) + 1)));
   }
 
   @SuppressWarnings({ "unused", "PMD.OnlyOneReturn" })
@@ -125,8 +125,8 @@ public final class FnSubstring {
     return ISequence.of(IStringItem.valueOf(
         fnSubstring(
             sourceString.asString(),
-            start.round().asInteger().intValue(),
-            length.round().asInteger().intValue())));
+            start.round().toIntValueExact(),
+            length.round().toIntValueExact())));
   }
 
   /**

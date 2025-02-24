@@ -6,9 +6,10 @@
 package gov.nist.secauto.metaschema.databind.model.impl;
 
 import gov.nist.secauto.metaschema.core.model.AbstractChoiceGroupInstance;
+import gov.nist.secauto.metaschema.core.model.DefaultChoiceGroupModelBuilder;
 import gov.nist.secauto.metaschema.core.model.IBoundObject;
 import gov.nist.secauto.metaschema.core.model.IContainerModelSupport;
-import gov.nist.secauto.metaschema.core.util.CollectionUtil;
+import gov.nist.secauto.metaschema.core.qname.IEnhancedQName;
 import gov.nist.secauto.metaschema.core.util.CustomCollectors;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 import gov.nist.secauto.metaschema.databind.model.IBoundDefinitionModelAssembly;
@@ -28,16 +29,9 @@ import gov.nist.secauto.metaschema.databind.model.info.IModelInstanceCollectionI
 
 import java.lang.reflect.Field;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import javax.xml.namespace.QName;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
@@ -54,8 +48,7 @@ public final class InstanceModelChoiceGroup
         IBoundInstanceModelGroupedNamed,
         IBoundInstanceModelGroupedField,
         IBoundInstanceModelGroupedAssembly>
-    implements IBoundInstanceModelChoiceGroup,
-    IFeatureBoundContainerModelChoiceGroup, IFeatureInstanceModelGroupAs<IBoundObject> {
+    implements IBoundInstanceModelChoiceGroup, IFeatureInstanceModelGroupAs {
   @NonNull
   private final Field javaField;
   @NonNull
@@ -65,11 +58,15 @@ public final class InstanceModelChoiceGroup
   @NonNull
   private final IGroupAs groupAs;
   @NonNull
-  private final Lazy<ChoiceGroupModelContainerSupport> modelContainer;
+  private final Lazy<IContainerModelSupport<
+      IBoundInstanceModelGroupedNamed,
+      IBoundInstanceModelGroupedNamed,
+      IBoundInstanceModelGroupedField,
+      IBoundInstanceModelGroupedAssembly>> modelContainer;
   @NonNull
   private final Lazy<Map<Class<?>, IBoundInstanceModelGroupedNamed>> classToInstanceMap;
   @NonNull
-  private final Lazy<Map<QName, IBoundInstanceModelGroupedNamed>> qnameToInstanceMap;
+  private final Lazy<Map<IEnhancedQName, IBoundInstanceModelGroupedNamed>> qnameToInstanceMap;
   @NonNull
   private final Lazy<Map<String, IBoundInstanceModelGroupedNamed>> discriminatorToInstanceMap;
 
@@ -107,6 +104,34 @@ public final class InstanceModelChoiceGroup
     return new InstanceModelChoiceGroup(javaField, annotation, groupAs, parent);
   }
 
+  @NonNull
+  private static IContainerModelSupport<
+      IBoundInstanceModelGroupedNamed,
+      IBoundInstanceModelGroupedNamed,
+      IBoundInstanceModelGroupedField,
+      IBoundInstanceModelGroupedAssembly> newContainerModel(
+          @NonNull BoundGroupedAssembly[] assemblies,
+          @NonNull BoundGroupedField[] fields,
+          @NonNull IBoundInstanceModelChoiceGroup container) {
+    DefaultChoiceGroupModelBuilder<
+        IBoundInstanceModelGroupedNamed,
+        IBoundInstanceModelGroupedField,
+        IBoundInstanceModelGroupedAssembly> builder = new DefaultChoiceGroupModelBuilder<>();
+
+    Arrays.stream(assemblies)
+        .map(instance -> {
+          assert instance != null;
+          return IBoundInstanceModelGroupedAssembly.newInstance(instance, container);
+        }).forEachOrdered(builder::append);
+    Arrays.stream(fields)
+        .map(instance -> {
+          assert instance != null;
+          return IBoundInstanceModelGroupedField.newInstance(instance, container);
+        }).forEachOrdered(builder::append);
+
+    return builder.buildChoiceGroup();
+  }
+
   @SuppressFBWarnings(value = "CT_CONSTRUCTOR_THROW", justification = "Use of final fields")
   private InstanceModelChoiceGroup(
       @NonNull Field javaField,
@@ -118,7 +143,7 @@ public final class InstanceModelChoiceGroup
     this.annotation = annotation;
     this.groupAs = groupAs;
     this.collectionInfo = ObjectUtils.notNull(Lazy.lazy(() -> IModelInstanceCollectionInfo.of(this)));
-    this.modelContainer = ObjectUtils.notNull(Lazy.lazy(() -> new ChoiceGroupModelContainerSupport(
+    this.modelContainer = ObjectUtils.notNull(Lazy.lazy(() -> newContainerModel(
         this.annotation.assemblies(),
         this.annotation.fields(),
         this)));
@@ -131,7 +156,7 @@ public final class InstanceModelChoiceGroup
     this.qnameToInstanceMap = ObjectUtils.notNull(Lazy.lazy(() -> Collections.unmodifiableMap(
         getNamedModelInstances().stream()
             .collect(Collectors.toMap(
-                IBoundInstanceModelGroupedNamed::getXmlQName,
+                IBoundInstanceModelGroupedNamed::getQName,
                 CustomCollectors.identity())))));
     this.discriminatorToInstanceMap = ObjectUtils.notNull(Lazy.lazy(() -> Collections.unmodifiableMap(
         getNamedModelInstances().stream()
@@ -173,7 +198,7 @@ public final class InstanceModelChoiceGroup
    */
   @SuppressWarnings("null")
   @NonNull
-  protected Map<QName, IBoundInstanceModelGroupedNamed> getQNameToInstanceMap() {
+  protected Map<IEnhancedQName, IBoundInstanceModelGroupedNamed> getQNameToInstanceMap() {
     return qnameToInstanceMap.get();
   }
 
@@ -208,7 +233,7 @@ public final class InstanceModelChoiceGroup
 
   @Override
   @Nullable
-  public IBoundInstanceModelGroupedNamed getGroupedModelInstance(@NonNull QName name) {
+  public IBoundInstanceModelGroupedNamed getGroupedModelInstance(@NonNull IEnhancedQName name) {
     return getQNameToInstanceMap().get(name);
   }
 
@@ -224,7 +249,11 @@ public final class InstanceModelChoiceGroup
 
   @SuppressWarnings("null")
   @Override
-  public ChoiceGroupModelContainerSupport getModelContainer() {
+  public IContainerModelSupport<
+      IBoundInstanceModelGroupedNamed,
+      IBoundInstanceModelGroupedNamed,
+      IBoundInstanceModelGroupedField,
+      IBoundInstanceModelGroupedAssembly> getModelContainer() {
     return modelContainer.get();
   }
 
@@ -267,80 +296,10 @@ public final class InstanceModelChoiceGroup
       Class<?> clazz = item.getClass();
 
       IBoundInstanceModelGroupedNamed itemInstance = getClassToInstanceMap().get(clazz);
-      retval = itemInstance.getDefinition().getFlagInstanceByName(
-          new QName(itemInstance.getXmlNamespace(), jsonKeyFlagName));
+      String namespace = itemInstance.getQName().getNamespace();
+      retval = itemInstance.getDefinition().getFlagInstanceByName(IEnhancedQName.of(namespace, jsonKeyFlagName)
+          .getIndexPosition());
     }
     return retval;
-  }
-
-  private static class ChoiceGroupModelContainerSupport
-      implements IContainerModelSupport<
-          IBoundInstanceModelGroupedNamed,
-          IBoundInstanceModelGroupedNamed,
-          IBoundInstanceModelGroupedField,
-          IBoundInstanceModelGroupedAssembly> {
-
-    @NonNull
-    private final Map<QName, IBoundInstanceModelGroupedNamed> namedModelInstances;
-    @NonNull
-    private final Map<QName, IBoundInstanceModelGroupedField> fieldInstances;
-    @NonNull
-    private final Map<QName, IBoundInstanceModelGroupedAssembly> assemblyInstances;
-
-    public ChoiceGroupModelContainerSupport(
-        @NonNull BoundGroupedAssembly[] assemblies,
-        @NonNull BoundGroupedField[] fields,
-        @NonNull IBoundInstanceModelChoiceGroup container) {
-      this.assemblyInstances = CollectionUtil.unmodifiableMap(ObjectUtils.notNull(Arrays.stream(assemblies)
-          .map(instance -> {
-            assert instance != null;
-            return IBoundInstanceModelGroupedAssembly.newInstance(instance,
-                container);
-          })
-          .collect(Collectors.toMap(
-              IBoundInstanceModelGroupedAssembly::getXmlQName,
-              Function.identity(),
-              CustomCollectors.useLastMapper(),
-              LinkedHashMap::new))));
-      this.fieldInstances = CollectionUtil.unmodifiableMap(ObjectUtils.notNull(Arrays.stream(fields)
-          .map(instance -> {
-            assert instance != null;
-            return IBoundInstanceModelGroupedField.newInstance(instance, container);
-          })
-          .collect(Collectors.toMap(
-              IBoundInstanceModelGroupedField::getXmlQName,
-              Function.identity(),
-              CustomCollectors.useLastMapper(),
-              LinkedHashMap::new))));
-      this.namedModelInstances = CollectionUtil.unmodifiableMap(ObjectUtils.notNull(Stream.concat(
-          this.assemblyInstances.entrySet().stream(),
-          this.fieldInstances.entrySet().stream())
-          .collect(Collectors.toMap(
-              Entry::getKey,
-              Entry::getValue,
-              CustomCollectors.useLastMapper(),
-              LinkedHashMap::new))));
-    }
-
-    @SuppressWarnings("null")
-    @Override
-    public Collection<IBoundInstanceModelGroupedNamed> getModelInstances() {
-      return namedModelInstances.values();
-    }
-
-    @Override
-    public Map<QName, IBoundInstanceModelGroupedNamed> getNamedModelInstanceMap() {
-      return namedModelInstances;
-    }
-
-    @Override
-    public Map<QName, IBoundInstanceModelGroupedField> getFieldInstanceMap() {
-      return fieldInstances;
-    }
-
-    @Override
-    public Map<QName, IBoundInstanceModelGroupedAssembly> getAssemblyInstanceMap() {
-      return assemblyInstances;
-    }
   }
 }

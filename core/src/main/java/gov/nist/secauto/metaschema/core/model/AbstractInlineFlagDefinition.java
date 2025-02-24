@@ -23,8 +23,8 @@ public abstract class AbstractInlineFlagDefinition<
     PARENT extends IModelDefinition,
     DEFINITION extends IFlagDefinition,
     INSTANCE extends IFlagInstance>
-    extends AbstractNamedInstance<PARENT>
-    implements IFlagInstance, IFlagDefinition,
+    extends AbstractFlagInstance<PARENT, DEFINITION, INSTANCE>
+    implements IFlagDefinition,
     IFeatureDefinitionInstanceInlined<DEFINITION, INSTANCE> {
 
   /**
@@ -34,7 +34,7 @@ public abstract class AbstractInlineFlagDefinition<
    *          the parent model containing this instance
    */
   protected AbstractInlineFlagDefinition(@NonNull PARENT parent) {
-    super(parent, name -> parent.getContainingModule().toFlagQName(name));
+    super(parent);
   }
 
   @Override
@@ -46,15 +46,5 @@ public abstract class AbstractInlineFlagDefinition<
   @NonNull
   public final INSTANCE getInlineInstance() {
     return ObjectUtils.asType(this);
-  }
-
-  @Override
-  public PARENT getContainingDefinition() {
-    return getParentContainer();
-  }
-
-  @Override
-  public IModule getContainingModule() {
-    return getContainingDefinition().getContainingModule();
   }
 }

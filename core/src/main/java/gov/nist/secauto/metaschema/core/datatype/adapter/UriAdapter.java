@@ -10,27 +10,33 @@ import com.fasterxml.jackson.databind.jsonFormatVisitors.JsonFormatTypes;
 import gov.nist.secauto.metaschema.core.datatype.AbstractDataTypeAdapter;
 import gov.nist.secauto.metaschema.core.metapath.MetapathConstants;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IAnyUriItem;
+import gov.nist.secauto.metaschema.core.qname.EQNameFactory;
+import gov.nist.secauto.metaschema.core.qname.IEnhancedQName;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 
 import java.net.URI;
 import java.util.List;
 
-import javax.xml.namespace.QName;
-
 import edu.umd.cs.findbugs.annotations.NonNull;
 
+/**
+ * Support for the Metaschema <a href=
+ * "https://pages.nist.gov/metaschema/specification/datatypes/#uri">uri</a> data
+ * type.
+ */
 public class UriAdapter
     extends AbstractDataTypeAdapter<URI, IAnyUriItem> {
   @NonNull
-  private static final List<QName> NAMES = ObjectUtils.notNull(
-      List.of(new QName(MetapathConstants.NS_METAPATH.toASCIIString(), "uri")));
+  private static final List<IEnhancedQName> NAMES = ObjectUtils.notNull(
+      List.of(
+          EQNameFactory.instance().newQName(MetapathConstants.NS_METAPATH, "uri")));
 
   UriAdapter() {
-    super(URI.class);
+    super(URI.class, IAnyUriItem.class, IAnyUriItem::cast);
   }
 
   @Override
-  public List<QName> getNames() {
+  public List<IEnhancedQName> getNames() {
     return NAMES;
   }
 
@@ -49,11 +55,6 @@ public class UriAdapter
   public URI copy(Object obj) {
     // a URI is immutable
     return (URI) obj;
-  }
-
-  @Override
-  public Class<IAnyUriItem> getItemClass() {
-    return IAnyUriItem.class;
   }
 
   @Override

@@ -6,14 +6,14 @@
 package gov.nist.secauto.metaschema.core.metapath.function.library;
 
 import gov.nist.secauto.metaschema.core.metapath.DynamicContext;
-import gov.nist.secauto.metaschema.core.metapath.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.MetapathConstants;
 import gov.nist.secauto.metaschema.core.metapath.function.FunctionUtils;
 import gov.nist.secauto.metaschema.core.metapath.function.IArgument;
 import gov.nist.secauto.metaschema.core.metapath.function.IFunction;
 import gov.nist.secauto.metaschema.core.metapath.function.InvalidArgumentFunctionException;
-import gov.nist.secauto.metaschema.core.metapath.function.OperationFunctions;
+import gov.nist.secauto.metaschema.core.metapath.function.impl.OperationFunctions;
 import gov.nist.secauto.metaschema.core.metapath.item.IItem;
+import gov.nist.secauto.metaschema.core.metapath.item.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IAnyAtomicItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IDayTimeDurationItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IIntegerItem;
@@ -45,10 +45,10 @@ public final class FnSum {
       .focusIndependent()
       .argument(IArgument.builder()
           .name("arg")
-          .type(IAnyAtomicItem.class)
+          .type(IAnyAtomicItem.type())
           .zeroOrMore()
           .build())
-      .returnType(IAnyAtomicItem.class)
+      .returnType(IAnyAtomicItem.type())
       .returnOne()
       .functionHandler(FnSum::executeOneArg)
       .build();
@@ -62,15 +62,15 @@ public final class FnSum {
       .focusIndependent()
       .argument(IArgument.builder()
           .name("arg")
-          .type(IAnyAtomicItem.class)
+          .type(IAnyAtomicItem.type())
           .zeroOrMore()
           .build())
       .argument(IArgument.builder()
           .name("zero")
-          .type(IAnyAtomicItem.class)
+          .type(IAnyAtomicItem.type())
           .zeroOrOne()
           .build())
-      .returnType(IAnyAtomicItem.class)
+      .returnType(IAnyAtomicItem.type())
       .returnZeroOrOne()
       .functionHandler(FnSum::executeTwoArg)
       .build();
@@ -89,7 +89,7 @@ public final class FnSum {
     ISequence<? extends IAnyAtomicItem> sequence = FunctionUtils.asType(
         ObjectUtils.requireNonNull(arguments.get(0)));
 
-    return ISequence.of(sum(sequence.getValue(), IIntegerItem.ZERO));
+    return ISequence.of(sum(sequence, IIntegerItem.ZERO));
   }
 
   @SuppressWarnings("unused")
@@ -103,7 +103,7 @@ public final class FnSum {
 
     IAnyAtomicItem zero = FunctionUtils.asTypeOrNull(arguments.get(1).getFirstItem(true));
 
-    return ISequence.of(sum(sequence.getValue(), zero));
+    return ISequence.of(sum(sequence, zero));
   }
 
   /**

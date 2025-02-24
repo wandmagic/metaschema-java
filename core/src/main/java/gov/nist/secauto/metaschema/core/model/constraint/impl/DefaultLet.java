@@ -6,11 +6,10 @@
 package gov.nist.secauto.metaschema.core.model.constraint.impl;
 
 import gov.nist.secauto.metaschema.core.datatype.markup.MarkupMultiline;
-import gov.nist.secauto.metaschema.core.metapath.MetapathExpression;
+import gov.nist.secauto.metaschema.core.metapath.IMetapathExpression;
 import gov.nist.secauto.metaschema.core.model.ISource;
 import gov.nist.secauto.metaschema.core.model.constraint.ILet;
-
-import javax.xml.namespace.QName;
+import gov.nist.secauto.metaschema.core.qname.IEnhancedQName;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
@@ -23,9 +22,9 @@ import edu.umd.cs.findbugs.annotations.Nullable;
 @SuppressWarnings("PMD.DataClass")
 public class DefaultLet implements ILet {
   @NonNull
-  private final QName name;
+  private final IEnhancedQName name;
   @NonNull
-  private final MetapathExpression valueExpression;
+  private final IMetapathExpression valueExpression;
   @NonNull
   private final ISource source;
   @Nullable
@@ -44,8 +43,8 @@ public class DefaultLet implements ILet {
    *          remarks about the let statement
    */
   public DefaultLet(
-      @NonNull QName name,
-      @NonNull MetapathExpression metapath,
+      @NonNull IEnhancedQName name,
+      @NonNull IMetapathExpression metapath,
       @NonNull ISource source,
       @Nullable MarkupMultiline remarks) {
     this.name = name;
@@ -55,12 +54,12 @@ public class DefaultLet implements ILet {
   }
 
   @Override
-  public QName getName() {
+  public IEnhancedQName getName() {
     return name;
   }
 
   @Override
-  public MetapathExpression getValueExpression() {
+  public IMetapathExpression getValueExpression() {
     return valueExpression;
   }
 

@@ -6,13 +6,12 @@
 package gov.nist.secauto.metaschema.core.metapath.cst;
 
 import gov.nist.secauto.metaschema.core.metapath.DynamicContext;
-import gov.nist.secauto.metaschema.core.metapath.ISequence;
-import gov.nist.secauto.metaschema.core.metapath.item.IItem;
+import gov.nist.secauto.metaschema.core.metapath.IExpression;
+import gov.nist.secauto.metaschema.core.metapath.item.ISequence;
+import gov.nist.secauto.metaschema.core.qname.IEnhancedQName;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 
 import java.util.List;
-
-import javax.xml.namespace.QName;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
@@ -22,7 +21,8 @@ import edu.umd.cs.findbugs.annotations.NonNull;
  * expression</a> supporting variable value binding.
  */
 @SuppressWarnings("PMD.ShortClassName")
-public class Let implements IExpression {
+public class Let
+    extends AbstractExpression {
   @NonNull
   private final VariableDeclaration variable;
   @NonNull
@@ -31,6 +31,8 @@ public class Let implements IExpression {
   /**
    * Construct a new Let CST expression.
    *
+   * @param text
+   *          the parsed text of the expression
    * @param name
    *          the variable name
    * @param boundExpression
@@ -38,7 +40,12 @@ public class Let implements IExpression {
    * @param returnExpression
    *          the inner expression to evaluate with the variable in-scope
    */
-  public Let(@NonNull QName name, @NonNull IExpression boundExpression, @NonNull IExpression returnExpression) {
+  public Let(
+      @NonNull String text,
+      @NonNull IEnhancedQName name,
+      @NonNull IExpression boundExpression,
+      @NonNull IExpression returnExpression) {
+    super(text);
     this.variable = new VariableDeclaration(name, boundExpression);
     this.returnExpression = returnExpression;
   }
@@ -75,7 +82,7 @@ public class Let implements IExpression {
   }
 
   @Override
-  public ISequence<? extends IItem> accept(DynamicContext dynamicContext, ISequence<?> focus) {
+  protected ISequence<?> evaluate(DynamicContext dynamicContext, ISequence<?> focus) {
     DynamicContext subDynamicContext = dynamicContext.subContext();
 
     getVariable().bind(dynamicContext, focus, subDynamicContext);
@@ -88,7 +95,7 @@ public class Let implements IExpression {
    */
   public static class VariableDeclaration {
     @NonNull
-    private final QName name;
+    private final IEnhancedQName name;
     @NonNull
     private final IExpression boundExpression;
 
@@ -101,7 +108,7 @@ public class Let implements IExpression {
      * @param boundExpression
      *          the bound expression
      */
-    public VariableDeclaration(@NonNull QName name, @NonNull IExpression boundExpression) {
+    public VariableDeclaration(@NonNull IEnhancedQName name, @NonNull IExpression boundExpression) {
       this.name = name;
       this.boundExpression = boundExpression;
     }
@@ -112,7 +119,7 @@ public class Let implements IExpression {
      * @return the variable name
      */
     @NonNull
-    public QName getName() {
+    public IEnhancedQName getName() {
       return name;
     }
 
@@ -141,11 +148,9 @@ public class Let implements IExpression {
         @NonNull ISequence<?> focus,
         @NonNull DynamicContext boundDynamicContext) {
 
-      ISequence<?> result = getBoundExpression().accept(evaluationDynamicContext, focus);
-
-      // ensure this sequence is list backed
-      result.getValue();
-
+      ISequence<?> result = getBoundExpression().accept(evaluationDynamicContext, focus)
+          // ensure this sequence is list backed
+          .reusable();
       boundDynamicContext.bindVariableValue(getName(), result);
     }
   }

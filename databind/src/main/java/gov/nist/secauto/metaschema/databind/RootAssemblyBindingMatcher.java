@@ -6,16 +6,21 @@
 package gov.nist.secauto.metaschema.databind;
 
 import gov.nist.secauto.metaschema.core.model.IBoundObject;
+import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 import gov.nist.secauto.metaschema.databind.IBindingContext.IBindingMatcher;
 import gov.nist.secauto.metaschema.databind.model.IBoundDefinitionModelAssembly;
 
 import javax.xml.namespace.QName;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
+import nl.talsmasoftware.lazy4j.Lazy;
 
 class RootAssemblyBindingMatcher implements IBindingMatcher {
   @NonNull
   private final IBoundDefinitionModelAssembly definition;
+  @NonNull
+  private final Lazy<QName> rootQName = ObjectUtils.notNull(
+      Lazy.lazy(() -> getDefinition().getRootQName().toQName()));
 
   public RootAssemblyBindingMatcher(
       @NonNull IBoundDefinitionModelAssembly definition) {
@@ -30,10 +35,9 @@ class RootAssemblyBindingMatcher implements IBindingMatcher {
     return getDefinition().getBoundClass();
   }
 
-  @SuppressWarnings("null")
   @NonNull
   protected QName getRootQName() {
-    return getDefinition().getRootXmlQName();
+    return ObjectUtils.notNull(rootQName.get());
   }
 
   @SuppressWarnings("null")
@@ -54,6 +58,6 @@ class RootAssemblyBindingMatcher implements IBindingMatcher {
 
   @Override
   public String toString() {
-    return getDefinition().getRootXmlQName().toString();
+    return getDefinition().getRootQName().toString();
   }
 }

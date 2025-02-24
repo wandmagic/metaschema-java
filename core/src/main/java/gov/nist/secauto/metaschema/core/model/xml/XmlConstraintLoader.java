@@ -5,6 +5,7 @@
 
 package gov.nist.secauto.metaschema.core.model.xml;
 
+import gov.nist.secauto.metaschema.core.metapath.IMetapathExpression;
 import gov.nist.secauto.metaschema.core.metapath.MetapathException;
 import gov.nist.secauto.metaschema.core.metapath.StaticContext;
 import gov.nist.secauto.metaschema.core.model.AbstractLoader;
@@ -28,6 +29,7 @@ import gov.nist.secauto.metaschema.core.model.xml.impl.XmlObjectParser;
 import gov.nist.secauto.metaschema.core.model.xml.impl.XmlObjectParser.Handler;
 import gov.nist.secauto.metaschema.core.model.xml.xmlbeans.METASCHEMACONSTRAINTSDocument;
 import gov.nist.secauto.metaschema.core.model.xml.xmlbeans.METASCHEMACONSTRAINTSDocument.METASCHEMACONSTRAINTS.Scope;
+import gov.nist.secauto.metaschema.core.qname.IEnhancedQName;
 import gov.nist.secauto.metaschema.core.util.CollectionUtil;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 
@@ -47,8 +49,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.xml.namespace.QName;
-
 import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
@@ -65,7 +65,7 @@ public class XmlConstraintLoader
 
   @SuppressWarnings("PMD.UseConcurrentHashMap")
   @NonNull
-  private static final Map<QName,
+  private static final Map<IEnhancedQName,
       Handler<Pair<ISource, List<ITargetedConstraints>>>> SCOPE_OBJECT_MAPPING = ObjectUtils.notNull(
           Map.ofEntries(
               Map.entry(XmlModuleConstants.ASSEMBLY_QNAME, XmlConstraintLoader::handleScopedAssembly),
@@ -76,6 +76,7 @@ public class XmlConstraintLoader
   private static final XmlObjectParser<Pair<ISource, List<ITargetedConstraints>>> SCOPE_PARSER
       = new XmlObjectParser<>(SCOPE_OBJECT_MAPPING) {
 
+        @SuppressWarnings("synthetic-access")
         @Override
         protected Handler<Pair<ISource, List<ITargetedConstraints>>> identifyHandler(XmlCursor cursor, XmlObject obj) {
           Handler<Pair<ISource, List<ITargetedConstraints>>> retval;
@@ -121,7 +122,7 @@ public class XmlConstraintLoader
 
     // now create this constraint set
     return CollectionUtil.singletonList(new DefaultConstraintSet(
-        resource,
+        ISource.externalSource(resource),
         parseScopedConstraints(xmlObject, resource),
         importedConstraints));
   }
@@ -174,14 +175,14 @@ public class XmlConstraintLoader
 
     builder.useWildcardWhenNamespaceNotDefaulted(true);
 
-    ISource source = ISource.externalSource(builder.build());
+    ISource source = ISource.externalSource(builder.build(), false);
 
     for (Scope scope : constraints.getScopeList()) {
       assert scope != null;
 
       List<ITargetedConstraints> targetedConstraints = new LinkedList<>(); // NOPMD - intentional
       try {
-        SCOPE_PARSER.parse(scope, Pair.of(source, targetedConstraints));
+        SCOPE_PARSER.parse(source, scope, Pair.of(source, targetedConstraints));
       } catch (MetapathException | XmlValueNotSupportedException ex) {
         if (ex.getCause() instanceof MetapathException) {
           throw new MetapathException(
@@ -204,42 +205,54 @@ public class XmlConstraintLoader
     return CollectionUtil.unmodifiableList(scopedConstraints);
   }
 
-  private static void handleScopedAssembly( // NOPMD false positive
+  private static void handleScopedAssembly(
+      @NonNull ISource source,
       @NonNull XmlObject obj,
       Pair<ISource, List<ITargetedConstraints>> state) {
     Scope.Assembly assembly = (Scope.Assembly) obj;
 
-    IModelConstrained constraints = new AssemblyConstraintSet();
+    IModelConstrained constraints = new AssemblyConstraintSet(source);
     ConstraintXmlSupport.parse(constraints, assembly, ObjectUtils.notNull(state.getLeft()));
 
     state.getRight().add(new AssemblyTargetedConstraints(
-        ObjectUtils.requireNonNull(assembly.getTarget()),
+        source,
+        IMetapathExpression.lazyCompile(
+            ObjectUtils.requireNonNull(assembly.getTarget()),
+            source.getStaticContext()),
         constraints));
   }
 
   private static void handleScopedField( // NOPMD false positive
+      @NonNull ISource source,
       @NonNull XmlObject obj,
       Pair<ISource, List<ITargetedConstraints>> state) {
     Scope.Field field = (Scope.Field) obj;
 
-    IValueConstrained constraints = new ValueConstraintSet();
+    IValueConstrained constraints = new ValueConstraintSet(source);
     ConstraintXmlSupport.parse(constraints, field, ObjectUtils.notNull(state.getLeft()));
 
     state.getRight().add(new FieldTargetedConstraints(
-        ObjectUtils.requireNonNull(field.getTarget()),
+        source,
+        IMetapathExpression.lazyCompile(
+            ObjectUtils.requireNonNull(field.getTarget()),
+            source.getStaticContext()),
         constraints));
   }
 
   private static void handleScopedFlag( // NOPMD false positive
+      @NonNull ISource source,
       @NonNull XmlObject obj,
       Pair<ISource, List<ITargetedConstraints>> state) {
     Scope.Flag flag = (Scope.Flag) obj;
 
-    IValueConstrained constraints = new ValueConstraintSet();
+    IValueConstrained constraints = new ValueConstraintSet(source);
     ConstraintXmlSupport.parse(constraints, flag, ObjectUtils.notNull(state.getLeft()));
 
     state.getRight().add(new FlagTargetedConstraints(
-        ObjectUtils.requireNonNull(flag.getTarget()),
+        source,
+        IMetapathExpression.lazyCompile(
+            ObjectUtils.requireNonNull(flag.getTarget()),
+            source.getStaticContext()),
         constraints));
   }
 }

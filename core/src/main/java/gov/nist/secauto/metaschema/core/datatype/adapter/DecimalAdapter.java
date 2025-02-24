@@ -10,10 +10,9 @@ import com.fasterxml.jackson.databind.jsonFormatVisitors.JsonFormatTypes;
 
 import gov.nist.secauto.metaschema.core.datatype.AbstractDataTypeAdapter;
 import gov.nist.secauto.metaschema.core.metapath.MetapathConstants;
-import gov.nist.secauto.metaschema.core.metapath.item.atomic.IAnyAtomicItem;
-import gov.nist.secauto.metaschema.core.metapath.item.atomic.IBooleanItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IDecimalItem;
-import gov.nist.secauto.metaschema.core.metapath.item.atomic.INumericItem;
+import gov.nist.secauto.metaschema.core.qname.EQNameFactory;
+import gov.nist.secauto.metaschema.core.qname.IEnhancedQName;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 
 import java.io.IOException;
@@ -21,27 +20,27 @@ import java.math.BigDecimal;
 import java.math.MathContext;
 import java.util.List;
 
-import javax.xml.namespace.QName;
-
 import edu.umd.cs.findbugs.annotations.NonNull;
 
+/**
+ * Support for the Metaschema <a href=
+ * "https://pages.nist.gov/metaschema/specification/datatypes/#decimal">decimal</a>
+ * data type.
+ */
 public class DecimalAdapter
     extends AbstractDataTypeAdapter<BigDecimal, IDecimalItem> {
-  public static final MathContext MATH_CONTEXT = MathContext.DECIMAL64;
+  private static final MathContext MATH_CONTEXT = MathContext.DECIMAL64;
   @NonNull
-  private static final BigDecimal DECIMAL_BOOLEAN_TRUE = new BigDecimal("1.0");
-  @NonNull
-  private static final BigDecimal DECIMAL_BOOLEAN_FALSE = new BigDecimal("0.0");
-  @NonNull
-  private static final List<QName> NAMES = ObjectUtils.notNull(
-      List.of(new QName(MetapathConstants.NS_METAPATH.toASCIIString(), "decimal")));
+  private static final List<IEnhancedQName> NAMES = ObjectUtils.notNull(
+      List.of(
+          EQNameFactory.instance().newQName(MetapathConstants.NS_METAPATH, "decimal")));
 
   DecimalAdapter() {
-    super(BigDecimal.class);
+    super(BigDecimal.class, IDecimalItem.class, IDecimalItem::cast);
   }
 
   @Override
-  public List<QName> getNames() {
+  public List<IEnhancedQName> getNames() {
     return NAMES;
   }
 
@@ -71,27 +70,8 @@ public class DecimalAdapter
   }
 
   @Override
-  public Class<IDecimalItem> getItemClass() {
-    return IDecimalItem.class;
-  }
-
-  @Override
   public IDecimalItem newItem(Object value) {
     BigDecimal item = toValue(value);
     return IDecimalItem.valueOf(item);
-  }
-
-  @Override
-  protected IDecimalItem castInternal(@NonNull IAnyAtomicItem item) {
-    IDecimalItem retval;
-    if (item instanceof INumericItem) {
-      retval = newItem(((INumericItem) item).asDecimal());
-    } else if (item instanceof IBooleanItem) {
-      boolean value = ((IBooleanItem) item).toBoolean();
-      retval = newItem(value ? DECIMAL_BOOLEAN_TRUE : DECIMAL_BOOLEAN_FALSE);
-    } else {
-      retval = super.castInternal(item);
-    }
-    return retval;
   }
 }

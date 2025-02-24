@@ -6,21 +6,19 @@
 package gov.nist.secauto.metaschema.core.metapath.impl;
 
 import gov.nist.secauto.metaschema.core.metapath.DynamicContext;
-import gov.nist.secauto.metaschema.core.metapath.ICollectionValue;
-import gov.nist.secauto.metaschema.core.metapath.ISequence;
-import gov.nist.secauto.metaschema.core.metapath.InvalidTypeMetapathException;
-import gov.nist.secauto.metaschema.core.metapath.cst.IExpression;
+import gov.nist.secauto.metaschema.core.metapath.IExpression;
 import gov.nist.secauto.metaschema.core.metapath.function.library.ArrayGet;
-import gov.nist.secauto.metaschema.core.metapath.function.library.FnData;
 import gov.nist.secauto.metaschema.core.metapath.function.library.MapGet;
+import gov.nist.secauto.metaschema.core.metapath.item.ICollectionValue;
 import gov.nist.secauto.metaschema.core.metapath.item.IItem;
-import gov.nist.secauto.metaschema.core.metapath.item.atomic.IAnyAtomicItem;
+import gov.nist.secauto.metaschema.core.metapath.item.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IIntegerItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IStringItem;
 import gov.nist.secauto.metaschema.core.metapath.item.function.ArrayException;
 import gov.nist.secauto.metaschema.core.metapath.item.function.IArrayItem;
 import gov.nist.secauto.metaschema.core.metapath.item.function.IKeySpecifier;
 import gov.nist.secauto.metaschema.core.metapath.item.function.IMapItem;
+import gov.nist.secauto.metaschema.core.metapath.type.InvalidTypeMetapathException;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 
 import java.util.stream.Stream;
@@ -165,7 +163,7 @@ public abstract class AbstractKeySpecifier implements IKeySpecifier {
     private final int index;
 
     public IntegerLiteralKeySpecifier(@NonNull IIntegerItem literal) {
-      index = literal.asInteger().intValueExact();
+      index = literal.toIntValueExact();
     }
 
     @Override
@@ -236,12 +234,12 @@ public abstract class AbstractKeySpecifier implements IKeySpecifier {
         IArrayItem<?> targetItem,
         DynamicContext dynamicContext,
         ISequence<?> focus) {
-      ISequence<IAnyAtomicItem> keys = FnData.fnData(getKeyExpression().accept(dynamicContext, focus));
-
-      return ObjectUtils.notNull(keys.stream()
+      return ObjectUtils.notNull(getKeyExpression()
+          .accept(dynamicContext, focus)
+          .atomize()
           .flatMap(key -> {
             if (key instanceof IIntegerItem) {
-              int index = ((IIntegerItem) key).asInteger().intValueExact();
+              int index = ((IIntegerItem) key).toIntValueExact();
               try {
                 return Stream.ofNullable(ArrayGet.get(targetItem, index));
               } catch (IndexOutOfBoundsException ex) {
@@ -266,10 +264,9 @@ public abstract class AbstractKeySpecifier implements IKeySpecifier {
         IMapItem<?> targetItem,
         DynamicContext dynamicContext,
         ISequence<?> focus) {
-      ISequence<? extends IAnyAtomicItem> keys
-          = ObjectUtils.requireNonNull(FnData.fnData(getKeyExpression().accept(dynamicContext, focus)));
-
-      return ObjectUtils.notNull(keys.stream()
+      return ObjectUtils.notNull(getKeyExpression()
+          .accept(dynamicContext, focus)
+          .atomize()
           .flatMap(key -> {
             assert key != null;
             return Stream.ofNullable(MapGet.get(targetItem, key));

@@ -6,22 +6,28 @@
 package gov.nist.secauto.metaschema.core.metapath.function.library;
 
 import gov.nist.secauto.metaschema.core.metapath.DynamicContext;
-import gov.nist.secauto.metaschema.core.metapath.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.MetapathConstants;
 import gov.nist.secauto.metaschema.core.metapath.function.FunctionUtils;
 import gov.nist.secauto.metaschema.core.metapath.function.IArgument;
 import gov.nist.secauto.metaschema.core.metapath.function.IFunction;
 import gov.nist.secauto.metaschema.core.metapath.function.InvalidArgumentFunctionException;
 import gov.nist.secauto.metaschema.core.metapath.item.IItem;
+import gov.nist.secauto.metaschema.core.metapath.item.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IAnyAtomicItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IAnyUriItem;
+import gov.nist.secauto.metaschema.core.metapath.item.atomic.IBase64BinaryItem;
+import gov.nist.secauto.metaschema.core.metapath.item.atomic.IBooleanItem;
+import gov.nist.secauto.metaschema.core.metapath.item.atomic.IDateItem;
+import gov.nist.secauto.metaschema.core.metapath.item.atomic.IDateTimeItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IDecimalItem;
+import gov.nist.secauto.metaschema.core.metapath.item.atomic.IDurationItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IStringItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IUntypedAtomicItem;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -37,7 +43,21 @@ import edu.umd.cs.findbugs.annotations.Nullable;
 public final class FnMinMax {
   private static final String NAME_MIN = "min";
   private static final String NAME_MAX = "max";
-
+  /**
+   * Defines the set of primitive atomic item types supported by the min/max
+   * functions. This set is used for type validation and normalization during
+   * comparison operations.
+   */
+  @NonNull
+  private static final Set<Class<? extends IAnyAtomicItem>> PRIMITIVE_ITEM_TYPES = ObjectUtils.notNull(Set.of(
+      IStringItem.class,
+      IBooleanItem.class,
+      IDecimalItem.class,
+      IDurationItem.class,
+      IDateTimeItem.class,
+      IDateItem.class,
+      IBase64BinaryItem.class,
+      IAnyUriItem.class));
   @NonNull
   static final IFunction SIGNATURE_MIN = IFunction.builder()
       .name(NAME_MIN)
@@ -47,10 +67,10 @@ public final class FnMinMax {
       .focusIndependent()
       .argument(IArgument.builder()
           .name("arg")
-          .type(IAnyAtomicItem.class)
+          .type(IAnyAtomicItem.type())
           .zeroOrMore()
           .build())
-      .returnType(IAnyAtomicItem.class)
+      .returnType(IAnyAtomicItem.type())
       .returnZeroOrOne()
       .functionHandler(FnMinMax::executeMin)
       .build();
@@ -64,10 +84,10 @@ public final class FnMinMax {
       .focusIndependent()
       .argument(IArgument.builder()
           .name("arg")
-          .type(IAnyAtomicItem.class)
+          .type(IAnyAtomicItem.type())
           .zeroOrMore()
           .build())
-      .returnType(IAnyAtomicItem.class)
+      .returnType(IAnyAtomicItem.type())
       .returnZeroOrOne()
       .functionHandler(FnMinMax::executeMax)
       .build();
@@ -86,7 +106,7 @@ public final class FnMinMax {
     ISequence<? extends IAnyAtomicItem> sequence = FunctionUtils.asType(
         ObjectUtils.requireNonNull(arguments.get(0)));
 
-    return ISequence.of(min(sequence.getValue()));
+    return ISequence.of(min(sequence));
   }
 
   @SuppressWarnings("unused")
@@ -99,7 +119,7 @@ public final class FnMinMax {
     ISequence<? extends IAnyAtomicItem> sequence = FunctionUtils.asType(
         ObjectUtils.requireNonNull(arguments.get(0)));
 
-    return ISequence.of(max(sequence.getValue()));
+    return ISequence.of(max(sequence));
   }
 
   /**
@@ -149,36 +169,57 @@ public final class FnMinMax {
       return Stream.of(items.get(0));
     }
 
-    List<? extends IAnyAtomicItem> resultingItems = ObjectUtils.notNull(items.stream()
+    List<? extends IAnyAtomicItem> resultingItems = convertUntypedItems(items);
+    Map<Class<? extends IAnyAtomicItem>, Integer> counts = countItemTypes(resultingItems);
+    return createNormalizedStream(resultingItems, counts);
+  }
+
+  @NonNull
+  private static List<? extends IAnyAtomicItem> convertUntypedItems(
+      @NonNull List<? extends IAnyAtomicItem> items) {
+    return ObjectUtils.notNull(items.stream()
         .map(item -> item instanceof IUntypedAtomicItem ? IDecimalItem.cast(item) : item)
         .collect(Collectors.toList()));
+  }
 
-    Map<Class<? extends IAnyAtomicItem>, Integer> counts = FunctionUtils.countTypes(
-        IAnyAtomicItem.PRIMITIVE_ITEM_TYPES,
-        resultingItems);
+  @NonNull
+  private static Map<Class<? extends IAnyAtomicItem>, Integer> countItemTypes(
+      @NonNull List<? extends IAnyAtomicItem> items) {
+    return FunctionUtils.countTypes(PRIMITIVE_ITEM_TYPES, items);
+  }
 
-    Stream<? extends IAnyAtomicItem> stream = null;
+  @SuppressWarnings("PMD.OnlyOneReturn")
+  @NonNull
+  private static Stream<? extends IAnyAtomicItem> createNormalizedStream(
+      @NonNull List<? extends IAnyAtomicItem> items,
+      @NonNull Map<Class<? extends IAnyAtomicItem>, Integer> counts) {
+
+    // Single type - no conversion needed
     if (counts.size() == 1) {
-      stream = resultingItems.stream();
-    } else if (counts.size() > 1) {
-      int size = resultingItems.size();
+      return ObjectUtils.notNull(items.stream());
+    }
+
+    // Multiple types - attempt conversion
+    int size = items.size();
+    if (counts.size() > 1) {
+      // Check if all items are either String or AnyUri
       if (counts.getOrDefault(IStringItem.class, 0) + counts.getOrDefault(IAnyUriItem.class, 0) == size) {
-        stream = resultingItems.stream()
-            .map(IAnyAtomicItem::asStringItem);
-      } else if (counts.getOrDefault(IDecimalItem.class, 0) == size) {
-        stream = resultingItems.stream()
-            .map(item -> (IDecimalItem) item);
+        return ObjectUtils.notNull(items.stream().map(IAnyAtomicItem::asStringItem));
+      }
+
+      // Check if all items are Decimal
+      if (counts.getOrDefault(IDecimalItem.class, 0) == size) {
+        return ObjectUtils.notNull(items.stream().map(item -> (IDecimalItem) item));
       }
     }
 
-    if (stream == null) {
-      throw new InvalidArgumentFunctionException(
-          InvalidArgumentFunctionException.INVALID_ARGUMENT_TYPE,
-          String.format("Values must all be of a single atomic type. Their types are '%s'.",
-              FunctionUtils.getTypes(resultingItems).stream()
-                  .map(Class::getName)
-                  .collect(Collectors.joining(","))));
-    }
-    return stream;
+    // No valid conversion possible
+    throw new InvalidArgumentFunctionException(
+        InvalidArgumentFunctionException.INVALID_ARGUMENT_TYPE,
+        String.format(
+            "Values must all be of a single atomic type. Found multiple types: [%s]",
+            FunctionUtils.getTypes(items).stream()
+                .map(Class::getSimpleName)
+                .collect(Collectors.joining(", "))));
   }
 }

@@ -16,8 +16,9 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import gov.nist.secauto.metaschema.core.metapath.ExpressionTestBase;
-import gov.nist.secauto.metaschema.core.metapath.ISequence;
-import gov.nist.secauto.metaschema.core.metapath.MetapathExpression;
+import gov.nist.secauto.metaschema.core.metapath.IMetapathExpression;
+import gov.nist.secauto.metaschema.core.metapath.MetapathException;
+import gov.nist.secauto.metaschema.core.metapath.item.ISequence;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -108,9 +109,7 @@ public class LookupTest
   @ParameterizedTest
   @MethodSource("functionCallLookupValues")
   void testFunctionCallLookup(@NonNull ISequence<?> expected, @NonNull String metapath) {
-    ISequence<?> result = MetapathExpression.compile(metapath)
-        .evaluateAs(null, MetapathExpression.ResultType.SEQUENCE, newDynamicContext());
-    assertEquals(expected, result);
+    assertEquals(expected, IMetapathExpression.compile(metapath).evaluate(null, newDynamicContext()));
   }
 
   private static Stream<Arguments> postfixLookupValues() { // NOPMD - false positive
@@ -142,21 +141,24 @@ public class LookupTest
   @ParameterizedTest
   @MethodSource("postfixLookupValues")
   void testPostfixLookup(@NonNull ISequence<?> expected, @NonNull String metapath) {
-    ISequence<?> result = MetapathExpression.compile(metapath)
-        .evaluateAs(null, MetapathExpression.ResultType.SEQUENCE, newDynamicContext());
-    assertEquals(expected, result);
+    assertEquals(expected, IMetapathExpression.compile(metapath).evaluate(null, newDynamicContext()));
   }
 
   @Test
   void testUnaryLookupMissingMember() {
-    ArrayException thrown = assertThrows(
-        ArrayException.class,
+    MetapathException thrown = assertThrows(
+        MetapathException.class,
         () -> {
-          ISequence<?> result = MetapathExpression.compile("([1,2,3], [1,2,5], [1,2])[?3 = 5]")
-              .evaluateAs(null, MetapathExpression.ResultType.SEQUENCE, newDynamicContext());
+          ISequence<?> result = IMetapathExpression.compile("([1,2,3], [1,2,5], [1,2])[?3 = 5]")
+              .evaluate(null, newDynamicContext());
           assertNotNull(result);
           result.safeStream();
         });
-    assertEquals(ArrayException.INDEX_OUT_OF_BOUNDS, thrown.getCode());
+    Throwable cause = thrown.getCause();
+    assertEquals(
+        ArrayException.INDEX_OUT_OF_BOUNDS,
+        cause instanceof ArrayException
+            ? ((ArrayException) cause).getCode()
+            : null);
   }
 }

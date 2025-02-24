@@ -7,8 +7,11 @@ package gov.nist.secauto.metaschema.core.model.constraint.impl;
 
 import gov.nist.secauto.metaschema.core.datatype.markup.MarkupLine;
 import gov.nist.secauto.metaschema.core.datatype.markup.MarkupMultiline;
+import gov.nist.secauto.metaschema.core.metapath.IMetapathExpression;
 import gov.nist.secauto.metaschema.core.model.IAttributable;
 import gov.nist.secauto.metaschema.core.model.ISource;
+import gov.nist.secauto.metaschema.core.model.constraint.ConstraintInitializationException;
+import gov.nist.secauto.metaschema.core.model.constraint.IConstraint;
 import gov.nist.secauto.metaschema.core.model.constraint.IKeyConstraint;
 import gov.nist.secauto.metaschema.core.model.constraint.IKeyField;
 
@@ -59,14 +62,17 @@ abstract class AbstractKeyConstraint
       @Nullable MarkupLine description,
       @NonNull ISource source,
       @NonNull Level level,
-      @NonNull String target,
+      @NonNull IMetapathExpression target,
       @NonNull Map<IAttributable.Key, Set<String>> properties,
       @NonNull List<IKeyField> keyFields,
       @Nullable String message,
       @Nullable MarkupMultiline remarks) {
     super(id, formalName, description, source, level, target, properties, message, remarks);
     if (keyFields.isEmpty()) {
-      throw new IllegalArgumentException("an empty list of key fields is not allowed");
+      throw new ConstraintInitializationException(
+          String.format("An empty list of key fields is not allowed in the constraint %s in '%s'.",
+              IConstraint.getConstraintIdentity(this),
+              source.getLocationHint()));
     }
     this.keyFields = keyFields;
   }

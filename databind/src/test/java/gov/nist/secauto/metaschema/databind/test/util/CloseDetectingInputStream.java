@@ -88,11 +88,13 @@ public class CloseDetectingInputStream
     closed = true;
   }
 
+  @SuppressWarnings("sync-override")
   @Override
   public void mark(int readlimit) {
     delegate.mark(readlimit);
   }
 
+  @SuppressWarnings("sync-override")
   @Override
   public void reset() throws IOException {
     delegate.reset();

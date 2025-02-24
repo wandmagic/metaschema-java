@@ -6,16 +6,23 @@
 package gov.nist.secauto.metaschema.core.metapath.cst.math;
 
 import gov.nist.secauto.metaschema.core.metapath.DynamicContext;
-import gov.nist.secauto.metaschema.core.metapath.ISequence;
-import gov.nist.secauto.metaschema.core.metapath.cst.IExpression;
+import gov.nist.secauto.metaschema.core.metapath.IExpression;
 import gov.nist.secauto.metaschema.core.metapath.cst.IExpressionVisitor;
 import gov.nist.secauto.metaschema.core.metapath.function.FunctionUtils;
-import gov.nist.secauto.metaschema.core.metapath.function.OperationFunctions;
+import gov.nist.secauto.metaschema.core.metapath.function.impl.OperationFunctions;
+import gov.nist.secauto.metaschema.core.metapath.item.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.INumericItem;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 
+/**
+ * An XPath 3.1
+ * <a href="https://www.w3.org/TR/xpath-31/#id-arithmetic">arithmetic
+ * expression</a> supporting modulo.
+ * <p>
+ * For example: {@code 5 mod 2} evaluates to {@code 1}
+ */
 public class Modulo
     extends AbstractArithmeticExpression<INumericItem> {
 
@@ -23,13 +30,18 @@ public class Modulo
    * Create an expression that gets the numeric remainder from dividing the
    * dividend by the divisor, also called the "modulo operation".
    *
+   * @param text
+   *          the parsed text of the expression
    * @param dividend
    *          the item to be divided
    * @param divisor
    *          the item to divide by
    */
-  public Modulo(@NonNull IExpression dividend, @NonNull IExpression divisor) {
-    super(dividend, divisor, INumericItem.class);
+  public Modulo(
+      @NonNull String text,
+      @NonNull IExpression dividend,
+      @NonNull IExpression divisor) {
+    super(text, dividend, divisor, INumericItem.class);
   }
 
   @Override
@@ -43,7 +55,7 @@ public class Modulo
   }
 
   @Override
-  public ISequence<? extends INumericItem> accept(DynamicContext dynamicContext, ISequence<?> focus) {
+  protected ISequence<? extends INumericItem> evaluate(DynamicContext dynamicContext, ISequence<?> focus) {
     INumericItem dividend = FunctionUtils.toNumeric(getLeft().accept(dynamicContext, focus), true);
     INumericItem divisor = FunctionUtils.toNumeric(getRight().accept(dynamicContext, focus), true);
     return resultOrEmpty(dividend, divisor);

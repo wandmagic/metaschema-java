@@ -5,9 +5,9 @@
 
 package gov.nist.secauto.metaschema.core.metapath.function;
 
-import java.util.stream.Stream;
+import gov.nist.secauto.metaschema.core.qname.IEnhancedQName;
 
-import javax.xml.namespace.QName;
+import java.util.stream.Stream;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
@@ -22,22 +22,6 @@ public interface IFunctionLibrary {
   Stream<IFunction> stream();
 
   /**
-   * Determine if there is a function with the provided name that supports the
-   * signature of the provided {@code arity}.
-   *
-   * @param name
-   *          the name of a group of functions
-   * @param arity
-   *          the count of arguments for use in determining an argument signature
-   *          match
-   * @return {@code true} if a function signature matches or {@code false}
-   *         otherwise
-   */
-  default boolean hasFunction(@NonNull String name, int arity) {
-    return getFunction(name, arity) != null;
-  }
-
-  /**
    * Determine if there is a function with the provided namespace qualified name
    * that supports the signature of the provided {@code arity}.
    *
@@ -49,22 +33,9 @@ public interface IFunctionLibrary {
    * @return {@code true} if a function signature matches or {@code false}
    *         otherwise
    */
-  default boolean hasFunction(@NonNull QName name, int arity) {
+  default boolean hasFunction(@NonNull IEnhancedQName name, int arity) {
     return getFunction(name, arity) != null;
   }
-
-  /**
-   * Retrieve the function with the provided name that supports the signature of
-   * the provided {@code arity}, if such a function exists.
-   *
-   * @param name
-   *          the name of a group of functions
-   * @param arity
-   *          the count of arguments for use in determining an argument signature
-   *          match
-   * @return the matching function or {@code null} if no match exists
-   */
-  IFunction getFunction(@NonNull String name, int arity);
 
   /**
    * Retrieve the function with the provided namespace qualified name that
@@ -78,5 +49,5 @@ public interface IFunctionLibrary {
    *          match
    * @return the matching function or {@code null} if no match exists
    */
-  IFunction getFunction(@NonNull QName name, int arity);
+  IFunction getFunction(@NonNull IEnhancedQName name, int arity);
 }

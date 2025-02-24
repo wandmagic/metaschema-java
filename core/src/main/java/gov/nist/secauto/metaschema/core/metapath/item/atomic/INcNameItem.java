@@ -7,11 +7,32 @@ package gov.nist.secauto.metaschema.core.metapath.item.atomic;
 
 import gov.nist.secauto.metaschema.core.datatype.adapter.MetaschemaDataTypeProvider;
 import gov.nist.secauto.metaschema.core.metapath.function.InvalidValueForCastFunctionException;
+import gov.nist.secauto.metaschema.core.metapath.item.atomic.impl.NcNameItemImpl;
+import gov.nist.secauto.metaschema.core.metapath.type.IAtomicOrUnionType;
+import gov.nist.secauto.metaschema.core.metapath.type.InvalidTypeMetapathException;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
+/**
+ * An atomic Metapath item containing a non-colonized name (NCName) data value.
+ */
 @Deprecated(forRemoval = true, since = "0.7.0")
 public interface INcNameItem extends IStringItem {
+  /**
+   * Get the type information for this item.
+   *
+   * @return the type information
+   */
+  @NonNull
+  static IAtomicOrUnionType<INcNameItem> type() {
+    return MetaschemaDataTypeProvider.NCNAME.getItemType();
+  }
+
+  @Override
+  default IAtomicOrUnionType<INcNameItem> getType() {
+    return type();
+  }
+
   /**
    * Construct a new item using the provided string {@code value}.
    *
@@ -25,7 +46,11 @@ public interface INcNameItem extends IStringItem {
     try {
       return new NcNameItemImpl(MetaschemaDataTypeProvider.NCNAME.parse(value));
     } catch (IllegalArgumentException ex) {
-      throw new InvalidValueForCastFunctionException(String.format("Unable to parse string value '%s'", value),
+      throw new InvalidTypeMetapathException(
+          null,
+          String.format("Invalid non-colonized name value '%s'. %s",
+              value,
+              ex.getLocalizedMessage()),
           ex);
     }
   }
@@ -42,7 +67,14 @@ public interface INcNameItem extends IStringItem {
    */
   @NonNull
   static INcNameItem cast(@NonNull IAnyAtomicItem item) {
-    return MetaschemaDataTypeProvider.NCNAME.cast(item);
+    try {
+      return item instanceof INcNameItem
+          ? (INcNameItem) item
+          : valueOf(item.asString());
+    } catch (IllegalStateException | InvalidTypeMetapathException ex) {
+      // asString can throw IllegalStateException exception
+      throw new InvalidValueForCastFunctionException(ex);
+    }
   }
 
   @Override

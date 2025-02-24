@@ -9,8 +9,9 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.jsonFormatVisitors.JsonFormatTypes;
 
-import gov.nist.secauto.metaschema.core.metapath.function.InvalidValueForCastFunctionException;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IAnyAtomicItem;
+import gov.nist.secauto.metaschema.core.metapath.type.IAtomicOrUnionType;
+import gov.nist.secauto.metaschema.core.qname.IEnhancedQName;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 
 import org.codehaus.stax2.XMLEventReader2;
@@ -19,8 +20,8 @@ import org.codehaus.stax2.evt.XMLEventFactory2;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.net.URI;
 import java.util.List;
-import java.util.function.Supplier;
 
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLEventWriter;
@@ -47,7 +48,7 @@ public interface IDataTypeAdapter<TYPE> {
    * @return the name
    */
   @NonNull
-  List<QName> getNames();
+  List<IEnhancedQName> getNames();
 
   /**
    * Get the most preferred name for this data type.
@@ -55,7 +56,7 @@ public interface IDataTypeAdapter<TYPE> {
    * @return the name
    */
   @NonNull
-  default QName getPreferredName() {
+  default IEnhancedQName getPreferredName() {
     return ObjectUtils.notNull(getNames().iterator().next());
   }
 
@@ -122,13 +123,12 @@ public interface IDataTypeAdapter<TYPE> {
   }
 
   /**
-   * Get the java type of the associated item.
+   * Get the item type information of the associated item.
    *
-   * @return the java associated item type
+   * @return the item type information
    */
-  // TODO: move to IAnyAtomicItem
   @NonNull
-  Class<? extends IAnyAtomicItem> getItemClass();
+  IAtomicOrUnionType<?> getItemType();
 
   /**
    * Construct a new item of this type using the provided value.
@@ -137,24 +137,8 @@ public interface IDataTypeAdapter<TYPE> {
    *          the item's value
    * @return a new item
    */
-  // TODO: markup types are not atomic values.
-  // Figure out a better base type (i.e., IValuedItem)
-  // TODO: move to IAnyAtomicItem
   @NonNull
   IAnyAtomicItem newItem(@NonNull Object value);
-
-  /**
-   * Cast the provided item to an item of this type, if possible.
-   *
-   * @param item
-   *          the atomic item to cast
-   * @return an atomic item of this type
-   * @throws InvalidValueForCastFunctionException
-   *           if the provided item type cannot be cast to this item type
-   */
-  // TODO: move to IAnyAtomicItem
-  @NonNull
-  IAnyAtomicItem cast(IAnyAtomicItem item);
 
   /**
    * Determines if adapter can parse the next element. The next element's
@@ -168,7 +152,7 @@ public interface IDataTypeAdapter<TYPE> {
    * @return {@code true} if the adapter will parse the element, or {@code false}
    *         otherwise
    */
-  boolean canHandleQName(@NonNull QName nextElementQName);
+  boolean canHandleQName(@NonNull IEnhancedQName nextElementQName);
 
   /**
    * Parses a provided string. Used to parse XML attributes, simple XML character
@@ -201,90 +185,30 @@ public interface IDataTypeAdapter<TYPE> {
    *
    * @param eventReader
    *          the XML parser used to read the parsed value
+   * @param resource
+   *          the resource being parsed
    * @return the parsed value
    * @throws IOException
    *           if a parsing error occurs
    */
   // TODO: migrate code to XML parser implementation.
   @NonNull
-  TYPE parse(@NonNull XMLEventReader2 eventReader) throws IOException;
+  TYPE parse(@NonNull XMLEventReader2 eventReader, @NonNull URI resource) throws IOException;
 
   /**
    * Parses a JSON property value.
    *
    * @param parser
    *          the JSON parser used to read the parsed value
+   * @param resource
+   *          the resource being parsed
    * @return the parsed value
    * @throws IOException
    *           if a parsing error occurs
    */
   // TODO: migrate code to JSON parser implementation.
   @NonNull
-  TYPE parse(@NonNull JsonParser parser) throws IOException;
-
-  /**
-   * Parses a provided string using {@link #parse(String)}.
-   * <p>
-   * This method may pre-parse the data and then return copies, since the data can
-   * only be parsed once, but the supplier might be called multiple times.
-   *
-   * @param value
-   *          the string value to parse
-   * @return a supplier that will provide new instances of the parsed data
-   * @throws IOException
-   *           if an error occurs while parsing
-   * @throws IllegalArgumentException
-   *           if the provided value is invalid based on the data type
-   * @see #parse(String)
-   */
-  @NonNull
-  default Supplier<TYPE> parseAndSupply(@NonNull String value) throws IOException {
-    TYPE retval = parse(value);
-    return () -> copy(retval);
-  }
-
-  /**
-   * Parses a provided string using
-   * {@link IDataTypeAdapter#parse(XMLEventReader2)}.
-   * <p>
-   * This method may pre-parse the data and then return copies, since the data can
-   * only be parsed once, but the supplier might be called multiple times.
-   *
-   * @param eventReader
-   *          the XML parser used to read the parsed value
-   * @return a supplier that will provide new instances of the parsed data
-   * @throws IOException
-   *           if an error occurs while parsing
-   * @see #parse(String)
-   * @see #parse(XMLEventReader2)
-   */
-  // TODO: migrate code to XML parser implementation.
-  @NonNull
-  default Supplier<TYPE> parseAndSupply(@NonNull XMLEventReader2 eventReader) throws IOException {
-    TYPE retval = parse(eventReader);
-    return () -> copy(retval);
-  }
-
-  /**
-   * Parses a provided string using {@link #parse(JsonParser)}.
-   * <p>
-   * This method may pre-parse the data and then return copies, since the data can
-   * only be parsed once, but the supplier might be called multiple times.
-   *
-   * @param parser
-   *          the JSON parser used to read the parsed value
-   * @return a supplier that will provide new instances of the parsed data
-   * @throws IOException
-   *           if an error occurs while parsing
-   * @see #parse(String)
-   * @see #parse(JsonParser)
-   */
-  // TODO: migrate code to JSON parser implementation.
-  @NonNull
-  default Supplier<TYPE> parseAndSupply(@NonNull JsonParser parser) throws IOException {
-    TYPE retval = parse(parser);
-    return () -> copy(retval);
-  }
+  TYPE parse(@NonNull JsonParser parser, @NonNull URI resource) throws IOException;
 
   /**
    * Writes the provided Java class instance data as XML. The parent element
@@ -306,9 +230,11 @@ public interface IDataTypeAdapter<TYPE> {
    *           if an unexpected error occurred while writing to the output stream
    */
   // TODO: migrate code to XML writer implementation.
-  void writeXmlValue(@NonNull Object instance, @NonNull StartElement parent, @NonNull XMLEventFactory2 eventFactory,
-      @NonNull XMLEventWriter eventWriter)
-      throws IOException;
+  void writeXmlValue(
+      @NonNull Object instance,
+      @NonNull StartElement parent,
+      @NonNull XMLEventFactory2 eventFactory,
+      @NonNull XMLEventWriter eventWriter) throws IOException;
 
   /**
    * Writes the provided Java class instance data as XML. The parent element
@@ -328,8 +254,10 @@ public interface IDataTypeAdapter<TYPE> {
    *           if an unexpected error occurred while processing the XML output
    */
   // TODO: migrate code to XML writer implementation.
-  void writeXmlValue(@NonNull Object instance, @NonNull QName parentName, @NonNull XMLStreamWriter2 writer)
-      throws IOException;
+  void writeXmlValue(
+      @NonNull Object instance,
+      @NonNull IEnhancedQName parentName,
+      @NonNull XMLStreamWriter2 writer) throws IOException;
 
   /**
    * Writes the provided Java class instance as a JSON/YAML field value.

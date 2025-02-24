@@ -6,12 +6,12 @@
 package gov.nist.secauto.metaschema.core.metapath.function.library;
 
 import gov.nist.secauto.metaschema.core.metapath.DynamicContext;
-import gov.nist.secauto.metaschema.core.metapath.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.MetapathConstants;
 import gov.nist.secauto.metaschema.core.metapath.function.FunctionUtils;
 import gov.nist.secauto.metaschema.core.metapath.function.IArgument;
 import gov.nist.secauto.metaschema.core.metapath.function.IFunction;
 import gov.nist.secauto.metaschema.core.metapath.item.IItem;
+import gov.nist.secauto.metaschema.core.metapath.item.ISequence;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 
 import java.util.List;
@@ -34,10 +34,10 @@ public final class FnHead {
       .focusIndependent()
       .argument(IArgument.builder()
           .name("arg")
-          .type(IItem.class)
+          .type(IItem.type())
           .zeroOrMore()
           .build())
-      .returnType(IItem.class)
+      .returnType(IItem.type())
       .returnZeroOrOne()
       .functionHandler(FnHead::execute)
       .build();

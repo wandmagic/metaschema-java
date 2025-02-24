@@ -6,7 +6,6 @@
 package gov.nist.secauto.metaschema.core.metapath.function.library;
 
 import gov.nist.secauto.metaschema.core.metapath.DynamicContext;
-import gov.nist.secauto.metaschema.core.metapath.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.MetapathConstants;
 import gov.nist.secauto.metaschema.core.metapath.function.FunctionUtils;
 import gov.nist.secauto.metaschema.core.metapath.function.IArgument;
@@ -14,6 +13,7 @@ import gov.nist.secauto.metaschema.core.metapath.function.IFunction;
 import gov.nist.secauto.metaschema.core.metapath.function.InvalidArgumentFunctionException;
 import gov.nist.secauto.metaschema.core.metapath.function.UriFunctionException;
 import gov.nist.secauto.metaschema.core.metapath.item.IItem;
+import gov.nist.secauto.metaschema.core.metapath.item.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IAnyUriItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IStringItem;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
@@ -39,10 +39,10 @@ public final class FnResolveUri {
       .focusIndependent()
       .argument(IArgument.builder()
           .name("relative")
-          .type(IStringItem.class)
+          .type(IStringItem.type())
           .zeroOrOne()
           .build())
-      .returnType(IAnyUriItem.class)
+      .returnType(IAnyUriItem.type())
       .returnZeroOrOne()
       .functionHandler(FnResolveUri::executeOneArg)
       .build();
@@ -56,15 +56,15 @@ public final class FnResolveUri {
       .focusIndependent()
       .argument(IArgument.builder()
           .name("relative")
-          .type(IStringItem.class)
+          .type(IStringItem.type())
           .zeroOrOne()
           .build())
       .argument(IArgument.builder()
           .name("base")
-          .type(IStringItem.class)
+          .type(IStringItem.type())
           .one()
           .build())
-      .returnType(IAnyUriItem.class)
+      .returnType(IAnyUriItem.type())
       .returnZeroOrOne()
       .functionHandler(FnResolveUri::executeTwoArg)
       .build();

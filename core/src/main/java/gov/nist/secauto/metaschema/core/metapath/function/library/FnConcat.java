@@ -6,11 +6,11 @@
 package gov.nist.secauto.metaschema.core.metapath.function.library;
 
 import gov.nist.secauto.metaschema.core.metapath.DynamicContext;
-import gov.nist.secauto.metaschema.core.metapath.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.MetapathConstants;
 import gov.nist.secauto.metaschema.core.metapath.function.IArgument;
 import gov.nist.secauto.metaschema.core.metapath.function.IFunction;
 import gov.nist.secauto.metaschema.core.metapath.item.IItem;
+import gov.nist.secauto.metaschema.core.metapath.item.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IAnyAtomicItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IStringItem;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
@@ -38,16 +38,16 @@ public final class FnConcat {
       .focusIndependent()
       .argument(IArgument.builder()
           .name("arg1")
-          .type(IAnyAtomicItem.class)
+          .type(IAnyAtomicItem.type())
           .zeroOrOne()
           .build())
       .argument(IArgument.builder()
           .name("arg2")
-          .type(IAnyAtomicItem.class)
+          .type(IAnyAtomicItem.type())
           .zeroOrOne()
           .build())
       .allowUnboundedArity(true)
-      .returnType(IStringItem.class)
+      .returnType(IStringItem.type())
       .returnOne()
       .functionHandler(FnConcat::execute)
       .build();

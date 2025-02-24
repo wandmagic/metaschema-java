@@ -14,7 +14,6 @@ import edu.umd.cs.findbugs.annotations.Nullable;
  * always have data.
  */
 public interface IFeatureNoDataValuedItem extends IItem {
-
   @Override
   @Nullable
   default Object getValue() {

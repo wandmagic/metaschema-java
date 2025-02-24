@@ -6,13 +6,13 @@
 package gov.nist.secauto.metaschema.core.metapath.function.library;
 
 import gov.nist.secauto.metaschema.core.metapath.DynamicContext;
-import gov.nist.secauto.metaschema.core.metapath.ICollectionValue;
-import gov.nist.secauto.metaschema.core.metapath.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.MetapathConstants;
 import gov.nist.secauto.metaschema.core.metapath.function.FunctionUtils;
 import gov.nist.secauto.metaschema.core.metapath.function.IArgument;
 import gov.nist.secauto.metaschema.core.metapath.function.IFunction;
+import gov.nist.secauto.metaschema.core.metapath.item.ICollectionValue;
 import gov.nist.secauto.metaschema.core.metapath.item.IItem;
+import gov.nist.secauto.metaschema.core.metapath.item.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IAnyAtomicItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IBooleanItem;
 import gov.nist.secauto.metaschema.core.metapath.item.function.IMapItem;
@@ -38,15 +38,15 @@ public final class MapContains {
       .focusIndependent()
       .argument(IArgument.builder()
           .name("map")
-          .type(IMapItem.class)
+          .type(IMapItem.type())
           .one()
           .build())
       .argument(IArgument.builder()
           .name("key")
-          .type(IAnyAtomicItem.class)
+          .type(IAnyAtomicItem.type())
           .one()
           .build())
-      .returnType(IBooleanItem.class)
+      .returnType(IBooleanItem.type())
       .returnOne()
       .functionHandler(MapContains::execute)
       .build();
@@ -64,7 +64,7 @@ public final class MapContains {
     IMapItem<?> map = FunctionUtils.asType(ObjectUtils.requireNonNull(arguments.get(0).getFirstItem(true)));
     IAnyAtomicItem key = FunctionUtils.asType(ObjectUtils.requireNonNull(arguments.get(1).getFirstItem(true)));
 
-    return IBooleanItem.valueOf(contains(map, key)).asSequence();
+    return IBooleanItem.valueOf(contains(map, key)).toSequence();
   }
 
   /**

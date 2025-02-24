@@ -6,16 +6,16 @@
 package gov.nist.secauto.metaschema.core.metapath.function.library;
 
 import gov.nist.secauto.metaschema.core.metapath.DynamicContext;
-import gov.nist.secauto.metaschema.core.metapath.ISequence;
-import gov.nist.secauto.metaschema.core.metapath.InvalidTypeMetapathException;
 import gov.nist.secauto.metaschema.core.metapath.MetapathConstants;
 import gov.nist.secauto.metaschema.core.metapath.format.IPathFormatter;
 import gov.nist.secauto.metaschema.core.metapath.function.FunctionUtils;
 import gov.nist.secauto.metaschema.core.metapath.function.IArgument;
 import gov.nist.secauto.metaschema.core.metapath.function.IFunction;
 import gov.nist.secauto.metaschema.core.metapath.item.IItem;
+import gov.nist.secauto.metaschema.core.metapath.item.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IStringItem;
 import gov.nist.secauto.metaschema.core.metapath.item.node.INodeItem;
+import gov.nist.secauto.metaschema.core.metapath.type.InvalidTypeMetapathException;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 
 import java.util.List;
@@ -40,7 +40,7 @@ public final class FnPath {
       .deterministic()
       .contextDependent()
       .focusDependent()
-      .returnType(IStringItem.class)
+      .returnType(IStringItem.type())
       .returnZeroOrOne()
       .functionHandler(FnPath::executeNoArg)
       .build();
@@ -54,10 +54,10 @@ public final class FnPath {
       .focusIndependent()
       .argument(IArgument.builder()
           .name("arg1")
-          .type(INodeItem.class)
+          .type(INodeItem.type())
           .zeroOrOne()
           .build())
-      .returnType(IStringItem.class)
+      .returnType(IStringItem.type())
       .returnZeroOrOne()
       .functionHandler(FnPath::executeOneArg)
       .build();

@@ -7,8 +7,8 @@ package gov.nist.secauto.metaschema.core.model.constraint;
 
 import gov.nist.secauto.metaschema.core.datatype.IDataTypeAdapter;
 import gov.nist.secauto.metaschema.core.metapath.DynamicContext;
-import gov.nist.secauto.metaschema.core.metapath.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.MetapathException;
+import gov.nist.secauto.metaschema.core.metapath.item.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.item.node.INodeItem;
 import gov.nist.secauto.metaschema.core.model.constraint.IConstraint.Level;
 import gov.nist.secauto.metaschema.core.model.validation.IValidationFinding.Kind;
@@ -85,7 +85,7 @@ public class FindingCollectingConstraintValidationHandler
       retval = Kind.PASS;
       break;
     default:
-      throw new IllegalArgumentException(String.format("Unsupported level '%s'.", level));
+      throw new UnsupportedOperationException(String.format("Unsupported level '%s'.", level));
     }
 
     return retval;
@@ -101,7 +101,7 @@ public class FindingCollectingConstraintValidationHandler
         .severity(constraint.getLevel())
         .kind(toKind(constraint.getLevel()))
         .target(target)
-        .subjects(testedItems.getValue())
+        .subjects(testedItems)
         .message(newCardinalityMinimumViolationMessage(constraint, target, testedItems, dynamicContext))
         .build());
   }
@@ -116,7 +116,7 @@ public class FindingCollectingConstraintValidationHandler
         .severity(constraint.getLevel())
         .kind(toKind(constraint.getLevel()))
         .target(target)
-        .subjects(testedItems.getValue())
+        .subjects(testedItems)
         .message(newCardinalityMaximumViolationMessage(constraint, target, testedItems, dynamicContext))
         .build());
   }

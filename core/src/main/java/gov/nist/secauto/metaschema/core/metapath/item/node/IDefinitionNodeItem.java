@@ -4,12 +4,20 @@ package gov.nist.secauto.metaschema.core.metapath.item.node;
 import gov.nist.secauto.metaschema.core.model.IDefinition;
 import gov.nist.secauto.metaschema.core.model.INamedInstance;
 import gov.nist.secauto.metaschema.core.model.IResourceLocation;
-
-import javax.xml.namespace.QName;
+import gov.nist.secauto.metaschema.core.qname.IEnhancedQName;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 
+/**
+ * Represents a Metapath node item that is based on an underlying Metaschema
+ * module definition and instance.
+ *
+ * @param <D>
+ *          the Java type of the definition associated with a Metaschema module
+ * @param <I>
+ *          the Java type of the instance associated with a Metaschema module
+ */
 public interface IDefinitionNodeItem<D extends IDefinition, I extends INamedInstance> extends INodeItem {
   /**
    * Get the name of this node.
@@ -17,11 +25,11 @@ public interface IDefinitionNodeItem<D extends IDefinition, I extends INamedInst
    * @return the qualified name
    */
   @NonNull
-  default QName getQName() {
+  default IEnhancedQName getQName() {
     I instance = getInstance();
     return instance == null
-        ? getDefinition().getXmlQName()
-        : instance.getXmlQName();
+        ? getDefinition().getQName()
+        : instance.getQName();
   }
 
   /**

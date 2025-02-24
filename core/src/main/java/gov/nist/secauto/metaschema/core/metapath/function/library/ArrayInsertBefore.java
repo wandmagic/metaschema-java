@@ -6,13 +6,13 @@
 package gov.nist.secauto.metaschema.core.metapath.function.library;
 
 import gov.nist.secauto.metaschema.core.metapath.DynamicContext;
-import gov.nist.secauto.metaschema.core.metapath.ICollectionValue;
-import gov.nist.secauto.metaschema.core.metapath.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.MetapathConstants;
 import gov.nist.secauto.metaschema.core.metapath.function.FunctionUtils;
 import gov.nist.secauto.metaschema.core.metapath.function.IArgument;
 import gov.nist.secauto.metaschema.core.metapath.function.IFunction;
+import gov.nist.secauto.metaschema.core.metapath.item.ICollectionValue;
 import gov.nist.secauto.metaschema.core.metapath.item.IItem;
+import gov.nist.secauto.metaschema.core.metapath.item.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IIntegerItem;
 import gov.nist.secauto.metaschema.core.metapath.item.function.ArrayException;
 import gov.nist.secauto.metaschema.core.metapath.item.function.IArrayItem;
@@ -40,20 +40,20 @@ public final class ArrayInsertBefore {
       .focusIndependent()
       .argument(IArgument.builder()
           .name("array")
-          .type(IArrayItem.class)
+          .type(IArrayItem.type())
           .one()
           .build())
       .argument(IArgument.builder()
           .name("position")
-          .type(IIntegerItem.class)
+          .type(IIntegerItem.type())
           .one()
           .build())
       .argument(IArgument.builder()
           .name("member")
-          .type(IItem.class)
+          .type(IItem.type())
           .zeroOrMore()
           .build())
-      .returnType(IArrayItem.class)
+      .returnType(IArrayItem.type())
       .returnOne()
       .functionHandler(ArrayInsertBefore::execute)
       .build();
@@ -99,7 +99,7 @@ public final class ArrayInsertBefore {
       @NonNull IArrayItem<T> array,
       @NonNull IIntegerItem positionItem,
       @NonNull T member) {
-    return insertBefore(array, positionItem.asInteger().intValueExact(), member);
+    return insertBefore(array, positionItem.toIntValueExact(), member);
   }
 
   /**

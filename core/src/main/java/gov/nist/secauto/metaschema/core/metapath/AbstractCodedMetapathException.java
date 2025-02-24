@@ -5,6 +5,8 @@
 
 package gov.nist.secauto.metaschema.core.metapath;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
+
 /**
  * This Metapath exception base class is used for all exceptions that have a
  * defined error code family and value.
@@ -37,8 +39,8 @@ public abstract class AbstractCodedMetapathException
   }
 
   /**
-   * Constructs a new Metapath exception with the provided {@code message} and
-   * {@code cause}.
+   * Constructs a new Metapath exception with the provided {@code code},
+   * {@code message}, and {@code cause}.
    *
    * @param code
    *          the error code value
@@ -68,7 +70,18 @@ public abstract class AbstractCodedMetapathException
 
   @Override
   public String getMessage() {
-    return String.format("%s: %s", getCodeAsString(), super.getMessage());
+    String message = getMessageText();
+    return String.format("%s%s", getCodeAsString(), message == null ? "" : ": " + message);
+  }
+
+  /**
+   * Get the message text without the error code prefix.
+   *
+   * @return the message text or {@code null}
+   */
+  @Nullable
+  public String getMessageText() {
+    return super.getMessage();
   }
 
   /**

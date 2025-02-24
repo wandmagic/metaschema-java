@@ -6,6 +6,7 @@
 package gov.nist.secauto.metaschema.core.datatype;
 
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IAnyAtomicItem;
+import gov.nist.secauto.metaschema.core.metapath.type.IAtomicOrUnionType;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
@@ -20,8 +21,7 @@ import edu.umd.cs.findbugs.annotations.NonNull;
  *          the Metapath item type associated with the adapter
  */
 public abstract class AbstractCustomJavaDataTypeAdapter<
-    TYPE extends ICustomJavaDataType<
-        TYPE>,
+    TYPE extends ICustomJavaDataType<TYPE>,
     ITEM_TYPE extends IAnyAtomicItem>
     extends AbstractDataTypeAdapter<TYPE, ITEM_TYPE> {
 
@@ -29,11 +29,18 @@ public abstract class AbstractCustomJavaDataTypeAdapter<
    * Construct a new Java type adapter for the class based on
    * {@link ICustomJavaDataType}.
    *
-   * @param clazz
+   * @param valueClass
    *          a data type class based on {@link ICustomJavaDataType}
+   * @param itemClass
+   *          the Java type of the Metapath item this adapter supports
+   * @param castExecutor
+   *          the method to call to cast an item to an item based on this type
    */
-  public AbstractCustomJavaDataTypeAdapter(@NonNull Class<TYPE> clazz) {
-    super(clazz);
+  public AbstractCustomJavaDataTypeAdapter(
+      @NonNull Class<TYPE> valueClass,
+      @NonNull Class<ITEM_TYPE> itemClass,
+      @NonNull IAtomicOrUnionType.ICastExecutor<ITEM_TYPE> castExecutor) {
+    super(valueClass, itemClass, castExecutor);
   }
 
   @SuppressWarnings("unchecked")
@@ -43,5 +50,4 @@ public abstract class AbstractCustomJavaDataTypeAdapter<
     // method.
     return ((TYPE) obj).copy();
   }
-
 }

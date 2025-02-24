@@ -5,6 +5,8 @@
 
 package gov.nist.secauto.metaschema.core.metapath.cst;
 
+import gov.nist.secauto.metaschema.core.metapath.IExpression;
+
 import java.util.List;
 import java.util.Objects;
 
@@ -21,10 +23,13 @@ public abstract class AbstractUnaryExpression
   /**
    * Construct a new unary expression.
    *
+   * @param text
+   *          the parsed text of the expression
    * @param expr
    *          the single sub-expression
    */
-  public AbstractUnaryExpression(@NonNull IExpression expr) {
+  public AbstractUnaryExpression(@NonNull String text, @NonNull IExpression expr) {
+    super(text);
     this.expr = Objects.requireNonNull(expr, "expr");
   }
 

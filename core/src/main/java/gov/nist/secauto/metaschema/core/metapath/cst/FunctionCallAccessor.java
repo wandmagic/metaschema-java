@@ -6,41 +6,46 @@
 package gov.nist.secauto.metaschema.core.metapath.cst;
 
 import gov.nist.secauto.metaschema.core.metapath.DynamicContext;
-import gov.nist.secauto.metaschema.core.metapath.ICollectionValue;
-import gov.nist.secauto.metaschema.core.metapath.ISequence;
-import gov.nist.secauto.metaschema.core.metapath.StaticMetapathException;
-import gov.nist.secauto.metaschema.core.metapath.function.library.ArrayGet;
-import gov.nist.secauto.metaschema.core.metapath.function.library.FnData;
-import gov.nist.secauto.metaschema.core.metapath.function.library.MapGet;
+import gov.nist.secauto.metaschema.core.metapath.IExpression;
+import gov.nist.secauto.metaschema.core.metapath.function.IFunction;
 import gov.nist.secauto.metaschema.core.metapath.item.IItem;
-import gov.nist.secauto.metaschema.core.metapath.item.atomic.IAnyAtomicItem;
-import gov.nist.secauto.metaschema.core.metapath.item.atomic.IIntegerItem;
-import gov.nist.secauto.metaschema.core.metapath.item.function.IArrayItem;
-import gov.nist.secauto.metaschema.core.metapath.item.function.IMapItem;
+import gov.nist.secauto.metaschema.core.metapath.item.ISequence;
+import gov.nist.secauto.metaschema.core.metapath.type.InvalidTypeMetapathException;
+import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
-public class FunctionCallAccessor implements IExpression {
+/**
+ * An implementation of the XPATH 3.1
+ * <a href="https://www.w3.org/TR/xpath-31/#id-eval-function-call">function call
+ * accessor</a>.
+ */
+public class FunctionCallAccessor
+    extends AbstractExpression {
   @NonNull
   private final IExpression base;
   @NonNull
-  private final IExpression argument;
+  private final List<IExpression> arguments;
 
   /**
    * Construct a new functional call accessor.
    *
+   * @param text
+   *          the parsed text of the expression
    * @param base
    *          the expression whose result is used as the map or array to perform
    *          the lookup on
-   * @param keyOrIndex
-   *          the value to find, which will be the key for a map or the index for
-   *          an array
+   * @param arguments
+   *          the function call argument expressions
    */
-  public FunctionCallAccessor(@NonNull IExpression base, @NonNull IExpression keyOrIndex) {
+  public FunctionCallAccessor(@NonNull String text, @NonNull IExpression base, @NonNull List<IExpression> arguments) {
+    super(text);
     this.base = base;
-    this.argument = keyOrIndex;
+    this.arguments = arguments;
   }
 
   /**
@@ -59,34 +64,29 @@ public class FunctionCallAccessor implements IExpression {
    * @return the argument
    */
   @NonNull
-  public IExpression getArgument() {
-    return argument;
+  public List<IExpression> getArguments() {
+    return arguments;
   }
 
   @SuppressWarnings("null")
   @Override
-  public List<? extends IExpression> getChildren() {
-    return List.of(getBase(), getArgument());
+  public List<IExpression> getChildren() {
+    return Stream.concat(Stream.of(getBase()), getArguments().stream())
+        .collect(Collectors.toUnmodifiableList());
   }
 
   @Override
-  public ISequence<? extends IItem> accept(DynamicContext dynamicContext, ISequence<?> focus) {
+  protected ISequence<?> evaluate(DynamicContext dynamicContext, ISequence<?> focus) {
     ISequence<?> target = getBase().accept(dynamicContext, focus);
     IItem collection = target.getFirstItem(true);
-    IAnyAtomicItem key = FnData.fnData(getArgument().accept(dynamicContext, focus)).getFirstItem(false);
-    if (key == null) {
-      throw new StaticMetapathException(StaticMetapathException.NO_FUNCTION_MATCH,
-          "No key provided for functional call lookup");
+
+    if (!(collection instanceof IFunction)) {
+      throw new InvalidTypeMetapathException(collection, "The base expression did not evaluate to a function.");
     }
 
-    ICollectionValue retval = null;
-    if (collection instanceof IArrayItem) {
-      retval = ArrayGet.get((IArrayItem<?>) collection, IIntegerItem.cast(key));
-    } else if (collection instanceof IMapItem) {
-      retval = MapGet.get((IMapItem<?>) collection, key);
-    }
-
-    return retval == null ? ISequence.empty() : retval.asSequence();
+    return ((IFunction) collection).execute(ObjectUtils.notNull(getArguments().stream()
+        .map(expr -> expr.accept(dynamicContext, focus))
+        .collect(Collectors.toUnmodifiableList())), dynamicContext, focus);
   }
 
   @Override

@@ -5,13 +5,29 @@
 
 package gov.nist.secauto.metaschema.cli.commands;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.net.URI;
+import java.net.UnknownHostException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
+
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Option;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import gov.nist.secauto.metaschema.cli.processor.CLIProcessor;
 import gov.nist.secauto.metaschema.cli.processor.CLIProcessor.CallingContext;
 import gov.nist.secauto.metaschema.cli.processor.ExitCode;
 import gov.nist.secauto.metaschema.cli.processor.command.AbstractCommandExecutor;
 import gov.nist.secauto.metaschema.cli.processor.command.AbstractTerminalCommand;
 import gov.nist.secauto.metaschema.cli.processor.command.CommandExecutionException;
-import gov.nist.secauto.metaschema.cli.processor.command.DefaultExtraArgument;
 import gov.nist.secauto.metaschema.cli.processor.command.ExtraArgument;
 import gov.nist.secauto.metaschema.cli.util.LoggingValidationHandler;
 import gov.nist.secauto.metaschema.core.configuration.DefaultConfiguration;
@@ -30,24 +46,6 @@ import gov.nist.secauto.metaschema.databind.io.Format;
 import gov.nist.secauto.metaschema.databind.io.IBoundLoader;
 import gov.nist.secauto.metaschema.modules.sarif.SarifValidationHandler;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Option;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.net.URI;
-import java.net.UnknownHostException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
-
-import edu.umd.cs.findbugs.annotations.NonNull;
-import edu.umd.cs.findbugs.annotations.Nullable;
-
 /**
  * Used by implementing classes to provide a content validation command.
  */
@@ -58,7 +56,7 @@ public abstract class AbstractValidateContentCommand
   private static final String COMMAND = "validate";
   @NonNull
   private static final List<ExtraArgument> EXTRA_ARGUMENTS = ObjectUtils.notNull(List.of(
-      new DefaultExtraArgument("file-or-URI-to-validate", true)));
+      ExtraArgument.newInstance("file-or-URI-to-validate", true)));
 
   @NonNull
   private static final Option CONSTRAINTS_OPTION = ObjectUtils.notNull(
@@ -199,6 +197,7 @@ public abstract class AbstractValidateContentCommand
     @Override
     public void execute() throws CommandExecutionException {
       CommandLine cmdLine = getCommandLine();
+      @SuppressWarnings("synthetic-access")
       URI currentWorkingDirectory = ObjectUtils.notNull(getCurrentWorkingDirectory().toUri());
 
       Set<IConstraintSet> constraintSets = MetaschemaCommands.loadConstraintSets(
@@ -250,7 +249,8 @@ public abstract class AbstractValidateContentCommand
 
       IValidationResult validationResult = null;
       try {
-        IModule module = bindingContext.registerModule(getModule(commandLine, bindingContext));
+        // get the module, but don't register it
+        IModule module = getModule(commandLine, bindingContext);
         if (!commandLine.hasOption(NO_SCHEMA_VALIDATION_OPTION)) {
           // perform schema validation
           validationResult = getSchemaValidationProvider(module, commandLine, bindingContext)
@@ -264,6 +264,7 @@ public abstract class AbstractValidateContentCommand
           }
 
           // perform constraint validation
+          bindingContext.registerModule(module); // ensure the module is registered
           IValidationResult constraintValidationResult = bindingContext.validateWithConstraints(source, configuration);
           validationResult = validationResult == null
               ? constraintValidationResult
@@ -292,7 +293,7 @@ public abstract class AbstractValidateContentCommand
         @Nullable IValidationResult validationResult,
         @NonNull CommandLine commandLine,
         @NonNull IBindingContext bindingContext) throws CommandExecutionException {
-      if (commandLine.hasOption(SARIF_OUTPUT_FILE_OPTION) && LOGGER.isInfoEnabled()) {
+      if (commandLine.hasOption(SARIF_OUTPUT_FILE_OPTION)) {
         Path sarifFile = ObjectUtils.notNull(Paths.get(commandLine.getOptionValue(SARIF_OUTPUT_FILE_OPTION)));
 
         IVersionInfo version

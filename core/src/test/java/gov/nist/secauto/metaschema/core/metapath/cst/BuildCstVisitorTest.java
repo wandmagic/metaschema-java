@@ -8,6 +8,7 @@ package gov.nist.secauto.metaschema.core.metapath.cst;
 import static com.github.seregamorph.hamcrest.MoreMatchers.where;
 import static gov.nist.secauto.metaschema.core.metapath.TestUtils.bool;
 import static gov.nist.secauto.metaschema.core.metapath.TestUtils.integer;
+import static gov.nist.secauto.metaschema.core.metapath.TestUtils.qname;
 import static gov.nist.secauto.metaschema.core.metapath.TestUtils.string;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
@@ -18,21 +19,29 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import gov.nist.secauto.metaschema.core.metapath.DynamicContext;
-import gov.nist.secauto.metaschema.core.metapath.ISequence;
-import gov.nist.secauto.metaschema.core.metapath.MetapathExpression;
-import gov.nist.secauto.metaschema.core.metapath.MetapathExpression.ResultType;
+import gov.nist.secauto.metaschema.core.metapath.IExpression;
+import gov.nist.secauto.metaschema.core.metapath.IMetapathExpression;
+import gov.nist.secauto.metaschema.core.metapath.MetapathConstants;
+import gov.nist.secauto.metaschema.core.metapath.MetapathException;
 import gov.nist.secauto.metaschema.core.metapath.StaticContext;
+import gov.nist.secauto.metaschema.core.metapath.StaticMetapathException;
 import gov.nist.secauto.metaschema.core.metapath.antlr.FailingErrorListener;
 import gov.nist.secauto.metaschema.core.metapath.antlr.Metapath10;
 import gov.nist.secauto.metaschema.core.metapath.antlr.Metapath10Lexer;
-import gov.nist.secauto.metaschema.core.metapath.cst.comparison.AbstractComparison;
-import gov.nist.secauto.metaschema.core.metapath.cst.comparison.GeneralComparison;
-import gov.nist.secauto.metaschema.core.metapath.cst.comparison.ValueComparison;
+import gov.nist.secauto.metaschema.core.metapath.cst.items.SimpleMap;
+import gov.nist.secauto.metaschema.core.metapath.cst.logic.AbstractComparison;
+import gov.nist.secauto.metaschema.core.metapath.cst.logic.And;
+import gov.nist.secauto.metaschema.core.metapath.cst.logic.GeneralComparison;
+import gov.nist.secauto.metaschema.core.metapath.cst.logic.If;
+import gov.nist.secauto.metaschema.core.metapath.cst.logic.ValueComparison;
 import gov.nist.secauto.metaschema.core.metapath.function.ComparisonFunctions;
+import gov.nist.secauto.metaschema.core.metapath.function.IFunction;
 import gov.nist.secauto.metaschema.core.metapath.item.IItem;
+import gov.nist.secauto.metaschema.core.metapath.item.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IBooleanItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IStringItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IUuidItem;
@@ -41,7 +50,8 @@ import gov.nist.secauto.metaschema.core.metapath.item.node.IDocumentNodeItem;
 import gov.nist.secauto.metaschema.core.metapath.item.node.IFieldNodeItem;
 import gov.nist.secauto.metaschema.core.metapath.item.node.IFlagNodeItem;
 import gov.nist.secauto.metaschema.core.metapath.item.node.IRootAssemblyNodeItem;
-import gov.nist.secauto.metaschema.core.metapath.item.node.MockNodeItemFactory;
+import gov.nist.secauto.metaschema.core.qname.IEnhancedQName;
+import gov.nist.secauto.metaschema.core.testing.model.mocking.MockNodeItemFactory;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 
 import org.antlr.v4.runtime.CharStreams;
@@ -59,8 +69,6 @@ import java.net.URI;
 import java.util.List;
 import java.util.stream.Stream;
 
-import javax.xml.namespace.QName;
-
 import edu.umd.cs.findbugs.annotations.NonNull;
 
 @SuppressWarnings("PMD.TooManyStaticImports")
@@ -70,15 +78,15 @@ class BuildCstVisitorTest {
   @NonNull
   private static final String NS = ObjectUtils.notNull(NS_URI.toASCIIString());
   @NonNull
-  private static final QName ROOT = new QName(NS, "root");
+  private static final IEnhancedQName ROOT = IEnhancedQName.of(NS, "root");
   @NonNull
-  private static final QName FIELD1 = new QName(NS, "field1");
+  private static final IEnhancedQName FIELD1 = IEnhancedQName.of(NS, "field1");
   @NonNull
-  private static final QName FIELD2 = new QName(NS, "field2");
+  private static final IEnhancedQName FIELD2 = IEnhancedQName.of(NS, "field2");
   @NonNull
-  private static final QName UUID = new QName(NS, "uuid");
+  private static final IEnhancedQName UUID = IEnhancedQName.of(NS, "uuid");
   @NonNull
-  private static final QName FLAG = new QName("flag");
+  private static final IEnhancedQName FLAG = IEnhancedQName.of("flag");
 
   @RegisterExtension
   Mockery context = new JUnit5Mockery();
@@ -122,18 +130,18 @@ class BuildCstVisitorTest {
     StaticContext staticContext = newStaticContext();
     // compile expression
     String path = "../field2";
-    MetapathExpression expr = MetapathExpression.compile(path, staticContext);
+    IMetapathExpression expr = IMetapathExpression.compile(path, staticContext);
 
     // select starting node
     IDocumentNodeItem document = newTestDocument();
     IFieldNodeItem field
-        = MetapathExpression.compile("/root/field1", staticContext)
-            .evaluateAs(document, ResultType.ITEM);
+        = IMetapathExpression.compile("/root/field1", staticContext)
+            .evaluateAs(document, IMetapathExpression.ResultType.ITEM);
     assert field != null;
 
     // evaluate
     ISequence<IFieldNodeItem> result = expr.evaluate(field);
-    assertThat(result.getValue(), contains(
+    assertThat(result, contains(
         allOf(
             where(IFieldNodeItem::getQName, equalTo(FIELD2))))); // NOPMD
   }
@@ -144,13 +152,13 @@ class BuildCstVisitorTest {
 
     // select starting node
     IDocumentNodeItem document = newTestDocument();
-    IFieldNodeItem field = MetapathExpression.compile("/root/field1", staticContext)
-        .evaluateAs(document, ResultType.ITEM);
+    IFieldNodeItem field = IMetapathExpression.compile("/root/field1", staticContext)
+        .evaluateAs(document, IMetapathExpression.ResultType.ITEM);
     assert field != null;
 
     // compile expression
-    IItem result = MetapathExpression.compile("parent::root", staticContext)
-        .evaluateAs(field, ResultType.ITEM);
+    IItem result = IMetapathExpression.compile("parent::root", staticContext)
+        .evaluateAs(field, IMetapathExpression.ResultType.ITEM);
     assert result != null;
 
     assertAll(
@@ -164,13 +172,13 @@ class BuildCstVisitorTest {
 
     // select starting node
     IDocumentNodeItem document = newTestDocument();
-    IFieldNodeItem field = MetapathExpression.compile("/root/field1", staticContext)
-        .evaluateAs(document, ResultType.ITEM);
+    IFieldNodeItem field = IMetapathExpression.compile("/root/field1", staticContext)
+        .evaluateAs(document, IMetapathExpression.ResultType.ITEM);
     assert field != null;
 
     // compile expression
     String path = "parent::other";
-    MetapathExpression expr = MetapathExpression.compile(path, staticContext);
+    IMetapathExpression expr = IMetapathExpression.compile(path, staticContext);
 
     // evaluate
     ISequence<?> result = expr.evaluate(field);
@@ -183,7 +191,7 @@ class BuildCstVisitorTest {
 
     // compile expression
     String path = "parent::other";
-    MetapathExpression expr = MetapathExpression.compile(path, staticContext);
+    IMetapathExpression expr = IMetapathExpression.compile(path, staticContext);
 
     // select starting node
     IDocumentNodeItem document = newTestDocument();
@@ -198,14 +206,14 @@ class BuildCstVisitorTest {
     StaticContext staticContext = newStaticContext();
 
     String path = "./root";
-    MetapathExpression expr = MetapathExpression.compile(path, staticContext);
+    IMetapathExpression expr = IMetapathExpression.compile(path, staticContext);
 
     // select starting node
     IDocumentNodeItem document = newTestDocument();
 
     // evaluate
     ISequence<IAssemblyNodeItem> result = expr.evaluate(document);
-    assertThat(result.getValue(), contains(
+    assertThat(result, contains(
         allOf(
             instanceOf(IRootAssemblyNodeItem.class),
             where(IAssemblyNodeItem::getQName, equalTo(ROOT))))); // NOPMD
@@ -216,17 +224,17 @@ class BuildCstVisitorTest {
     StaticContext staticContext = newStaticContext();
 
     String path = "./@flag";
-    MetapathExpression expr = MetapathExpression.compile(path, staticContext);
+    IMetapathExpression expr = IMetapathExpression.compile(path, staticContext);
 
     // select starting node
     IDocumentNodeItem document = newTestDocument();
-    IFieldNodeItem field = MetapathExpression.compile("/root/field2", staticContext)
-        .evaluateAs(document, ResultType.ITEM);
+    IFieldNodeItem field = IMetapathExpression.compile("/root/field2", staticContext)
+        .evaluateAs(document, IMetapathExpression.ResultType.ITEM);
     assert field != null;
 
     // evaluate
     ISequence<IFlagNodeItem> result = expr.evaluate(field);
-    assertThat(result.getValue(), contains(
+    assertThat(result, contains(
         allOf(
             instanceOf(IFlagNodeItem.class),
             where(IFlagNodeItem::getQName, equalTo(FLAG)))));
@@ -237,23 +245,86 @@ class BuildCstVisitorTest {
     StaticContext staticContext = newStaticContext();
 
     String path = "child::*";
-    MetapathExpression expr = MetapathExpression.compile(path, staticContext);
+    IMetapathExpression expr = IMetapathExpression.compile(path, staticContext);
 
     // select starting node
     IDocumentNodeItem document = newTestDocument();
-    IRootAssemblyNodeItem root = MetapathExpression.compile("/root", staticContext)
-        .evaluateAs(document, ResultType.ITEM, new DynamicContext(staticContext));
+    IRootAssemblyNodeItem root = IMetapathExpression.compile("/root", staticContext)
+        .evaluateAs(document, IMetapathExpression.ResultType.ITEM, new DynamicContext(staticContext));
     assert root != null;
 
     // evaluate
     ISequence<IFieldNodeItem> result = expr.evaluate(root);
-    assertThat(result.getValue(), contains(
+    assertThat(result, contains(
         allOf(
             instanceOf(IFieldNodeItem.class),
             where(IFieldNodeItem::getQName, equalTo(FIELD1))), // NOPMD
         allOf(
             instanceOf(IFieldNodeItem.class),
             where(IFieldNodeItem::getQName, equalTo(FIELD2))))); // NOPMD
+  }
+
+  static Stream<Arguments> testNamedFunctionRef() {
+    return Stream.of(
+        Arguments.of("fn:string#1", qname(MetapathConstants.NS_METAPATH_FUNCTIONS, "string"), 1));
+  }
+
+  @ParameterizedTest
+  @MethodSource
+  void testNamedFunctionRef(
+      @NonNull String metapath,
+      @NonNull IEnhancedQName expectedQname,
+      int expectedArity) {
+    StaticContext staticContext = StaticContext.builder().build();
+    DynamicContext dynamicContext = new DynamicContext(staticContext);
+
+    IFunction result = IMetapathExpression.compile(metapath, staticContext)
+        .evaluateAs(null, IMetapathExpression.ResultType.ITEM, dynamicContext);
+    assertAll(
+        () -> assertEquals(expectedQname, result == null ? null : result.getQName()),
+        () -> assertEquals(expectedArity, result == null ? null : result.arity()));
+  }
+
+  static Stream<Arguments> testNamedFunctionRefNotFound() {
+    return Stream.of(
+        Arguments.of("fn:string#4"));
+  }
+
+  @ParameterizedTest
+  @MethodSource("testNamedFunctionRefNotFound")
+  void testNamedFunctionRefNotFound(
+      @NonNull String metapath) {
+    StaticContext staticContext = StaticContext.builder().build();
+    DynamicContext dynamicContext = new DynamicContext(staticContext);
+
+    MetapathException thrown = assertThrows(MetapathException.class,
+        () -> IMetapathExpression.compile(metapath, staticContext).evaluateAs(null,
+            IMetapathExpression.ResultType.ITEM, dynamicContext));
+    Throwable cause = thrown.getCause();
+
+    assertEquals(
+        StaticMetapathException.NO_FUNCTION_MATCH,
+        cause instanceof StaticMetapathException
+            ? ((StaticMetapathException) cause).getCode()
+            : null);
+  }
+
+  static Stream<Arguments> testNamedFunctionRefCall() {
+    return Stream.of(
+        Arguments.of("fn:string#1(1)", string("1")));
+  }
+
+  @ParameterizedTest
+  @MethodSource("testNamedFunctionRefCall")
+  void testNamedFunctionRefCall(
+      @NonNull String metapath,
+      @NonNull IItem expectedResult) {
+    StaticContext staticContext = StaticContext.builder().build();
+    DynamicContext dynamicContext = new DynamicContext(staticContext);
+
+    IItem result = IMetapathExpression.compile(metapath, staticContext)
+        .evaluateAs(null, IMetapathExpression.ResultType.ITEM, dynamicContext);
+    assertEquals(expectedResult, result);
   }
 
   static Stream<Arguments> testComparison() {

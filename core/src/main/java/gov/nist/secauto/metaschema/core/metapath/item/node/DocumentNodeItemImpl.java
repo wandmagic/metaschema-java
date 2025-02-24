@@ -12,6 +12,7 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import nl.talsmasoftware.lazy4j.Lazy;
 
 class DocumentNodeItemImpl
+    extends AbstractNodeItem
     implements IDocumentNodeItem, IFeatureModelContainerItem {
   @NonNull
   private final IRootAssemblyNodeItem root;
@@ -33,7 +34,7 @@ class DocumentNodeItemImpl
 
     StaticContext.Builder builder = StaticContext.builder()
         .baseUri(documentUri)
-        .defaultModelNamespace(ObjectUtils.requireNonNull(root.getXmlNamespace()));
+        .defaultModelNamespace(ObjectUtils.requireNonNull(root.getRootQName().getNamespace()));
 
     // obj.getNamespaceBindingList().stream()
     // .forEach(binding -> builder.namespace(
@@ -81,4 +82,8 @@ class DocumentNodeItemImpl
     return getRootAssemblyNodeItem().stringValue();
   }
 
+  @Override
+  protected String getValueSignature() {
+    return null;
+  }
 }

@@ -10,10 +10,14 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import gov.nist.secauto.metaschema.core.configuration.DefaultConfiguration;
 import gov.nist.secauto.metaschema.core.configuration.IConfiguration;
 import gov.nist.secauto.metaschema.core.configuration.IMutableConfiguration;
-import gov.nist.secauto.metaschema.core.metapath.function.DefaultFunction.CallingContext;
+import gov.nist.secauto.metaschema.core.metapath.function.CalledContext;
+import gov.nist.secauto.metaschema.core.metapath.function.IFunction;
 import gov.nist.secauto.metaschema.core.metapath.function.IFunction.FunctionProperty;
+import gov.nist.secauto.metaschema.core.metapath.item.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.item.node.IDocumentNodeItem;
 import gov.nist.secauto.metaschema.core.model.IUriResolver;
+import gov.nist.secauto.metaschema.core.qname.IEnhancedQName;
+import gov.nist.secauto.metaschema.core.util.CollectionUtil;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 
 import java.io.IOException;
@@ -21,13 +25,16 @@ import java.net.URI;
 import java.time.Clock;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
-
-import javax.xml.namespace.QName;
+import java.util.stream.Collectors;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
@@ -39,7 +46,7 @@ import edu.umd.cs.findbugs.annotations.Nullable;
  */
 public class DynamicContext { // NOPMD - intentional data class
   @NonNull
-  private final Map<QName, ISequence<?>> letVariableMap;
+  private final Map<Integer, ISequence<?>> letVariableMap;
   @NonNull
   private final SharedState sharedState;
 
@@ -76,11 +83,13 @@ public class DynamicContext { // NOPMD - intentional data class
     @NonNull
     private final Map<URI, IDocumentNodeItem> availableDocuments;
     @NonNull
-    private final Map<CallingContext, ISequence<?>> functionResultCache;
+    private final Map<CalledContext, ISequence<?>> functionResultCache;
     @Nullable
     private CachingLoader documentLoader;
     @NonNull
     private final IMutableConfiguration<MetapathEvaluationFeature<?>> configuration;
+    @NonNull
+    private final Deque<IExpression> executionStack = new ArrayDeque<>();
 
     public SharedState(@NonNull StaticContext staticContext) {
       this.staticContext = staticContext;
@@ -93,7 +102,7 @@ public class DynamicContext { // NOPMD - intentional data class
       this.functionResultCache = ObjectUtils.notNull(Caffeine.newBuilder()
           .maximumSize(5000)
           .expireAfterAccess(10, TimeUnit.MINUTES)
-          .<CallingContext, ISequence<?>>build().asMap());
+          .<CalledContext, ISequence<?>>build().asMap());
       this.configuration = new DefaultConfiguration<>();
       this.configuration.enableFeature(MetapathEvaluationFeature.METAPATH_EVALUATE_PREDICATES);
     }
@@ -195,7 +204,7 @@ public class DynamicContext { // NOPMD - intentional data class
    * @return the cached result sequence for the function call
    */
   @Nullable
-  public ISequence<?> getCachedResult(@NonNull CallingContext callingContext) {
+  public ISequence<?> getCachedResult(@NonNull CalledContext callingContext) {
     return sharedState.functionResultCache.get(callingContext);
   }
 
@@ -209,7 +218,7 @@ public class DynamicContext { // NOPMD - intentional data class
    * @param result
    *          the function call result
    */
-  public void cacheResult(@NonNull CallingContext callingContext, @NonNull ISequence<?> result) {
+  public void cacheResult(@NonNull CalledContext callingContext, @NonNull ISequence<?> result) {
     ISequence<?> old = sharedState.functionResultCache.put(callingContext, result);
     assert old == null;
   }
@@ -266,15 +275,34 @@ public class DynamicContext { // NOPMD - intentional data class
    *           {@code null}
    */
   @NonNull
-  public ISequence<?> getVariableValue(@NonNull QName name) {
-    ISequence<?> retval = letVariableMap.get(name);
+  public ISequence<?> getVariableValue(@NonNull IEnhancedQName name) {
+    ISequence<?> retval = letVariableMap.get(name.getIndexPosition());
     if (retval == null) {
-      if (!letVariableMap.containsKey(name)) {
-        throw new MetapathException(String.format("Variable '%s' not defined in context.", name));
+      if (letVariableMap.containsKey(name.getIndexPosition())) {
+        throw new MetapathException(String.format("Variable '%s' has null contents.", name));
       }
-      throw new MetapathException(String.format("Variable '%s' has null contents.", name));
+      throw new StaticMetapathException(
+          StaticMetapathException.NOT_DEFINED,
+          String.format("Variable '%s' not defined in the dynamic context.", name));
     }
     return retval;
+  }
+
+  /**
+   * Get the function with the provided name and arity.
+   *
+   * @param name
+   *          the requested function's qualified name
+   * @param arity
+   *          the number of arguments in the requested function
+   * @return the function
+   * @throws StaticMetapathException
+   *           with the code {@link StaticMetapathException#NO_FUNCTION_MATCH} if
+   *           a matching function was not found
+   */
+  @NonNull
+  public IFunction getFunction(@NonNull IEnhancedQName name, int arity) {
+    return StaticContext.lookupFunction(name, arity);
   }
 
   /**
@@ -287,9 +315,54 @@ public class DynamicContext { // NOPMD - intentional data class
    * @return this dynamic context
    */
   @NonNull
-  public DynamicContext bindVariableValue(@NonNull QName name, @NonNull ISequence<?> boundValue) {
-    letVariableMap.put(name, boundValue);
+  public DynamicContext bindVariableValue(@NonNull IEnhancedQName name, @NonNull ISequence<?> boundValue) {
+    letVariableMap.put(name.getIndexPosition(), boundValue);
     return this;
+  }
+
+  /**
+   * Push the current expression under evaluation to the execution queue.
+   *
+   * @param expression
+   *          the expression to push
+   */
+  public void pushExecutionStack(@NonNull IExpression expression) {
+    this.sharedState.executionStack.push(expression);
+  }
+
+  /**
+   * Pop the expression that was under evaluation from the execution queue.
+   *
+   * @param expression
+   *          the expected expression to be popped
+   */
+  public void popExecutionStack(@NonNull IExpression expression) {
+    IExpression popped = this.sharedState.executionStack.pop();
+    if (!expression.equals(popped)) {
+      throw new IllegalStateException("Popped expression does not match expected expression");
+    }
+  }
+
+  /**
+   * Return a copy of the current execution stack.
+   *
+   * @return the execution stack
+   */
+  @NonNull
+  public List<IExpression> getExecutionStack() {
+    return CollectionUtil.unmodifiableList(new ArrayList<>(this.sharedState.executionStack));
+  }
+
+  /**
+   * Provides a formatted stack trace.
+   *
+   * @return the formatted stack trace
+   */
+  @NonNull
+  public String formatExecutionStackTrace() {
+    return ObjectUtils.notNull(getExecutionStack().stream()
+        .map(IExpression::toCSTString)
+        .collect(Collectors.joining("\n-> ")));
   }
 
   private class CachingLoader implements IDocumentLoader {
@@ -350,5 +423,4 @@ public class DynamicContext { // NOPMD - intentional data class
       }
     }
   }
-
 }

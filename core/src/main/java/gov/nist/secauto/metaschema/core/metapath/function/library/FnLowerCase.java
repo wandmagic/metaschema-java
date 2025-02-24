@@ -6,12 +6,12 @@
 package gov.nist.secauto.metaschema.core.metapath.function.library;
 
 import gov.nist.secauto.metaschema.core.metapath.DynamicContext;
-import gov.nist.secauto.metaschema.core.metapath.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.MetapathConstants;
 import gov.nist.secauto.metaschema.core.metapath.function.FunctionUtils;
 import gov.nist.secauto.metaschema.core.metapath.function.IArgument;
 import gov.nist.secauto.metaschema.core.metapath.function.IFunction;
 import gov.nist.secauto.metaschema.core.metapath.item.IItem;
+import gov.nist.secauto.metaschema.core.metapath.item.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IStringItem;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 
@@ -37,10 +37,10 @@ public final class FnLowerCase {
       .focusIndependent()
       .argument(IArgument.builder()
           .name("arg")
-          .type(IStringItem.class)
+          .type(IStringItem.type())
           .zeroOrOne()
           .build())
-      .returnType(IStringItem.class)
+      .returnType(IStringItem.type())
       .returnOne()
       .functionHandler(FnLowerCase::executeOneArg)
       .build();
@@ -72,6 +72,6 @@ public final class FnLowerCase {
    */
   @NonNull
   public static IStringItem fnLowerCase(@NonNull IStringItem arg) {
-    return IStringItem.valueOf(ObjectUtils.notNull(arg.toString().toLowerCase(Locale.ROOT)));
+    return IStringItem.valueOf(ObjectUtils.notNull(arg.asString().toLowerCase(Locale.ROOT)));
   }
 }

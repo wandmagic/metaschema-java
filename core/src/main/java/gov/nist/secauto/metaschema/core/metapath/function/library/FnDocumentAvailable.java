@@ -6,7 +6,6 @@
 package gov.nist.secauto.metaschema.core.metapath.function.library;
 
 import gov.nist.secauto.metaschema.core.metapath.DynamicContext;
-import gov.nist.secauto.metaschema.core.metapath.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.MetapathConstants;
 import gov.nist.secauto.metaschema.core.metapath.MetapathException;
 import gov.nist.secauto.metaschema.core.metapath.function.DocumentFunctionException;
@@ -15,6 +14,7 @@ import gov.nist.secauto.metaschema.core.metapath.function.IArgument;
 import gov.nist.secauto.metaschema.core.metapath.function.IFunction;
 import gov.nist.secauto.metaschema.core.metapath.function.UriFunctionException;
 import gov.nist.secauto.metaschema.core.metapath.item.IItem;
+import gov.nist.secauto.metaschema.core.metapath.item.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IAnyUriItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IBooleanItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IStringItem;
@@ -43,10 +43,10 @@ public final class FnDocumentAvailable {
       .focusIndependent()
       .argument(IArgument.builder()
           .name("arg1")
-          .type(IStringItem.class)
+          .type(IStringItem.type())
           .zeroOrOne()
           .build())
-      .returnType(IBooleanItem.class)
+      .returnType(IBooleanItem.type())
       .returnOne()
       .functionHandler(FnDocumentAvailable::execute)
       .build();
@@ -113,23 +113,20 @@ public final class FnDocumentAvailable {
           ? documentUri
           // if not absolute or opaque, then resolve it to make it absolute
           : FnResolveUri.fnResolveUri(documentUri, null, context);
-      try {
-        URLConnection connection = uri.asUri().toURL().openConnection();
+      URLConnection connection = uri.asUri().toURL().openConnection();
 
-        if (connection instanceof HttpURLConnection) {
-          HttpURLConnection httpConnection = (HttpURLConnection) connection;
-          httpConnection.setRequestMethod("HEAD");
-          httpConnection.connect();
-          retval = HttpURLConnection.HTTP_OK == httpConnection.getResponseCode();
-          httpConnection.disconnect();
-        } else {
-          connection.connect();
-          retval = true;
-        }
-      } catch (IOException ex) {
-        retval = false;
+      if (connection instanceof HttpURLConnection) {
+        HttpURLConnection httpConnection = (HttpURLConnection) connection;
+        httpConnection.setRequestMethod("HEAD");
+        httpConnection.connect();
+        retval = HttpURLConnection.HTTP_OK == httpConnection.getResponseCode();
+        httpConnection.disconnect();
+      } else {
+        connection.connect();
+        retval = true;
       }
-    } catch (UriFunctionException ex) {
+    } catch (@SuppressWarnings("unused") IOException | UriFunctionException ex) {
+      // an error occurred while retrieving, report false
       retval = false;
     }
     return IBooleanItem.valueOf(retval);

@@ -7,7 +7,7 @@ package gov.nist.secauto.metaschema.core.model;
 
 import java.util.Collection;
 
-import javax.xml.namespace.QName;
+import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
  * Common interface for model container support classes.
@@ -26,14 +26,22 @@ public interface IFeatureContainerModelAbsolute<
     NMI extends INamedModelInstanceAbsolute,
     FI extends IFieldInstanceAbsolute,
     AI extends IAssemblyInstanceAbsolute>
-    extends IContainerModelAbsolute, IFeatureContainerModel<MI, NMI, FI, AI> {
+    extends IContainerModelAbsolute {
+  /**
+   * Get the model container implementation instance.
+   *
+   * @return the model container instance
+   */
+  @NonNull
+  IContainerModelSupport<MI, NMI, FI, AI> getModelContainer();
+
   @Override
-  default Collection<MI> getModelInstances() {
+  default Collection<? extends MI> getModelInstances() {
     return getModelContainer().getModelInstances();
   }
 
   @Override
-  default NMI getNamedModelInstanceByName(QName name) {
+  default NMI getNamedModelInstanceByName(Integer name) {
     return getModelContainer().getNamedModelInstanceMap().get(name);
   }
 
@@ -44,7 +52,7 @@ public interface IFeatureContainerModelAbsolute<
   }
 
   @Override
-  default FI getFieldInstanceByName(QName name) {
+  default FI getFieldInstanceByName(Integer name) {
     return getModelContainer().getFieldInstanceMap().get(name);
   }
 
@@ -55,7 +63,7 @@ public interface IFeatureContainerModelAbsolute<
   }
 
   @Override
-  default AI getAssemblyInstanceByName(QName name) {
+  default AI getAssemblyInstanceByName(Integer name) {
     return getModelContainer().getAssemblyInstanceMap().get(name);
   }
 

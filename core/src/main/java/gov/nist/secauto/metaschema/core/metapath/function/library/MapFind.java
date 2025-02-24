@@ -6,13 +6,13 @@
 package gov.nist.secauto.metaschema.core.metapath.function.library;
 
 import gov.nist.secauto.metaschema.core.metapath.DynamicContext;
-import gov.nist.secauto.metaschema.core.metapath.ICollectionValue;
-import gov.nist.secauto.metaschema.core.metapath.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.MetapathConstants;
 import gov.nist.secauto.metaschema.core.metapath.function.FunctionUtils;
 import gov.nist.secauto.metaschema.core.metapath.function.IArgument;
 import gov.nist.secauto.metaschema.core.metapath.function.IFunction;
+import gov.nist.secauto.metaschema.core.metapath.item.ICollectionValue;
 import gov.nist.secauto.metaschema.core.metapath.item.IItem;
+import gov.nist.secauto.metaschema.core.metapath.item.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IAnyAtomicItem;
 import gov.nist.secauto.metaschema.core.metapath.item.function.IArrayItem;
 import gov.nist.secauto.metaschema.core.metapath.item.function.IMapItem;
@@ -41,15 +41,15 @@ public final class MapFind {
       .focusIndependent()
       .argument(IArgument.builder()
           .name("input")
-          .type(IItem.class)
+          .type(IItem.type())
           .zeroOrMore()
           .build())
       .argument(IArgument.builder()
           .name("key")
-          .type(IAnyAtomicItem.class)
+          .type(IAnyAtomicItem.type())
           .one()
           .build())
-      .returnType(IArrayItem.class)
+      .returnType(IArrayItem.type())
       .returnOne()
       .functionHandler(MapFind::execute)
       .build();

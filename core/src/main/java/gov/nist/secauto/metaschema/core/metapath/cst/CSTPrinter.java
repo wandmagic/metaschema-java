@@ -5,30 +5,61 @@
 
 package gov.nist.secauto.metaschema.core.metapath.cst;
 
-import gov.nist.secauto.metaschema.core.metapath.cst.comparison.GeneralComparison;
-import gov.nist.secauto.metaschema.core.metapath.cst.comparison.ValueComparison;
+import gov.nist.secauto.metaschema.core.metapath.IExpression;
+import gov.nist.secauto.metaschema.core.metapath.cst.items.ArraySequenceConstructor;
+import gov.nist.secauto.metaschema.core.metapath.cst.items.ArraySquareConstructor;
+import gov.nist.secauto.metaschema.core.metapath.cst.items.DecimalLiteral;
+import gov.nist.secauto.metaschema.core.metapath.cst.items.EmptySequence;
+import gov.nist.secauto.metaschema.core.metapath.cst.items.Except;
+import gov.nist.secauto.metaschema.core.metapath.cst.items.IntegerLiteral;
+import gov.nist.secauto.metaschema.core.metapath.cst.items.Intersect;
+import gov.nist.secauto.metaschema.core.metapath.cst.items.MapConstructor;
+import gov.nist.secauto.metaschema.core.metapath.cst.items.PostfixLookup;
+import gov.nist.secauto.metaschema.core.metapath.cst.items.Quantified;
+import gov.nist.secauto.metaschema.core.metapath.cst.items.Range;
+import gov.nist.secauto.metaschema.core.metapath.cst.items.SequenceExpression;
+import gov.nist.secauto.metaschema.core.metapath.cst.items.SimpleMap;
+import gov.nist.secauto.metaschema.core.metapath.cst.items.StringConcat;
+import gov.nist.secauto.metaschema.core.metapath.cst.items.StringLiteral;
+import gov.nist.secauto.metaschema.core.metapath.cst.items.UnaryLookup;
+import gov.nist.secauto.metaschema.core.metapath.cst.items.Union;
+import gov.nist.secauto.metaschema.core.metapath.cst.logic.And;
+import gov.nist.secauto.metaschema.core.metapath.cst.logic.GeneralComparison;
+import gov.nist.secauto.metaschema.core.metapath.cst.logic.If;
+import gov.nist.secauto.metaschema.core.metapath.cst.logic.Or;
+import gov.nist.secauto.metaschema.core.metapath.cst.logic.PredicateExpression;
+import gov.nist.secauto.metaschema.core.metapath.cst.logic.ValueComparison;
 import gov.nist.secauto.metaschema.core.metapath.cst.math.Addition;
 import gov.nist.secauto.metaschema.core.metapath.cst.math.Division;
 import gov.nist.secauto.metaschema.core.metapath.cst.math.IntegerDivision;
 import gov.nist.secauto.metaschema.core.metapath.cst.math.Modulo;
 import gov.nist.secauto.metaschema.core.metapath.cst.math.Multiplication;
+import gov.nist.secauto.metaschema.core.metapath.cst.math.Negate;
 import gov.nist.secauto.metaschema.core.metapath.cst.math.Subtraction;
-import gov.nist.secauto.metaschema.core.metapath.cst.path.Axis;
 import gov.nist.secauto.metaschema.core.metapath.cst.path.ContextItem;
-import gov.nist.secauto.metaschema.core.metapath.cst.path.Flag;
-import gov.nist.secauto.metaschema.core.metapath.cst.path.ModelInstance;
-import gov.nist.secauto.metaschema.core.metapath.cst.path.NameTest;
+import gov.nist.secauto.metaschema.core.metapath.cst.path.FlagStep;
+import gov.nist.secauto.metaschema.core.metapath.cst.path.KindNodeTest;
+import gov.nist.secauto.metaschema.core.metapath.cst.path.ModelInstanceStep;
+import gov.nist.secauto.metaschema.core.metapath.cst.path.NameNodeTest;
 import gov.nist.secauto.metaschema.core.metapath.cst.path.RelativeDoubleSlashPath;
 import gov.nist.secauto.metaschema.core.metapath.cst.path.RelativeSlashPath;
 import gov.nist.secauto.metaschema.core.metapath.cst.path.RootDoubleSlashPath;
 import gov.nist.secauto.metaschema.core.metapath.cst.path.RootSlashOnlyPath;
 import gov.nist.secauto.metaschema.core.metapath.cst.path.RootSlashPath;
 import gov.nist.secauto.metaschema.core.metapath.cst.path.Step;
-import gov.nist.secauto.metaschema.core.metapath.cst.path.Wildcard;
+import gov.nist.secauto.metaschema.core.metapath.cst.path.WildcardNodeTest;
+import gov.nist.secauto.metaschema.core.metapath.cst.type.Cast;
+import gov.nist.secauto.metaschema.core.metapath.cst.type.Castable;
+import gov.nist.secauto.metaschema.core.metapath.cst.type.InstanceOf;
+import gov.nist.secauto.metaschema.core.metapath.cst.type.Treat;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 
+/**
+ * Supports the generation of a human-readable representation of a Metapath
+ * compact syntax tree (CST).
+ */
 @SuppressWarnings("PMD.CouplingBetweenObjects")
 public final class CSTPrinter {
   private CSTPrinter() {
@@ -89,10 +120,13 @@ public final class CSTPrinter {
      *         its children
      */
     @SuppressWarnings("static-method")
-    protected String appendNode(@NonNull IExpression expr, @Nullable String childResult, @NonNull State context) {
+    protected String appendNode(
+        @NonNull IExpression expr,
+        @Nullable String childResult,
+        @NonNull State context) {
       StringBuilder buffer = new StringBuilder();
       buffer.append(context.getIndentation())
-          .append(expr.toASTString());
+          .append(expr.toCSTString());
       if (childResult != null) {
         buffer.append(System.lineSeparator())
             .append(childResult);
@@ -158,13 +192,23 @@ public final class CSTPrinter {
     }
 
     @Override
-    public String visitFlag(Flag expr, State context) {
-      return appendNode(expr, super.visitFlag(expr, context), context);
+    public String visitFlagStep(FlagStep expr, State context) {
+      return appendNode(expr, super.visitFlagStep(expr, context), context);
     }
 
     @Override
-    public String visitFunctionCall(StaticFunctionCall expr, State context) {
-      return appendNode(expr, super.visitFunctionCall(expr, context), context);
+    public String visitStaticFunctionCall(StaticFunctionCall expr, State context) {
+      return appendNode(expr, super.visitStaticFunctionCall(expr, context), context);
+    }
+
+    @Override
+    public String visitDynamicFunctionCall(DynamicFunctionCall expr, State context) {
+      return appendNode(expr, super.visitDynamicFunctionCall(expr, context), context);
+    }
+
+    @Override
+    public String visitAnonymousFunctionCall(AnonymousFunctionCall expr, State context) {
+      return appendNode(expr, super.visitAnonymousFunctionCall(expr, context), context);
     }
 
     @Override
@@ -183,7 +227,7 @@ public final class CSTPrinter {
     }
 
     @Override
-    public String visitMetapath(Metapath expr, State context) {
+    public String visitMetapath(SequenceExpression expr, State context) {
       return appendNode(expr, super.visitMetapath(expr, context), context);
     }
 
@@ -193,8 +237,8 @@ public final class CSTPrinter {
     }
 
     @Override
-    public String visitModelInstance(ModelInstance expr, State context) {
-      return appendNode(expr, super.visitModelInstance(expr, context), context);
+    public String visitModelInstanceStep(ModelInstanceStep expr, State context) {
+      return appendNode(expr, super.visitModelInstanceStep(expr, context), context);
     }
 
     @Override
@@ -203,8 +247,8 @@ public final class CSTPrinter {
     }
 
     @Override
-    public String visitName(NameTest expr, State context) {
-      return appendNode(expr, super.visitName(expr, context), context);
+    public String visitNameNodeTest(NameNodeTest expr, State context) {
+      return appendNode(expr, super.visitNameNodeTest(expr, context), context);
     }
 
     @Override
@@ -215,11 +259,6 @@ public final class CSTPrinter {
     @Override
     public String visitOr(Or expr, State context) {
       return appendNode(expr, super.visitOr(expr, context), context);
-    }
-
-    @Override
-    public String visitAxis(Axis expr, State context) {
-      return appendNode(expr, super.visitAxis(expr, context), context);
     }
 
     @Override
@@ -273,13 +312,18 @@ public final class CSTPrinter {
     }
 
     @Override
-    public String visitWildcard(Wildcard expr, State context) {
-      return appendNode(expr, super.visitWildcard(expr, context), context);
+    public String visitWildcardNodeTest(WildcardNodeTest expr, State context) {
+      return appendNode(expr, super.visitWildcardNodeTest(expr, context), context);
     }
 
     @Override
     public String visitLet(Let expr, State context) {
       return appendNode(expr, super.visitLet(expr, context), context);
+    }
+
+    @Override
+    public String visitNamedFunctionReference(NamedFunctionReference expr, State context) {
+      return appendNode(expr, super.visitNamedFunctionReference(expr, context), context);
     }
 
     @Override
@@ -351,6 +395,32 @@ public final class CSTPrinter {
     public String visitMapConstructorEntry(MapConstructor.Entry expr, State context) {
       return appendNode(expr, super.visitMapConstructorEntry(expr, context), context);
     }
+
+    @Override
+    public String visitInstanceOf(InstanceOf expr, State context) {
+      return appendNode(expr, super.visitInstanceOf(expr, context), context);
+    }
+
+    @Override
+    public String visitCast(Cast expr, State context) {
+      return appendNode(expr, super.visitCast(expr, context), context);
+    }
+
+    @Override
+    public String visitCastable(Castable expr, State context) {
+      return appendNode(expr, super.visitCastable(expr, context), context);
+    }
+
+    @Override
+    public String visitTreat(Treat expr, State context) {
+      return appendNode(expr, super.visitTreat(expr, context), context);
+    }
+
+    @Override
+    public String visitKindNodeTest(KindNodeTest expr, State context) {
+      return appendNode(expr, super.visitKindNodeTest(expr, context), context);
+    }
+
   }
 
   static class State {

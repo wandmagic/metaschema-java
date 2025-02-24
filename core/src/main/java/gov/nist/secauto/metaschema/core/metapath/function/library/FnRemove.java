@@ -6,12 +6,12 @@
 package gov.nist.secauto.metaschema.core.metapath.function.library;
 
 import gov.nist.secauto.metaschema.core.metapath.DynamicContext;
-import gov.nist.secauto.metaschema.core.metapath.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.MetapathConstants;
 import gov.nist.secauto.metaschema.core.metapath.function.FunctionUtils;
 import gov.nist.secauto.metaschema.core.metapath.function.IArgument;
 import gov.nist.secauto.metaschema.core.metapath.function.IFunction;
 import gov.nist.secauto.metaschema.core.metapath.item.IItem;
+import gov.nist.secauto.metaschema.core.metapath.item.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IIntegerItem;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 
@@ -36,15 +36,15 @@ public final class FnRemove {
       .focusIndependent()
       .argument(IArgument.builder()
           .name("target")
-          .type(IItem.class)
+          .type(IItem.type())
           .zeroOrMore()
           .build())
       .argument(IArgument.builder()
           .name("position")
-          .type(IIntegerItem.class)
+          .type(IIntegerItem.type())
           .one()
           .build())
-      .returnType(IItem.class)
+      .returnType(IItem.type())
       .returnZeroOrMore()
       .functionHandler(FnRemove::execute)
       .build();
@@ -80,7 +80,7 @@ public final class FnRemove {
   public static <T extends IItem> List<T> fnRemove(
       @NonNull List<T> target,
       @NonNull IIntegerItem positionItem) {
-    int position = positionItem.asInteger().intValue();
+    int position = positionItem.toIntValueExact();
 
     if (position == 0 || position > target.size()) {
       return target;

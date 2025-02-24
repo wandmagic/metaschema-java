@@ -6,7 +6,6 @@
 package gov.nist.secauto.metaschema.core.metapath.function.library;
 
 import gov.nist.secauto.metaschema.core.metapath.DynamicContext;
-import gov.nist.secauto.metaschema.core.metapath.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.MetapathConstants;
 import gov.nist.secauto.metaschema.core.metapath.function.FunctionUtils;
 import gov.nist.secauto.metaschema.core.metapath.function.IArgument;
@@ -14,6 +13,7 @@ import gov.nist.secauto.metaschema.core.metapath.function.IFunction;
 import gov.nist.secauto.metaschema.core.metapath.function.regex.RegexUtil;
 import gov.nist.secauto.metaschema.core.metapath.function.regex.RegularExpressionMetapathException;
 import gov.nist.secauto.metaschema.core.metapath.item.IItem;
+import gov.nist.secauto.metaschema.core.metapath.item.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IBooleanItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IStringItem;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
@@ -43,15 +43,15 @@ public final class FnMatches {
       .focusIndependent()
       .argument(IArgument.builder()
           .name("input")
-          .type(IStringItem.class)
+          .type(IStringItem.type())
           .zeroOrOne()
           .build())
       .argument(IArgument.builder()
           .name("pattern")
-          .type(IStringItem.class)
+          .type(IStringItem.type())
           .one()
           .build())
-      .returnType(IBooleanItem.class)
+      .returnType(IBooleanItem.type())
       .returnOne()
       .functionHandler(FnMatches::executeTwoArg)
       .build();
@@ -65,43 +65,45 @@ public final class FnMatches {
       .focusIndependent()
       .argument(IArgument.builder()
           .name("input")
-          .type(IStringItem.class)
+          .type(IStringItem.type())
           .zeroOrOne()
           .build())
       .argument(IArgument.builder()
           .name("pattern")
-          .type(IStringItem.class)
+          .type(IStringItem.type())
           .one()
           .build())
       .argument(IArgument.builder()
           .name("flags")
-          .type(IStringItem.class)
+          .type(IStringItem.type())
           .one()
           .build())
-      .returnType(IBooleanItem.class)
+      .returnType(IBooleanItem.type())
       .returnOne()
       .functionHandler(FnMatches::executeThreeArg)
       .build();
   // CPD-ON
 
+  @SuppressWarnings("unused")
   @NonNull
   private static ISequence<IBooleanItem> executeTwoArg(
-      @SuppressWarnings("unused") @NonNull IFunction function,
+      @NonNull IFunction function,
       @NonNull List<ISequence<?>> arguments,
-      @SuppressWarnings("unused") @NonNull DynamicContext dynamicContext,
-      @SuppressWarnings("unused") IItem focus) {
+      @NonNull DynamicContext dynamicContext,
+      IItem focus) {
     IStringItem input = FunctionUtils.asTypeOrNull(arguments.get(0).getFirstItem(true));
     IStringItem pattern = ObjectUtils.requireNonNull(FunctionUtils.asTypeOrNull(arguments.get(1).getFirstItem(true)));
 
     return execute(input, pattern, IStringItem.valueOf(""));
   }
 
+  @SuppressWarnings("unused")
   @NonNull
   private static ISequence<IBooleanItem> executeThreeArg(
-      @SuppressWarnings("unused") @NonNull IFunction function,
+      @NonNull IFunction function,
       @NonNull List<ISequence<?>> arguments,
-      @SuppressWarnings("unused") @NonNull DynamicContext dynamicContext,
-      @SuppressWarnings("unused") IItem focus) {
+      @NonNull DynamicContext dynamicContext,
+      IItem focus) {
     IStringItem input = FunctionUtils.asTypeOrNull(arguments.get(0).getFirstItem(true));
     IStringItem pattern = ObjectUtils.requireNonNull(FunctionUtils.asTypeOrNull(arguments.get(1).getFirstItem(true)));
     IStringItem flags = ObjectUtils.requireNonNull(FunctionUtils.asTypeOrNull(arguments.get(2).getFirstItem(true)));

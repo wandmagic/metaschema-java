@@ -5,17 +5,15 @@
 
 package gov.nist.secauto.metaschema.core.metapath.function;
 
-import gov.nist.secauto.metaschema.core.metapath.ISequence;
-import gov.nist.secauto.metaschema.core.metapath.InvalidTypeMetapathException;
-import gov.nist.secauto.metaschema.core.metapath.TypeMetapathException;
-import gov.nist.secauto.metaschema.core.metapath.function.library.FnData;
 import gov.nist.secauto.metaschema.core.metapath.item.IItem;
+import gov.nist.secauto.metaschema.core.metapath.item.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IAnyAtomicItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IDecimalItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.INumericItem;
+import gov.nist.secauto.metaschema.core.metapath.type.InvalidTypeMetapathException;
+import gov.nist.secauto.metaschema.core.metapath.type.TypeMetapathException;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 
-import java.math.BigInteger;
 import java.math.MathContext;
 import java.util.Collection;
 import java.util.HashMap;
@@ -30,65 +28,23 @@ import edu.umd.cs.findbugs.annotations.Nullable;
 
 /**
  * A collection of utility functions for use in implementing Metapath functions.
+ * <p>
+ * This class is thread-safe as all methods are stateless and the internal
+ * constant is immutable.
  */
+// FIXME: Remove these methods in favor of direct calls to methods on the item
+// types
 @SuppressWarnings("PMD.CouplingBetweenObjects")
 public final class FunctionUtils {
+  /**
+   * The math context used for decimal arithmetic operations. DECIMAL64 provides a
+   * precision of 16 digits, which is sufficient for most business calculations
+   * while maintaining reasonable performance.
+   */
   public static final MathContext MATH_CONTEXT = MathContext.DECIMAL64;
 
   private FunctionUtils() {
     // disable
-  }
-
-  /**
-   * Converts a {@link INumericItem} value to an integer value.
-   *
-   * @param value
-   *          the value to convert
-   * @return the integer value
-   * @throws ArithmeticException
-   *           if the provided value will not exactly fit in an {@code int}
-   */
-  public static int asInteger(@NonNull INumericItem value) {
-    return asInteger(value.asInteger());
-  }
-
-  /**
-   * Converts a {@link BigInteger} value to an integer value.
-   *
-   * @param value
-   *          the value to convert
-   * @return the integer value
-   * @throws ArithmeticException
-   *           if the provided value will not exactly fit in an {@code int}
-   */
-  public static int asInteger(@NonNull BigInteger value) {
-    return value.intValueExact();
-  }
-
-  /**
-   * Converts a {@link INumericItem} value to a long value.
-   *
-   * @param value
-   *          the value to convert
-   * @return the long value
-   * @throws ArithmeticException
-   *           if the provided value will not exactly fit in an {@code long}
-   */
-  public static long asLong(@NonNull INumericItem value) {
-    return asLong(value.asInteger());
-  }
-
-  /**
-   * Converts a {@link BigInteger} value to a long value.
-   *
-   * @param value
-   *          the value to convert
-   * @return the long value
-   * @throws ArithmeticException
-   *           if the provided value will not exactly fit in an {@code long}
-   */
-  public static long asLong(@NonNull BigInteger value) {
-    return value.longValueExact();
   }
 
   /**
@@ -126,7 +82,10 @@ public final class FunctionUtils {
   @NonNull
   public static INumericItem toNumeric(@NonNull IItem item) {
     // atomize
-    IAnyAtomicItem atomicItem = ISequence.getFirstItem(FnData.atomize(item), true);
+    IAnyAtomicItem atomicItem = ISequence.getFirstItem(item.atomize(), true);
+    if (atomicItem == null) {
+      throw new InvalidTypeMetapathException(item, "Unable to cast null item");
+    }
     return toNumeric(atomicItem);
   }
 
@@ -140,7 +99,7 @@ public final class FunctionUtils {
    *           if the item cannot be cast to a numeric value
    */
   @NonNull
-  public static INumericItem toNumeric(@Nullable IAnyAtomicItem item) {
+  public static INumericItem toNumeric(@NonNull IAnyAtomicItem item) {
     try {
       return IDecimalItem.cast(item);
     } catch (InvalidValueForCastFunctionException ex) {
@@ -237,7 +196,8 @@ public final class FunctionUtils {
           null,
           String.format("Expected non-null type '%s', but the node was null.",
               clazz.getName()));
-    } else if (!clazz.isInstance(item)) {
+    }
+    if (!clazz.isInstance(item)) {
       throw new InvalidTypeMetapathException(
           item,
           String.format("Expected type '%s', but the node was type '%s'.",

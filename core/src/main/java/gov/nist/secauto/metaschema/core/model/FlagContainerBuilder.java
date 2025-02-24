@@ -6,6 +6,7 @@
 package gov.nist.secauto.metaschema.core.model;
 
 import gov.nist.secauto.metaschema.core.model.impl.DefaultContainerFlagSupport;
+import gov.nist.secauto.metaschema.core.qname.EQNameFactory;
 import gov.nist.secauto.metaschema.core.util.CollectionUtil;
 import gov.nist.secauto.metaschema.core.util.CustomCollectors;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
@@ -18,8 +19,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import javax.xml.namespace.QName;
-
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 
@@ -27,7 +26,7 @@ public class FlagContainerBuilder<T extends IFlagInstance> implements IFlagConta
   private static final Logger LOGGER = LogManager.getLogger(FlagContainerBuilder.class);
 
   @Nullable
-  private final QName jsonKeyName;
+  private final Integer jsonKeyIndex;
   @NonNull
   private final List<T> flags;
 
@@ -35,12 +34,12 @@ public class FlagContainerBuilder<T extends IFlagInstance> implements IFlagConta
    * Construct a new flag container using the provided flag qualified name as the
    * JSON key.
    *
-   * @param jsonKeyName
-   *          the qualified name of the JSON key or {@code null} if no JSON key is
-   *          configured
+   * @param jsonKeyIndex
+   *          the qualified name index of the JSON key or {@code null} if no JSON
+   *          key is configured
    */
-  public FlagContainerBuilder(@Nullable QName jsonKeyName) {
-    this.jsonKeyName = jsonKeyName;
+  public FlagContainerBuilder(@Nullable Integer jsonKeyIndex) {
+    this.jsonKeyIndex = jsonKeyIndex;
     this.flags = new LinkedList<>();
   }
 
@@ -57,29 +56,30 @@ public class FlagContainerBuilder<T extends IFlagInstance> implements IFlagConta
     if (flags.isEmpty()) {
       retval = IContainerFlagSupport.empty();
     } else {
-      Map<QName, T> flagMap = CollectionUtil.unmodifiableMap(ObjectUtils.notNull(flags.stream()
+      Map<Integer, T> flagMap = CollectionUtil.unmodifiableMap(ObjectUtils.notNull(flags.stream()
           .collect(
               CustomCollectors.toMap(
-                  INamed::getXmlQName,
+                  flag -> flag.getQName().getIndexPosition(),
                   CustomCollectors.identity(),
                   FlagContainerBuilder::handleShadowedInstances,
                   LinkedHashMap::new))));
 
-      T jsonKey = jsonKeyName == null ? null : flagMap.get(jsonKeyName);
+      T jsonKey = jsonKeyIndex == null ? null : flagMap.get(jsonKeyIndex);
       retval = new DefaultContainerFlagSupport<>(flagMap, jsonKey);
     }
     return retval;
   }
 
+  @SuppressWarnings("unused")
   private static <INSTANCE extends IFlagInstance> INSTANCE handleShadowedInstances(
-      @NonNull QName key,
+      @NonNull Integer keyIndex,
       @NonNull INSTANCE shadowed,
       @NonNull INSTANCE shadowing) {
     if (!shadowed.equals(shadowing) && LOGGER.isErrorEnabled()) {
       IModelDefinition owningDefinition = shadowing.getContainingDefinition();
       IModule module = owningDefinition.getContainingModule();
-      LOGGER.error("Unexpected duplicate flag instance named '%s' in definition '%s' in module name '%s' at '%s'",
-          key,
+      LOGGER.error("Unexpected duplicate flag instance name '%s' in definition '%s' in module name '%s' at '%s'",
+          EQNameFactory.instance().get(keyIndex).or(null),
           owningDefinition.getDefinitionQName(),
           module.getShortName(),
           module.getLocation());

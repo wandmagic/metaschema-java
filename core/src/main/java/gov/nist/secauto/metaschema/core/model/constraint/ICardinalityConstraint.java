@@ -17,6 +17,11 @@ import edu.umd.cs.findbugs.annotations.Nullable;
  * elements with a minimum and/or maximum occurrence.
  */
 public interface ICardinalityConstraint extends IConfigurableMessageConstraint {
+  @Override
+  default Type getType() {
+    return Type.CARDINALITY;
+  }
+
   /**
    * Retrieve the required minimum occurrence of the target instance. If
    * specified, this value must be less than or equal to the value of
@@ -101,7 +106,7 @@ public interface ICardinalityConstraint extends IConfigurableMessageConstraint {
       super.validate();
 
       if (getMinOccurs() == null && getMaxOccurs() == null) {
-        throw new IllegalStateException("At least one of minOccurs or maxOccurs must be provided.");
+        throw new ConstraintInitializationException("At least one of minOccurs or maxOccurs must be provided.");
       }
     }
 

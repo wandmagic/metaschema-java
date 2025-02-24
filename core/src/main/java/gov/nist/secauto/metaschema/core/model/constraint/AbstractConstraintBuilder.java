@@ -7,6 +7,7 @@ package gov.nist.secauto.metaschema.core.model.constraint;
 
 import gov.nist.secauto.metaschema.core.datatype.markup.MarkupLine;
 import gov.nist.secauto.metaschema.core.datatype.markup.MarkupMultiline;
+import gov.nist.secauto.metaschema.core.metapath.IMetapathExpression;
 import gov.nist.secauto.metaschema.core.model.IAttributable;
 import gov.nist.secauto.metaschema.core.model.ISource;
 import gov.nist.secauto.metaschema.core.model.constraint.IConstraint.Level;
@@ -42,7 +43,7 @@ public abstract class AbstractConstraintBuilder<
   @NonNull
   private Level level = IConstraint.DEFAULT_LEVEL;
   @NonNull
-  private String target = IConstraint.DEFAULT_TARGET_METAPATH;
+  private IMetapathExpression target = IConstraint.DEFAULT_TARGET_METAPATH;
   @NonNull
   private Map<IAttributable.Key, Set<String>> properties = new LinkedHashMap<>(); // NOPMD not thread safe
   private MarkupMultiline remarks;
@@ -131,7 +132,7 @@ public abstract class AbstractConstraintBuilder<
    * @return this builder
    */
   @NonNull
-  public T target(@NonNull String target) {
+  public T target(@NonNull IMetapathExpression target) {
     this.target = target;
     return getThis();
   }
@@ -198,7 +199,7 @@ public abstract class AbstractConstraintBuilder<
    *
    * @throws NullPointerException
    *           if a required value is {@code null}
-   * @throws IllegalStateException
+   * @throws ConstraintInitializationException
    *           in other cases where the combination of values is inappropriate
    */
   protected void validate() {
@@ -217,6 +218,8 @@ public abstract class AbstractConstraintBuilder<
    * Generate the built instance after validating the provided data.
    *
    * @return the built instance
+   * @throws ConstraintInitializationException
+   *           if the underlying data is incomplete or invalid
    */
   @NonNull
   public R build() {
@@ -281,7 +284,7 @@ public abstract class AbstractConstraintBuilder<
    * @return the target Metapath expression
    */
   @NonNull
-  protected String getTarget() {
+  protected IMetapathExpression getTarget() {
     return target;
   }
 

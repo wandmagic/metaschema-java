@@ -6,13 +6,13 @@
 package gov.nist.secauto.metaschema.core.metapath.function.library;
 
 import gov.nist.secauto.metaschema.core.metapath.DynamicContext;
-import gov.nist.secauto.metaschema.core.metapath.ICollectionValue;
-import gov.nist.secauto.metaschema.core.metapath.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.MetapathConstants;
 import gov.nist.secauto.metaschema.core.metapath.function.FunctionUtils;
 import gov.nist.secauto.metaschema.core.metapath.function.IArgument;
 import gov.nist.secauto.metaschema.core.metapath.function.IFunction;
+import gov.nist.secauto.metaschema.core.metapath.item.ICollectionValue;
 import gov.nist.secauto.metaschema.core.metapath.item.IItem;
+import gov.nist.secauto.metaschema.core.metapath.item.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IAnyAtomicItem;
 import gov.nist.secauto.metaschema.core.metapath.item.function.IMapItem;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
@@ -29,7 +29,7 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 public final class MapEntry {
   private static final String NAME = "entry";
   @NonNull
-  public static final IFunction SIGNATURE = IFunction.builder()
+  static final IFunction SIGNATURE = IFunction.builder()
       .name(NAME)
       .namespace(MetapathConstants.NS_METAPATH_FUNCTIONS_MAP)
       .deterministic()
@@ -37,15 +37,15 @@ public final class MapEntry {
       .focusIndependent()
       .argument(IArgument.builder()
           .name("key")
-          .type(IAnyAtomicItem.class)
+          .type(IAnyAtomicItem.type())
           .one()
           .build())
       .argument(IArgument.builder()
           .name("item")
-          .type(IItem.class)
+          .type(IItem.type())
           .zeroOrMore()
           .build())
-      .returnType(IItem.class)
+      .returnType(IMapItem.type())
       .returnOne()
       .functionHandler(MapEntry::execute)
       .build();
@@ -64,7 +64,7 @@ public final class MapEntry {
     @SuppressWarnings("unchecked")
     T value = (T) arguments.get(1).toCollectionValue();
 
-    return entry(key, value).asSequence();
+    return entry(key, value).toSequence();
   }
 
   /**

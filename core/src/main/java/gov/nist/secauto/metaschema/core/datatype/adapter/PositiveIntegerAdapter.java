@@ -7,36 +7,37 @@ package gov.nist.secauto.metaschema.core.datatype.adapter;
 
 import gov.nist.secauto.metaschema.core.metapath.MetapathConstants;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IPositiveIntegerItem;
+import gov.nist.secauto.metaschema.core.qname.EQNameFactory;
+import gov.nist.secauto.metaschema.core.qname.IEnhancedQName;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 
 import java.math.BigInteger;
 import java.util.List;
 
-import javax.xml.namespace.QName;
-
 import edu.umd.cs.findbugs.annotations.NonNull;
 
+/**
+ * Support for the Metaschema <a href=
+ * "https://pages.nist.gov/metaschema/specification/datatypes/#positive-integer">positive-integer</a>
+ * data type.
+ */
 public class PositiveIntegerAdapter
     extends AbstractIntegerAdapter<IPositiveIntegerItem> {
   @NonNull
-  private static final List<QName> NAMES = ObjectUtils.notNull(
+  private static final List<IEnhancedQName> NAMES = ObjectUtils.notNull(
       List.of(
-          new QName(MetapathConstants.NS_METAPATH.toASCIIString(), "positive-integer"),
+          EQNameFactory.instance().newQName(MetapathConstants.NS_METAPATH, "positive-integer"),
           // for backwards compatibility with original type name
-          new QName(MetapathConstants.NS_METAPATH.toASCIIString(), "positiveInteger")));
+          EQNameFactory.instance().newQName(MetapathConstants.NS_METAPATH, "positiveInteger")));
 
   PositiveIntegerAdapter() {
+    super(IPositiveIntegerItem.class, IPositiveIntegerItem::cast);
     // avoid general construction
   }
 
   @Override
-  public List<QName> getNames() {
+  public List<IEnhancedQName> getNames() {
     return NAMES;
-  }
-
-  @Override
-  public Class<IPositiveIntegerItem> getItemClass() {
-    return IPositiveIntegerItem.class;
   }
 
   @Override

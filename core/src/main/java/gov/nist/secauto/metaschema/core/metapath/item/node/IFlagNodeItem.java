@@ -1,18 +1,21 @@
 
 package gov.nist.secauto.metaschema.core.metapath.item.node;
 
+import gov.nist.secauto.metaschema.core.metapath.StaticContext;
 import gov.nist.secauto.metaschema.core.metapath.format.IPathFormatter;
-import gov.nist.secauto.metaschema.core.metapath.item.atomic.IAtomicValuedItem;
+import gov.nist.secauto.metaschema.core.metapath.item.ICollectionValue;
+import gov.nist.secauto.metaschema.core.metapath.type.IAtomicOrUnionType;
+import gov.nist.secauto.metaschema.core.metapath.type.IItemType;
+import gov.nist.secauto.metaschema.core.metapath.type.IKindTest;
 import gov.nist.secauto.metaschema.core.model.IFlagDefinition;
 import gov.nist.secauto.metaschema.core.model.IFlagInstance;
+import gov.nist.secauto.metaschema.core.qname.IEnhancedQName;
 
 import java.net.URI;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Stream;
-
-import javax.xml.namespace.QName;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
@@ -22,10 +25,25 @@ import edu.umd.cs.findbugs.annotations.Nullable;
  */
 
 public interface IFlagNodeItem
-    extends IDefinitionNodeItem<IFlagDefinition, IFlagInstance>, IAtomicValuedItem {
+    extends IDefinitionNodeItem<IFlagDefinition, IFlagInstance>, IAtomicValuedNodeItem {
+  /**
+   * Get the static type information of the node item.
+   *
+   * @return the item type
+   */
+  @NonNull
+  static IItemType type() {
+    return IItemType.flag();
+  }
+
   @Override
-  default NodeItemType getNodeItemType() {
-    return NodeItemType.FLAG;
+  default NodeItemKind getNodeItemKind() {
+    return NodeItemKind.FLAG;
+  }
+
+  @Override
+  default NodeType getNodeType() {
+    return NodeType.FLAG;
   }
 
   @Override
@@ -38,6 +56,20 @@ public interface IFlagNodeItem
 
   @Override
   IFlagInstance getInstance();
+
+  @Override
+  default IKindTest<IFlagNodeItem> getType() {
+    StaticContext staticContext = getStaticContext();
+    return IItemType.flag(
+        getQName(),
+        getDefinition().getDefinitionQName().toEQName(staticContext),
+        staticContext);
+  }
+
+  @Override
+  default IAtomicOrUnionType<?> getValueItemType() {
+    return getDefinition().getJavaTypeAdapter().getItemType();
+  }
 
   @Override
   @Nullable
@@ -61,7 +93,7 @@ public interface IFlagNodeItem
    * FlagContainer do not have flag items. This call should return {@code null}.
    */
   @Override
-  default IFlagNodeItem getFlagByName(@NonNull QName name) {
+  default IFlagNodeItem getFlagByName(@NonNull IEnhancedQName name) {
     // a flag does not have flags
     return null;
   }
@@ -95,7 +127,7 @@ public interface IFlagNodeItem
    */
   @SuppressWarnings("null")
   @Override
-  default List<? extends IModelNodeItem<?, ?>> getModelItemsByName(QName name) {
+  default List<? extends IModelNodeItem<?, ?>> getModelItemsByName(IEnhancedQName name) {
     // a flag does not have model items
     return Collections.emptyList();
   }
@@ -121,5 +153,11 @@ public interface IFlagNodeItem
   @Override
   default <CONTEXT, RESULT> RESULT accept(@NonNull INodeItemVisitor<CONTEXT, RESULT> visitor, CONTEXT context) {
     return visitor.visitFlag(this, context);
+  }
+
+  @Override
+  default boolean deepEquals(ICollectionValue other) {
+    return other instanceof IFlagNodeItem
+        && NodeComparators.compareNodeItem(this, (IFlagNodeItem) other) == 0;
   }
 }

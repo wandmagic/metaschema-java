@@ -5,6 +5,7 @@
 
 package gov.nist.secauto.metaschema.core.model.xml;
 
+import gov.nist.secauto.metaschema.core.metapath.IMetapathExpression;
 import gov.nist.secauto.metaschema.core.metapath.StaticContext;
 import gov.nist.secauto.metaschema.core.model.AbstractLoader;
 import gov.nist.secauto.metaschema.core.model.IAssemblyDefinition;
@@ -42,6 +43,9 @@ import java.util.stream.Stream;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 
+/**
+ * Used to load a set of external constraints from an XML-based resource.
+ */
 @SuppressWarnings("PMD.CouplingBetweenObjects")
 public class XmlMetaConstraintLoader
     extends AbstractLoader<List<IConstraintSet>>
@@ -63,12 +67,12 @@ public class XmlMetaConstraintLoader
             ObjectUtils.notNull(binding.getPrefix()), ObjectUtils.notNull(binding.getUri())));
     builder.useWildcardWhenNamespaceNotDefaulted(true);
 
-    ISource source = ISource.externalSource(builder.build());
+    ISource source = ISource.externalSource(builder.build(), true);
 
     List<ITargetedConstraints> targetedConstraints = ObjectUtils.notNull(constraints.getContextList().stream()
         .flatMap(context -> parseContext(ObjectUtils.notNull(context), null, source).getTargetedConstraints().stream())
         .collect(Collectors.toList()));
-    return CollectionUtil.singletonList(new MetaConstraintSet(targetedConstraints));
+    return CollectionUtil.singletonList(new MetaConstraintSet(source, targetedConstraints));
   }
 
   private Context parseContext(
@@ -86,16 +90,14 @@ public class XmlMetaConstraintLoader
           .collect(Collectors.toList());
       metapaths = ObjectUtils.notNull(contextObj.getMetapathList().stream()
           .map(MetaschemaMetapathReferenceType::getTarget)
-          .flatMap(childPath -> {
-            return parentMetapaths.stream()
-                .map(parentPath -> parentPath + '/' + childPath);
-          })
+          .flatMap(childPath -> parentMetapaths.stream()
+              .map(parentPath -> parentPath + '/' + childPath))
           .collect(Collectors.toList()));
     }
 
-    IModelConstrained constraints = new AssemblyConstraintSet();
+    IModelConstrained constraints = new AssemblyConstraintSet(source);
     ConstraintXmlSupport.parse(constraints, ObjectUtils.notNull(contextObj.getConstraints()), source);
-    Context context = new Context(metapaths, constraints);
+    Context context = new Context(source, metapaths, constraints);
 
     List<Context> childContexts = contextObj.getContextList().stream()
         .map(childObj -> parseContext(ObjectUtils.notNull(childObj), context, source))
@@ -130,6 +132,8 @@ public class XmlMetaConstraintLoader
 
   private static class Context {
     @NonNull
+    private final ISource source;
+    @NonNull
     private final List<String> metapaths;
     @NonNull
     private final IModelConstrained constraints;
@@ -137,8 +141,10 @@ public class XmlMetaConstraintLoader
     private final List<Context> childContexts = new LinkedList<>();
 
     public Context(
+        @NonNull ISource source,
         @NonNull List<String> metapaths,
         @NonNull IModelConstrained constraints) {
+      this.source = source;
       this.metapaths = metapaths;
       this.constraints = constraints;
     }
@@ -146,7 +152,12 @@ public class XmlMetaConstraintLoader
     public List<ITargetedConstraints> getTargetedConstraints() {
       return Stream.concat(
           getMetapaths().stream()
-              .map(metapath -> new MetaTargetedContraints(ObjectUtils.notNull(metapath), constraints)),
+              .map(metapath -> new MetaTargetedContraints(
+                  source,
+                  IMetapathExpression.lazyCompile(
+                      ObjectUtils.requireNonNull(metapath),
+                      source.getStaticContext()),
+                  constraints)),
           childContexts.stream()
               .flatMap(child -> child.getTargetedConstraints().stream()))
           .collect(Collectors.toList());
@@ -166,9 +177,10 @@ public class XmlMetaConstraintLoader
       implements IFeatureModelConstrained {
 
     protected MetaTargetedContraints(
-        @NonNull String target,
+        @NonNull ISource source,
+        @NonNull IMetapathExpression target,
         @NonNull IModelConstrained constraints) {
-      super(target, constraints);
+      super(source, target, constraints);
     }
 
     /**
@@ -212,10 +224,20 @@ public class XmlMetaConstraintLoader
 
   private static final class MetaConstraintSet implements IConstraintSet {
     @NonNull
+    private final ISource source;
+    @NonNull
     private final List<ITargetedConstraints> targetedConstraints;
 
-    private MetaConstraintSet(@NonNull List<ITargetedConstraints> targetedConstraints) {
+    private MetaConstraintSet(
+        @NonNull ISource source,
+        @NonNull List<ITargetedConstraints> targetedConstraints) {
+      this.source = source;
       this.targetedConstraints = targetedConstraints;
+    }
+
+    @Override
+    public ISource getSource() {
+      return source;
     }
 
     @Override

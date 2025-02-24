@@ -10,14 +10,18 @@ import gov.nist.secauto.metaschema.core.model.IFlagInstance;
 
 import java.util.Map;
 
-import javax.xml.namespace.QName;
-
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 
+/**
+ * A flag container.
+ *
+ * @param <FI>
+ *          the Java type of the flags supported by the container
+ */
 public class DefaultContainerFlagSupport<FI extends IFlagInstance> implements IContainerFlagSupport<FI> {
   @NonNull
-  private final Map<QName, FI> instances;
+  private final Map<Integer, FI> instances;
   @Nullable
   private final FI jsonKey;
 
@@ -31,14 +35,14 @@ public class DefaultContainerFlagSupport<FI extends IFlagInstance> implements IC
    *          configured
    */
   public DefaultContainerFlagSupport(
-      @NonNull Map<QName, FI> instances,
+      @NonNull Map<Integer, FI> instances,
       @Nullable FI jsonKey) {
     this.instances = instances;
     this.jsonKey = jsonKey;
   }
 
   @Override
-  public Map<QName, FI> getFlagInstanceMap() {
+  public Map<Integer, FI> getFlagInstanceMap() {
     return instances;
   }
 

@@ -8,10 +8,10 @@ package gov.nist.secauto.metaschema.databind.codegen.impl;
 import com.squareup.javapoet.AnnotationSpec;
 
 import gov.nist.secauto.metaschema.core.datatype.markup.MarkupMultiline;
-import gov.nist.secauto.metaschema.core.metapath.StaticContext;
 import gov.nist.secauto.metaschema.core.model.IFlagDefinition;
 import gov.nist.secauto.metaschema.core.model.ISource;
 import gov.nist.secauto.metaschema.core.model.constraint.ILet;
+import gov.nist.secauto.metaschema.core.qname.IEnhancedQName;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 import gov.nist.secauto.metaschema.databind.model.annotations.BoundFlag;
 
@@ -24,24 +24,20 @@ import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
-import javax.xml.namespace.QName;
-
 class AnnotationGeneratorTest {
   @RegisterExtension
   final JUnit5Mockery context = new JUnit5Mockery();
 
   @Test
   void letAssignmentTest() {
-    ISource source = ISource.externalSource(StaticContext.builder()
-        .baseUri(ObjectUtils.notNull(URI.create("https://example.com/")))
-        .build());
+    ISource source = ISource.externalSource(ObjectUtils.notNull(URI.create("https://example.com/")));
 
     String variable = "var1";
     String expression = "1 + 1";
     MarkupMultiline remarks = MarkupMultiline.fromMarkdown("Test");
 
     ILet let = ILet.of(
-        new QName(variable),
+        IEnhancedQName.of(variable),
         expression,
         source,
         remarks);

@@ -5,9 +5,9 @@
 
 package gov.nist.secauto.metaschema.core.metapath.function;
 
-import gov.nist.secauto.metaschema.core.metapath.ISequence;
-import gov.nist.secauto.metaschema.core.metapath.InvalidTypeMetapathException;
+import gov.nist.secauto.metaschema.core.metapath.function.impl.OperationFunctions;
 import gov.nist.secauto.metaschema.core.metapath.function.library.FnNot;
+import gov.nist.secauto.metaschema.core.metapath.item.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IAnyAtomicItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IBase64BinaryItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IBooleanItem;
@@ -21,11 +21,21 @@ import gov.nist.secauto.metaschema.core.metapath.item.atomic.INumericItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IStringItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IUntypedAtomicItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IYearMonthDurationItem;
+import gov.nist.secauto.metaschema.core.metapath.type.InvalidTypeMetapathException;
 
 import java.util.Locale;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
+/**
+ * A collection of comparison functions supporting value and general
+ * comparisons.
+ * <p>
+ * Based on the XPath 3.1
+ * <a href="https://www.w3.org/TR/xpath-31/#id-comparisons">comparison
+ * expressions</a> syntax.
+ */
+// FIXME: Add unit tests
 @SuppressWarnings({ "PMD.GodClass", "PMD.CyclomaticComplexity" })
 public final class ComparisonFunctions {
   /**
@@ -91,15 +101,15 @@ public final class ComparisonFunctions {
    * @return a or an empty {@link ISequence} if either item is {@code null}
    */
   @NonNull
-  public static IBooleanItem generalCompairison( // NOPMD - acceptable complexity
+  public static IBooleanItem generalComparison( // NOPMD - acceptable complexity
       @NonNull ISequence<? extends IAnyAtomicItem> leftItems,
       @NonNull Operator operator,
       @NonNull ISequence<? extends IAnyAtomicItem> rightItems) {
 
     IBooleanItem retval = IBooleanItem.FALSE;
-    for (IAnyAtomicItem left : leftItems.getValue()) {
+    for (IAnyAtomicItem left : leftItems) {
       assert left != null;
-      for (IAnyAtomicItem right : rightItems.getValue()) {
+      for (IAnyAtomicItem right : rightItems) {
         assert right != null;
         IAnyAtomicItem leftCast;
         IAnyAtomicItem rightCast;
@@ -147,10 +157,10 @@ public final class ComparisonFunctions {
       retval = IDecimalItem.cast(other);
     } else if (item instanceof IDayTimeDurationItem) {
       retval = IDayTimeDurationItem.cast(other);
-    } else if (item instanceof IDayTimeDurationItem) {
+    } else if (item instanceof IYearMonthDurationItem) {
       retval = IYearMonthDurationItem.cast(other);
     } else {
-      retval = item.getJavaTypeAdapter().cast(other);
+      retval = item.castAsType(other);
     }
     return retval;
   }
@@ -210,39 +220,29 @@ public final class ComparisonFunctions {
    * @return the comparison result
    */
   @NonNull
-  public static IBooleanItem stringCompare(@NonNull IStringItem left, @NonNull Operator operator,
+  public static IBooleanItem stringCompare(
+      @NonNull IStringItem left,
+      @NonNull Operator operator,
       @NonNull IStringItem right) {
     int result = left.compareTo(right);
     boolean retval;
     switch (operator) {
     case EQ:
-      // retval = OperationFunctions.opNumericEqual(left.compare(right),
-      // IIntegerItem.ZERO);
       retval = result == 0;
       break;
     case GE:
-      // retval = OperationFunctions.opNumericGreaterThan(left.compare(right),
-      // IIntegerItem.NEGATIVE_ONE);
       retval = result >= 0;
       break;
     case GT:
-      // retval = OperationFunctions.opNumericGreaterThan(left.compare(right),
-      // IIntegerItem.ZERO);
       retval = result > 0;
       break;
     case LE:
-      // retval = OperationFunctions.opNumericLessThan(left.compare(right),
-      // IIntegerItem.ONE);
       retval = result <= 0;
       break;
     case LT:
-      // retval = OperationFunctions.opNumericLessThan(left.compare(right),
-      // IIntegerItem.ZERO);
       retval = result < 0;
       break;
     case NE:
-      // retval = FnNot.fnNot(OperationFunctions.opNumericEqual(left.compare(right),
-      // IIntegerItem.ZERO));
       retval = result != 0;
       break;
     default:

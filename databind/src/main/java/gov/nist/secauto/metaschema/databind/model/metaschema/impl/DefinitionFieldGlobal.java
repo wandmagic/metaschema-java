@@ -14,8 +14,10 @@ import gov.nist.secauto.metaschema.core.model.IAttributable;
 import gov.nist.secauto.metaschema.core.model.IContainerFlagSupport;
 import gov.nist.secauto.metaschema.core.model.IFieldInstance;
 import gov.nist.secauto.metaschema.core.model.IFlagInstance;
+import gov.nist.secauto.metaschema.core.model.ISource;
 import gov.nist.secauto.metaschema.core.model.constraint.IValueConstrained;
 import gov.nist.secauto.metaschema.core.model.constraint.ValueConstraintSet;
+import gov.nist.secauto.metaschema.core.model.util.ModuleUtils;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 import gov.nist.secauto.metaschema.databind.model.IBoundInstanceModelGroupedAssembly;
 import gov.nist.secauto.metaschema.databind.model.metaschema.IBindingDefinitionModel;
@@ -58,7 +60,12 @@ public class DefinitionFieldGlobal
     super(module);
     this.binding = binding;
     this.properties = ModelSupport.parseProperties(ObjectUtils.requireNonNull(binding.getProps()));
-    this.javaTypeAdapter = ModelSupport.dataType(binding.getAsType());
+
+    ISource source = module.getSource();
+
+    this.javaTypeAdapter = ModelSupport.dataType(
+        binding.getAsType(),
+        source);
     this.defaultValue = ModelSupport.defaultValue(binding.getDefault(), this.javaTypeAdapter);
     this.flagContainer = ObjectUtils.notNull(Lazy.lazy(() -> {
       JsonKey jsonKey = binding.getJsonKey();
@@ -69,16 +76,16 @@ public class DefinitionFieldGlobal
           jsonKey == null ? null : jsonKey.getFlagRef());
     }));
     this.valueConstraints = ObjectUtils.notNull(Lazy.lazy(() -> {
-      IValueConstrained retval = new ValueConstraintSet();
+      IValueConstrained retval = new ValueConstraintSet(source);
       FieldConstraints constraints = binding.getConstraint();
       if (constraints != null) {
-        ConstraintBindingSupport.parse(retval, constraints, module.getSource());
+        ConstraintBindingSupport.parse(retval, constraints, source);
       }
       return retval;
     }));
     this.boundNodeItem = ObjectUtils.notNull(Lazy.lazy(() -> ObjectUtils.requireNonNull(ModelSupport.toNodeItem(
         module,
-        bindingInstance.getXmlQName(),
+        bindingInstance.getQName(),
         position))));
   }
 
@@ -167,7 +174,7 @@ public class DefinitionFieldGlobal
     String name = obj == null ? null : obj.getFlagRef();
     return name == null ? null
         : ObjectUtils.requireNonNull(getFlagInstanceByName(
-            getContainingModule().toFlagQName(name)));
+            ModuleUtils.parseFlagName(getContainingModule(), name).getIndexPosition()));
   }
 
   @Override

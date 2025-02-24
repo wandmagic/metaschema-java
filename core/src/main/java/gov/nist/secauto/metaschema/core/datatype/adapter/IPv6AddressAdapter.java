@@ -10,11 +10,11 @@ import com.fasterxml.jackson.databind.jsonFormatVisitors.JsonFormatTypes;
 import gov.nist.secauto.metaschema.core.datatype.AbstractDataTypeAdapter;
 import gov.nist.secauto.metaschema.core.metapath.MetapathConstants;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IIPv6AddressItem;
+import gov.nist.secauto.metaschema.core.qname.EQNameFactory;
+import gov.nist.secauto.metaschema.core.qname.IEnhancedQName;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 
 import java.util.List;
-
-import javax.xml.namespace.QName;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import inet.ipaddr.AddressStringException;
@@ -23,11 +23,17 @@ import inet.ipaddr.IPAddressStringParameters;
 import inet.ipaddr.IncompatibleAddressException;
 import inet.ipaddr.ipv6.IPv6Address;
 
+/**
+ * Support for the Metaschema <a href=
+ * "https://pages.nist.gov/metaschema/specification/datatypes/#ip-v6-address">ip-v6-address</a>
+ * data type.
+ */
 public class IPv6AddressAdapter
     extends AbstractDataTypeAdapter<IPv6Address, IIPv6AddressItem> {
   @NonNull
-  private static final List<QName> NAMES = ObjectUtils.notNull(
-      List.of(new QName(MetapathConstants.NS_METAPATH.toASCIIString(), "ip-v6-address")));
+  private static final List<IEnhancedQName> NAMES = ObjectUtils.notNull(
+      List.of(
+          EQNameFactory.instance().newQName(MetapathConstants.NS_METAPATH, "ip-v6-address")));
   private static final IPAddressStringParameters IP_V_6;
 
   static {
@@ -37,11 +43,11 @@ public class IPv6AddressAdapter
   }
 
   IPv6AddressAdapter() {
-    super(IPv6Address.class);
+    super(IPv6Address.class, IIPv6AddressItem.class, IIPv6AddressItem::cast);
   }
 
   @Override
-  public List<QName> getNames() {
+  public List<IEnhancedQName> getNames() {
     return NAMES;
   }
 
@@ -64,11 +70,6 @@ public class IPv6AddressAdapter
   public IPv6Address copy(Object obj) {
     // value is immutable
     return (IPv6Address) obj;
-  }
-
-  @Override
-  public Class<IIPv6AddressItem> getItemClass() {
-    return IIPv6AddressItem.class;
   }
 
   @Override

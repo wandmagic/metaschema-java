@@ -5,37 +5,62 @@
 
 package gov.nist.secauto.metaschema.core.metapath.cst;
 
-import gov.nist.secauto.metaschema.core.metapath.ISequence;
-import gov.nist.secauto.metaschema.core.metapath.TypeMetapathException;
-import gov.nist.secauto.metaschema.core.metapath.function.library.FnData;
-import gov.nist.secauto.metaschema.core.metapath.item.atomic.IAnyAtomicItem;
+import gov.nist.secauto.metaschema.core.metapath.DynamicContext;
+import gov.nist.secauto.metaschema.core.metapath.IExpression;
+import gov.nist.secauto.metaschema.core.metapath.item.IItem;
+import gov.nist.secauto.metaschema.core.metapath.item.ISequence;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
-import edu.umd.cs.findbugs.annotations.Nullable;
 
+/**
+ * A common base class for Metapath expression implementations, providing common
+ * utility functions.
+ */
 public abstract class AbstractExpression implements IExpression {
+  @NonNull
+  private final String text;
+
   /**
-   * Get the first data item of the provided {@code sequence} cast to an
-   * {@link IAnyAtomicItem}.
+   * Construct a new expression.
    *
-   * @param sequence
-   *          the sequence to get the data item from
-   * @param requireSingleton
-   *          if {@code true} then a {@link TypeMetapathException} is thrown if
-   *          the sequence contains more than one item
-   * @return {@code null} if the sequence is empty, or the item otherwise
-   * @throws TypeMetapathException
-   *           if the sequence contains more than one item and requireSingleton is
-   *           {@code true}, or if the data item cannot be cast
+   * @param text
+   *          the parsed text of the expression
    */
-  @Nullable
-  public static IAnyAtomicItem getFirstDataItem(@NonNull ISequence<?> sequence,
-      boolean requireSingleton) {
-    return FnData.fnData(sequence).getFirstItem(requireSingleton);
+  public AbstractExpression(@NonNull String text) {
+    this.text = text;
+  }
+
+  @Override
+  public String getText() {
+    return text;
   }
 
   @Override
   public String toString() {
     return CSTPrinter.toString(this);
   }
+
+  @Override
+  public ISequence<?> accept(DynamicContext dynamicContext, ISequence<?> focus) {
+    dynamicContext.pushExecutionStack(this);
+    try {
+      return evaluate(dynamicContext, focus);
+    } finally {
+      dynamicContext.popExecutionStack(this);
+    }
+  }
+
+  /**
+   * Evaluate this expression, producing a sequence result.
+   *
+   * @param dynamicContext
+   *          the dynamic evaluation context
+   * @param focus
+   *          the outer focus of the expression
+   * @return the result of evaluation
+   */
+  @NonNull
+  protected abstract ISequence<? extends IItem> evaluate(
+      @NonNull DynamicContext dynamicContext,
+      @NonNull ISequence<?> focus);
 }

@@ -6,8 +6,9 @@
 package gov.nist.secauto.metaschema.core.metapath.function.library;
 
 import static gov.nist.secauto.metaschema.core.metapath.TestUtils.decimal;
+import static gov.nist.secauto.metaschema.core.metapath.TestUtils.integer;
 
-import gov.nist.secauto.metaschema.core.metapath.ISequence;
+import gov.nist.secauto.metaschema.core.metapath.item.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.INumericItem;
 import gov.nist.secauto.metaschema.core.util.CollectionUtil;
 
@@ -25,8 +26,11 @@ class FnCeilingTest
 
   private static Stream<Arguments> provideValues() {
     return Stream.of(
-        Arguments.of(decimal("11"), decimal("10.5")),
-        Arguments.of(decimal("-10"), decimal("-10.5")));
+        Arguments.of(integer(11), decimal("10.5")),
+        Arguments.of(integer(-10), decimal("-10.5")),
+        Arguments.of(integer(11), decimal("10.1")),
+        Arguments.of(integer(0), decimal("0.0")),
+        Arguments.of(integer(1), decimal("0.999999")));
   }
 
   @ParameterizedTest

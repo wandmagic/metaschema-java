@@ -6,14 +6,14 @@
 package gov.nist.secauto.metaschema.core.metapath.function.library;
 
 import gov.nist.secauto.metaschema.core.metapath.DynamicContext;
-import gov.nist.secauto.metaschema.core.metapath.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.MetapathConstants;
 import gov.nist.secauto.metaschema.core.metapath.function.FunctionUtils;
 import gov.nist.secauto.metaschema.core.metapath.function.IArgument;
 import gov.nist.secauto.metaschema.core.metapath.function.IFunction;
 import gov.nist.secauto.metaschema.core.metapath.function.InvalidArgumentFunctionException;
-import gov.nist.secauto.metaschema.core.metapath.function.OperationFunctions;
+import gov.nist.secauto.metaschema.core.metapath.function.impl.OperationFunctions;
 import gov.nist.secauto.metaschema.core.metapath.item.IItem;
+import gov.nist.secauto.metaschema.core.metapath.item.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IAnyAtomicItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IDayTimeDurationItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IDecimalItem;
@@ -51,10 +51,10 @@ public final class FnAvg {
       .focusIndependent()
       .argument(IArgument.builder()
           .name("arg")
-          .type(IAnyAtomicItem.class)
+          .type(IAnyAtomicItem.type())
           .zeroOrMore()
           .build())
-      .returnType(IAnyAtomicItem.class)
+      .returnType(IAnyAtomicItem.type())
       .returnZeroOrOne()
       .functionHandler(FnAvg::execute)
       .build();
@@ -73,9 +73,7 @@ public final class FnAvg {
     ISequence<? extends IAnyAtomicItem> sequence = FunctionUtils.asType(
         ObjectUtils.requireNonNull(arguments.get(0)));
 
-    List<? extends IAnyAtomicItem> items = sequence.getValue();
-
-    return ISequence.of(average(items));
+    return ISequence.of(average(sequence));
   }
 
   /**

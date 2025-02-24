@@ -7,12 +7,55 @@ package gov.nist.secauto.metaschema.core.metapath.item.atomic;
 
 import gov.nist.secauto.metaschema.core.datatype.adapter.MetaschemaDataTypeProvider;
 import gov.nist.secauto.metaschema.core.metapath.function.InvalidValueForCastFunctionException;
+import gov.nist.secauto.metaschema.core.metapath.item.atomic.impl.UuidItemImpl;
+import gov.nist.secauto.metaschema.core.metapath.type.IAtomicOrUnionType;
+import gov.nist.secauto.metaschema.core.metapath.type.InvalidTypeMetapathException;
 
 import java.util.UUID;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
+/**
+ * An atomic Metapath item containing a UUID data value.
+ */
 public interface IUuidItem extends IStringItem {
+  /**
+   * Get the type information for this item.
+   *
+   * @return the type information
+   */
+  @NonNull
+  static IAtomicOrUnionType<IUuidItem> type() {
+    return MetaschemaDataTypeProvider.UUID.getItemType();
+  }
+
+  @Override
+  default IAtomicOrUnionType<IUuidItem> getType() {
+    return type();
+  }
+
+  /**
+   * Construct a new UUID item using the provided string {@code value}.
+   *
+   * @param value
+   *          a string representing a UUID
+   * @return the new item
+   * @throws InvalidTypeMetapathException
+   *           if the given string violates RFC4122
+   */
+  @NonNull
+  static IUuidItem valueOf(@NonNull String value) {
+    try {
+      return valueOf(MetaschemaDataTypeProvider.UUID.parse(value));
+    } catch (IllegalArgumentException ex) {
+      throw new InvalidTypeMetapathException(
+          null,
+          String.format("Invalid UUID value '%s'. %s",
+              value,
+              ex.getLocalizedMessage()),
+          ex);
+    }
+  }
 
   /**
    * Construct a new item using the provided {@code value}.
@@ -49,7 +92,14 @@ public interface IUuidItem extends IStringItem {
    */
   @NonNull
   static IUuidItem cast(@NonNull IAnyAtomicItem item) {
-    return MetaschemaDataTypeProvider.UUID.cast(item);
+    try {
+      return item instanceof IUuidItem
+          ? (IUuidItem) item
+          : valueOf(item.asString());
+    } catch (IllegalStateException | InvalidTypeMetapathException ex) {
+      // asString can throw IllegalStateException exception
+      throw new InvalidValueForCastFunctionException(ex);
+    }
   }
 
   /**

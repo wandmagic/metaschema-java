@@ -5,6 +5,7 @@
 
 package gov.nist.secauto.metaschema.core.metapath.cst;
 
+import gov.nist.secauto.metaschema.core.metapath.IExpression;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 
 import java.util.List;
@@ -13,6 +14,12 @@ import java.util.stream.Collectors;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 
+/**
+ * A collection of utilities supporting the static and dynamic evaluation of
+ * Metapath expressions.
+ *
+ * @since 1.0.0
+ */
 public final class ExpressionUtils {
   private ExpressionUtils() {
     // disable

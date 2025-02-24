@@ -7,33 +7,40 @@ package gov.nist.secauto.metaschema.core.datatype.markup;
 
 import com.fasterxml.jackson.core.JsonParser;
 
-import gov.nist.secauto.metaschema.core.datatype.markup.flexmark.XmlMarkupParser;
 import gov.nist.secauto.metaschema.core.metapath.MetapathConstants;
-import gov.nist.secauto.metaschema.core.metapath.item.atomic.IMarkupItem;
+import gov.nist.secauto.metaschema.core.metapath.item.atomic.IMarkupMultilineItem;
+import gov.nist.secauto.metaschema.core.qname.EQNameFactory;
+import gov.nist.secauto.metaschema.core.qname.IEnhancedQName;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 
 import org.codehaus.stax2.XMLEventReader2;
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.List;
 
-import javax.xml.namespace.QName;
 import javax.xml.stream.XMLStreamException;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
+/**
+ * Support for the Metaschema <a href=
+ * "https://pages.nist.gov/metaschema/specification/datatypes/#markup-line">markup-multiline</a>
+ * data type.
+ */
 public class MarkupMultilineAdapter
-    extends AbstractMarkupAdapter<MarkupMultiline> {
+    extends AbstractMarkupAdapter<MarkupMultiline, IMarkupMultilineItem> {
   @NonNull
-  private static final List<QName> NAMES = ObjectUtils.notNull(
-      List.of(new QName(MetapathConstants.NS_METAPATH.toASCIIString(), "markup-multiline")));
+  private static final List<IEnhancedQName> NAMES = ObjectUtils.notNull(
+      List.of(
+          EQNameFactory.instance().newQName(MetapathConstants.NS_METAPATH, "markup-multiline")));
 
   MarkupMultilineAdapter() {
-    super(MarkupMultiline.class);
+    super(MarkupMultiline.class, IMarkupMultilineItem.class, IMarkupMultilineItem::cast);
   }
 
   @Override
-  public List<QName> getNames() {
+  public List<IEnhancedQName> getNames() {
     return NAMES;
   }
 
@@ -52,16 +59,16 @@ public class MarkupMultilineAdapter
 
   @SuppressWarnings("null")
   @Override
-  public MarkupMultiline parse(XMLEventReader2 eventReader) throws IOException {
+  public MarkupMultiline parse(XMLEventReader2 eventReader, URI resource) throws IOException {
     try {
-      return XmlMarkupParser.instance().parseMarkupMultiline(eventReader);
+      return XmlMarkupParser.instance().parseMarkupMultiline(eventReader, resource);
     } catch (XMLStreamException ex) {
       throw new IOException(ex);
     }
   }
 
   @Override
-  public MarkupMultiline parse(JsonParser parser) throws IOException {
+  public MarkupMultiline parse(JsonParser parser, URI resource) throws IOException {
     @SuppressWarnings("null")
     MarkupMultiline retval = parse(parser.getValueAsString());
     // skip past value
@@ -70,7 +77,7 @@ public class MarkupMultilineAdapter
   }
 
   @Override
-  public boolean canHandleQName(QName nextQName) {
+  public boolean canHandleQName(IEnhancedQName nextQName) {
     return true;
   }
 
@@ -80,13 +87,8 @@ public class MarkupMultilineAdapter
   }
 
   @Override
-  public Class<IMarkupItem> getItemClass() {
-    return IMarkupItem.class;
-  }
-
-  @Override
-  public IMarkupItem newItem(Object value) {
+  public IMarkupMultilineItem newItem(Object value) {
     MarkupMultiline item = toValue(value);
-    return IMarkupItem.valueOf(item);
+    return IMarkupMultilineItem.valueOf(item);
   }
 }

@@ -6,10 +6,11 @@
 package gov.nist.secauto.metaschema.core.model.constraint;
 
 import gov.nist.secauto.metaschema.core.model.IModule;
+import gov.nist.secauto.metaschema.core.model.ISource;
+import gov.nist.secauto.metaschema.core.qname.IEnhancedQName;
 import gov.nist.secauto.metaschema.core.util.CollectionUtil;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 
-import java.net.URI;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -20,18 +21,22 @@ import javax.xml.namespace.QName;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
+/**
+ * The default implementation of a constraint set sourced from an external
+ * constraint resource.
+ */
 public class DefaultConstraintSet implements IConstraintSet {
   @NonNull
-  private final URI resourceLocation;
+  private final ISource source;
   @NonNull
   private final Set<IConstraintSet> importedConstraintSets;
   @NonNull
-  private final Map<QName, List<IScopedContraints>> scopedContraints;
+  private final Map<IEnhancedQName, List<IScopedContraints>> scopedContraints;
 
   /**
    * Construct a new constraint set.
    *
-   * @param resourceLocation
+   * @param source
    *          the resource the constraint was provided from
    * @param scopedContraints
    *          a set of constraints qualified by a scope path
@@ -40,15 +45,15 @@ public class DefaultConstraintSet implements IConstraintSet {
    */
   @SuppressWarnings("null")
   public DefaultConstraintSet(
-      @NonNull URI resourceLocation,
+      @NonNull ISource source,
       @NonNull List<IScopedContraints> scopedContraints,
       @NonNull Set<IConstraintSet> importedConstraintSets) {
-    this.resourceLocation = resourceLocation;
+    this.source = source;
     this.scopedContraints = scopedContraints.stream()
         .collect(
             Collectors.collectingAndThen(
                 Collectors.groupingBy(
-                    scope -> new QName(scope.getModuleNamespace().toString(), scope.getModuleShortName()),
+                    scope -> IEnhancedQName.of(scope.getModuleNamespace().toString(), scope.getModuleShortName()),
                     Collectors.toUnmodifiableList()),
                 Collections::unmodifiableMap));
     this.importedConstraintSets = CollectionUtil.unmodifiableSet(importedConstraintSets);
@@ -59,9 +64,9 @@ public class DefaultConstraintSet implements IConstraintSet {
    *
    * @return the resource
    */
-  @NonNull
-  protected URI getResourceLocation() {
-    return resourceLocation;
+  @Override
+  public ISource getSource() {
+    return source;
   }
 
   /**
@@ -71,7 +76,7 @@ public class DefaultConstraintSet implements IConstraintSet {
    * @return the mapping of QName to scoped constraints
    */
   @NonNull
-  public Map<QName, List<IScopedContraints>> getScopedContraints() {
+  public Map<IEnhancedQName, List<IScopedContraints>> getScopedContraints() {
     return scopedContraints;
   }
 
@@ -82,9 +87,9 @@ public class DefaultConstraintSet implements IConstraintSet {
 
   @Override
   public Iterable<ITargetedConstraints> getTargetedConstraintsForModule(@NonNull IModule module) {
-    QName qname = module.getQName();
+    IEnhancedQName qname = module.getQName();
 
-    Map<QName, List<IScopedContraints>> map = getScopedContraints();
+    Map<IEnhancedQName, List<IScopedContraints>> map = getScopedContraints();
     List<IScopedContraints> scopes = map.getOrDefault(qname, CollectionUtil.emptyList());
     return CollectionUtil.toIterable(ObjectUtils.notNull(scopes.stream()
         .flatMap(scoped -> scoped.getTargetedContraints().stream())));

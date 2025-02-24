@@ -333,8 +333,8 @@ public interface IBindingContext {
    *         bound
    */
   @Nullable
-  default <TYPE extends IDataTypeAdapter<?>> TYPE getJavaTypeAdapterInstance(@NonNull Class<TYPE> clazz) {
-    return DataTypeService.getInstance().getJavaTypeAdapterByClass(clazz);
+  default <TYPE extends IDataTypeAdapter<?>> TYPE getDataTypeAdapterInstance(@NonNull Class<TYPE> clazz) {
+    return DataTypeService.instance().getDataTypeByAdapterClass(clazz);
   }
 
   /**
@@ -563,9 +563,9 @@ public interface IBindingContext {
    * <p>
    * A module will flow through the following process.
    * <ol>
-   * <li><b>Loading:</b> The module is read from its source.</li>
-   * <li><b>Post Processing:</b> The module is prepared for use.</li>
-   * <li><b>Registration:</b> The module is registered for use.</li>
+   * <li><b>Loading:</b> The module is read from its source.
+   * <li><b>Post Processing:</b> The module is prepared for use.
+   * <li><b>Registration:</b> The module is registered for use.
    * </ol>
    * <p>
    * A module will be loaded when either the module or one of its global

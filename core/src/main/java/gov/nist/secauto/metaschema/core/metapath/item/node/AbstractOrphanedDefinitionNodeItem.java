@@ -11,7 +11,7 @@ import java.net.URI;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 
-abstract class AbstractOrphanedDefinitionNodeItem<D extends IDefinition, I extends INamedInstance>
+public abstract class AbstractOrphanedDefinitionNodeItem<D extends IDefinition, I extends INamedInstance>
     extends AbstractDefinitionNodeItem<D, I> {
 
   @Nullable
@@ -26,7 +26,7 @@ abstract class AbstractOrphanedDefinitionNodeItem<D extends IDefinition, I exten
     this.baseUri = baseUri;
     StaticContext.Builder builder = StaticContext.builder();
 
-    builder.defaultModelNamespace(ObjectUtils.notNull(definition.getXmlQName().getNamespaceURI()));
+    builder.defaultModelNamespace(ObjectUtils.notNull(definition.getQName().getNamespace()));
 
     if (baseUri != null) {
       builder.baseUri(baseUri);
@@ -49,5 +49,10 @@ abstract class AbstractOrphanedDefinitionNodeItem<D extends IDefinition, I exten
   @Override
   public StaticContext getStaticContext() {
     return staticContext;
+  }
+
+  @Override
+  protected String getValueSignature() {
+    return null;
   }
 }

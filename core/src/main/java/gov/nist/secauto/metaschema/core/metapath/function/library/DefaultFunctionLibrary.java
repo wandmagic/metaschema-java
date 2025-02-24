@@ -5,19 +5,11 @@
 
 package gov.nist.secauto.metaschema.core.metapath.function.library;
 
+import gov.nist.secauto.metaschema.core.datatype.DataTypeService;
+import gov.nist.secauto.metaschema.core.datatype.IDataTypeAdapter;
 import gov.nist.secauto.metaschema.core.metapath.MetapathConstants;
 import gov.nist.secauto.metaschema.core.metapath.function.FunctionLibrary;
-import gov.nist.secauto.metaschema.core.metapath.item.atomic.IBooleanItem;
-import gov.nist.secauto.metaschema.core.metapath.item.atomic.IDateItem;
-import gov.nist.secauto.metaschema.core.metapath.item.atomic.IDateTimeItem;
-import gov.nist.secauto.metaschema.core.metapath.item.atomic.IDecimalItem;
-import gov.nist.secauto.metaschema.core.metapath.item.atomic.IDurationItem;
-import gov.nist.secauto.metaschema.core.metapath.item.atomic.IIntegerItem;
-import gov.nist.secauto.metaschema.core.metapath.item.atomic.INcNameItem;
-import gov.nist.secauto.metaschema.core.metapath.item.atomic.INonNegativeIntegerItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.INumericItem;
-import gov.nist.secauto.metaschema.core.metapath.item.atomic.IPositiveIntegerItem;
-import gov.nist.secauto.metaschema.core.metapath.item.atomic.IStringItem;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
@@ -26,7 +18,6 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
  * <a href= "https://www.w3.org/TR/xpath-functions-31/">function
  * specification</a>.
  */
-@SuppressWarnings({ "removal" })
 @SuppressFBWarnings("UWF_UNWRITTEN_FIELD")
 public class DefaultFunctionLibrary
     extends FunctionLibrary {
@@ -34,6 +25,7 @@ public class DefaultFunctionLibrary
   /**
    * Initialize the built-in function library.
    */
+  @SuppressFBWarnings(value = "UWF_UNWRITTEN_FIELD", justification = "Static fields used for initialization")
   public DefaultFunctionLibrary() { // NOPMD - intentional
     // https://www.w3.org/TR/xpath-functions-31/#func-abs
     registerFunction(FnAbs.SIGNATURE);
@@ -57,18 +49,22 @@ public class DefaultFunctionLibrary
     registerFunction(FnContains.SIGNATURE);
     // https://www.w3.org/TR/xpath-functions-31/#func-count
     registerFunction(FnCount.SIGNATURE);
-    // P2: https://www.w3.org/TR/xpath-functions-31/#func-current-date
+    // https://www.w3.org/TR/xpath-functions-31/#func-current-date
+    registerFunction(FnCurrentDate.SIGNATURE);
     // https://www.w3.org/TR/xpath-functions-31/#func-current-dateTime
     registerFunction(FnCurrentDateTime.SIGNATURE);
-    // P2: https://www.w3.org/TR/xpath-functions-31/#func-current-time
+    // https://www.w3.org/TR/xpath-functions-31/#func-current-time
+    registerFunction(FnCurrentTime.SIGNATURE);
     // https://www.w3.org/TR/xpath-functions-31/#func-data
     registerFunction(FnData.SIGNATURE_NO_ARG);
     registerFunction(FnData.SIGNATURE_ONE_ARG);
     // https://www.w3.org/TR/xpath-functions-31/#func-day-from-date
     // https://www.w3.org/TR/xpath-functions-31/#func-day-from-dateTime
     // https://www.w3.org/TR/xpath-functions-31/#func-days-from-duration
-    // P1: https://www.w3.org/TR/xpath-functions-31/#func-deep-equal
-    // P1: https://www.w3.org/TR/xpath-functions-31/#func-distinct-values
+    // https://www.w3.org/TR/xpath-functions-31/#func-deep-equal
+    registerFunction(FnDeepEqual.SIGNATURE_TWO_ARG);
+    // https://www.w3.org/TR/xpath-functions-31/#func-distinct-values
+    registerFunction(FnDistinctValues.SIGNATURE_ONE_ARG);
     // https://www.w3.org/TR/xpath-functions-31/#func-doc
     registerFunction(FnDoc.SIGNATURE);
     // https://www.w3.org/TR/xpath-functions-31/#func-doc-available
@@ -81,7 +77,8 @@ public class DefaultFunctionLibrary
     // https://www.w3.org/TR/xpath-functions-31/#func-encode-for-uri
     // https://www.w3.org/TR/xpath-functions-31/#func-ends-with
     registerFunction(FnEndsWith.SIGNATURE);
-    // P2: https://www.w3.org/TR/xpath-functions-31/#func-exactly-one
+    // https://www.w3.org/TR/xpath-functions-31/#func-exactly-one
+    registerFunction(FnExactlyOne.SIGNATURE);
     // https://www.w3.org/TR/xpath-functions-31/#func-exists
     registerFunction(FnExists.SIGNATURE);
     // https://www.w3.org/TR/xpath-functions-31/#func-false
@@ -93,20 +90,30 @@ public class DefaultFunctionLibrary
     // P2: https://www.w3.org/TR/xpath-functions-31/#func-format-integer
     // P2: https://www.w3.org/TR/xpath-functions-31/#func-format-number
     // P2: https://www.w3.org/TR/xpath-functions-31/#func-format-time
+    // https://www.w3.org/TR/xpath-functions-31/#func-function-lookup
+    registerFunction(FnFunctionLookup.SIGNATURE);
     // P1: https://www.w3.org/TR/xpath-functions-31/#func-generate-id
-    // P2: https://www.w3.org/TR/xpath-functions-31/#func-has-children
+    // https://www.w3.org/TR/xpath-functions-31/#func-has-children
+    registerFunction(FnHasChildren.SIGNATURE_NO_ARG);
+    registerFunction(FnHasChildren.SIGNATURE_ONE_ARG);
     // https://www.w3.org/TR/xpath-functions-31/#func-head
     registerFunction(FnHead.SIGNATURE);
     // https://www.w3.org/TR/xpath-functions-31/#func-hours-from-dateTime
     // https://www.w3.org/TR/xpath-functions-31/#func-hours-from-duration
     // https://www.w3.org/TR/xpath-functions-31/#func-hours-from-time
     // https://www.w3.org/TR/xpath-functions-31/#func-implicit-timezone
-    // P1: https://www.w3.org/TR/xpath-functions-31/#func-index-of
+    registerFunction(FnImplicitTimezone.SIGNATURE);
+    // https://www.w3.org/TR/xpath-functions-31/#func-index-of
+    registerFunction(FnIndexOf.SIGNATURE_TWO_ARG);
     // https://www.w3.org/TR/xpath-functions-31/#func-innermost
+    registerFunction(FnInnermost.SIGNATURE);
     // https://www.w3.org/TR/xpath-functions-31/#func-insert-before
     registerFunction(FnInsertBefore.SIGNATURE);
     // https://www.w3.org/TR/xpath-functions-31/#func-iri-to-uri
     // P1: https://www.w3.org/TR/xpath-functions-31/#func-last
+    // https://www.w3.org/TR/xpath-functions-31/#func-local-name
+    registerFunction(FnLocalName.SIGNATURE_NO_ARG);
+    registerFunction(FnLocalName.SIGNATURE_ONE_ARG);
     // https://www.w3.org/TR/xpath-functions-31/#func-lower-case
     registerFunction(FnLowerCase.SIGNATURE_ONE_ARG);
     // https://www.w3.org/TR/xpath-functions-31/#func-matches
@@ -122,6 +129,12 @@ public class DefaultFunctionLibrary
     // https://www.w3.org/TR/xpath-functions-31/#func-month-from-date
     // https://www.w3.org/TR/xpath-functions-31/#func-month-from-dateTime
     // https://www.w3.org/TR/xpath-functions-31/#func-months-from-duration
+    // https://www.w3.org/TR/xpath-functions-31/#func-name
+    registerFunction(FnName.SIGNATURE_NO_ARG);
+    registerFunction(FnName.SIGNATURE_ONE_ARG);
+    // https://www.w3.org/TR/xpath-functions-31/#func-namespace-uri
+    registerFunction(FnNamespaceUri.SIGNATURE_NO_ARG);
+    registerFunction(FnNamespaceUri.SIGNATURE_ONE_ARG);
     // https://www.w3.org/TR/xpath-functions-31/#func-node-name
     // https://www.w3.org/TR/xpath-functions-31/#func-normalize-space
     registerFunction(FnNormalizeSpace.SIGNATURE_NO_ARG);
@@ -130,8 +143,10 @@ public class DefaultFunctionLibrary
     // https://www.w3.org/TR/xpath-functions-31/#func-not
     registerFunction(FnNot.SIGNATURE);
     // https://www.w3.org/TR/xpath-functions-31/#func-number
-    // P2: https://www.w3.org/TR/xpath-functions-31/#func-one-or-more
+    // https://www.w3.org/TR/xpath-functions-31/#func-one-or-more
+    registerFunction(FnOneOrMore.SIGNATURE);
     // https://www.w3.org/TR/xpath-functions-31/#func-outermost
+    registerFunction(FnOutermost.SIGNATURE);
     // https://www.w3.org/TR/xpath-functions-31/#func-parse-ietf-date
     // https://www.w3.org/TR/xpath-functions-31/#func-path
     registerFunction(FnPath.SIGNATURE_NO_ARG);
@@ -145,7 +160,9 @@ public class DefaultFunctionLibrary
     registerFunction(FnResolveUri.SIGNATURE_TWO_ARG);
     // https://www.w3.org/TR/xpath-functions-31/#func-reverse
     registerFunction(FnReverse.SIGNATURE_ONE_ARG);
-    // P1: https://www.w3.org/TR/xpath-functions-31/#func-root
+    // https://www.w3.org/TR/xpath-functions-31/#func-root
+    registerFunction(FnRoot.SIGNATURE_NO_ARG);
+    registerFunction(FnRoot.SIGNATURE_ONE_ARG);
     // https://www.w3.org/TR/xpath-functions-31/#func-round
     registerFunction(FnRound.SIGNATURE);
     registerFunction(FnRound.SIGNATURE_WITH_PRECISION);
@@ -164,6 +181,8 @@ public class DefaultFunctionLibrary
     registerFunction(FnSubstring.SIGNATURE_TWO_ARG);
     registerFunction(FnSubstring.SIGNATURE_THREE_ARG);
     // P1: https://www.w3.org/TR/xpath-functions-31/#func-string-join
+    registerFunction(FnStringJoin.SIGNATURE_ONE_ARG);
+    registerFunction(FnStringJoin.SIGNATURE_TWO_ARG);
     // https://www.w3.org/TR/xpath-functions-31/#func-string-length
     registerFunction(FnStringLength.SIGNATURE_NO_ARG);
     registerFunction(FnStringLength.SIGNATURE_ONE_ARG);
@@ -195,7 +214,8 @@ public class DefaultFunctionLibrary
     // https://www.w3.org/TR/xpath-functions-31/#func-year-from-date
     // https://www.w3.org/TR/xpath-functions-31/#func-year-from-dateTime
     // https://www.w3.org/TR/xpath-functions-31/#func-years-from-duration
-    // P2: https://www.w3.org/TR/xpath-functions-31/#func-zero-or-one
+    // https://www.w3.org/TR/xpath-functions-31/#func-zero-or-one
+    registerFunction(FnZeroOrOne.SIGNATURE);
 
     // https://www.w3.org/TR/xpath-functions-31/#func-array-get
     registerFunction(ArrayGet.SIGNATURE);
@@ -248,67 +268,20 @@ public class DefaultFunctionLibrary
     registerFunction(MapEntry.SIGNATURE);
     // https://www.w3.org/TR/xpath-functions-31/#func-map-remove
     registerFunction(MapRemove.SIGNATURE);
-    // P3: https://www.w3.org/TR/xpath-functions-31/#func-map-for-each
-
-    // // xpath casting functions
-    // registerFunction(
-    // CastFunction.signature(MetapathConstants.NS_XML_SCHEMA, "boolean",
-    // IBooleanItem.class, IBooleanItem::cast));
-    // registerFunction(CastFunction.signature(
-    // MetapathConstants.NS_XML_SCHEMA, "date", IDateItem.class, IDateItem::cast));
-    // registerFunction(CastFunction.signature(
-    // MetapathConstants.NS_XML_SCHEMA, "dateTime", IDateTimeItem.class,
-    // IDateTimeItem::cast));
-    // registerFunction(CastFunction.signature(
-    // MetapathConstants.NS_XML_SCHEMA, "decimal", IDecimalItem.class,
-    // IDecimalItem::cast));
-    // registerFunction(CastFunction.signature(
-    // MetapathConstants.NS_XML_SCHEMA, "duration", IDurationItem.class,
-    // IDurationItem::cast));
-    // registerFunction(CastFunction.signature(
-    // MetapathConstants.NS_XML_SCHEMA, "integer", IIntegerItem.class,
-    // IIntegerItem::cast));
-    // registerFunction(CastFunction.signature(
-    // MetapathConstants.NS_XML_SCHEMA, "NCName", INcNameItem.class,
-    // INcNameItem::cast));
-    // registerFunction(CastFunction.signature(
-    // MetapathConstants.NS_XML_SCHEMA, "nonNegativeInteger",
-    // INonNegativeIntegerItem.class,
-    // INonNegativeIntegerItem::cast));
-    // registerFunction(CastFunction.signature(
-    // MetapathConstants.NS_XML_SCHEMA, "positiveInteger",
-    // IPositiveIntegerItem.class,
-    // IPositiveIntegerItem::cast));
-    // registerFunction(CastFunction.signature(
-    // MetapathConstants.NS_XML_SCHEMA, "string", IStringItem.class,
-    // IStringItem::cast));
+    // https://www.w3.org/TR/xpath-functions-31/#func-map-for-each
+    registerFunction(MapForEach.SIGNATURE);
 
     // metapath casting functions
-    registerFunction(CastFunction.signature(
-        MetapathConstants.NS_METAPATH, "boolean", IBooleanItem.class, IBooleanItem::cast));
-    registerFunction(CastFunction.signature(
-        MetapathConstants.NS_METAPATH, "date", IDateItem.class, IDateItem::cast));
-    registerFunction(CastFunction.signature(
-        MetapathConstants.NS_METAPATH, "date-time", IDateTimeItem.class, IDateTimeItem::cast));
-    registerFunction(CastFunction.signature(
-        MetapathConstants.NS_METAPATH, "decimal", IDecimalItem.class, IDecimalItem::cast));
-    registerFunction(CastFunction.signature(
-        MetapathConstants.NS_METAPATH, "duration", IDurationItem.class, IDurationItem::cast));
-    registerFunction(CastFunction.signature(
-        MetapathConstants.NS_METAPATH, "integer", IIntegerItem.class, IIntegerItem::cast));
-    registerFunction(CastFunction.signature(
-        MetapathConstants.NS_METAPATH, "ncname", INcNameItem.class, INcNameItem::cast));
-    registerFunction(CastFunction.signature(
-        MetapathConstants.NS_METAPATH, "non-negative-integer", INonNegativeIntegerItem.class,
-        INonNegativeIntegerItem::cast));
-    registerFunction(CastFunction.signature(
-        MetapathConstants.NS_METAPATH, "positive-integer", IPositiveIntegerItem.class,
-        IPositiveIntegerItem::cast));
-    registerFunction(CastFunction.signature(
-        MetapathConstants.NS_METAPATH, "string", IStringItem.class, IStringItem::cast));
+    DataTypeService.instance().getDataTypes().stream()
+        .map(IDataTypeAdapter::getItemType)
+        .forEachOrdered(type -> {
+          registerFunction(CastFunction.signature(type.getQName(), type, type::cast));
+        });
 
     // extra functions
     registerFunction(MpRecurseDepth.SIGNATURE_ONE_ARG);
     registerFunction(MpRecurseDepth.SIGNATURE_TWO_ARG);
+    registerFunction(MpBase64Decode.SIGNATURE_ONE_ARG);
+    registerFunction(MpBase64Encode.SIGNATURE_ONE_ARG);
   }
 }

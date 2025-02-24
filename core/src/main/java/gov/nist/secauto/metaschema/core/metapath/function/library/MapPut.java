@@ -6,13 +6,13 @@
 package gov.nist.secauto.metaschema.core.metapath.function.library;
 
 import gov.nist.secauto.metaschema.core.metapath.DynamicContext;
-import gov.nist.secauto.metaschema.core.metapath.ICollectionValue;
-import gov.nist.secauto.metaschema.core.metapath.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.MetapathConstants;
 import gov.nist.secauto.metaschema.core.metapath.function.FunctionUtils;
 import gov.nist.secauto.metaschema.core.metapath.function.IArgument;
 import gov.nist.secauto.metaschema.core.metapath.function.IFunction;
+import gov.nist.secauto.metaschema.core.metapath.item.ICollectionValue;
 import gov.nist.secauto.metaschema.core.metapath.item.IItem;
+import gov.nist.secauto.metaschema.core.metapath.item.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IAnyAtomicItem;
 import gov.nist.secauto.metaschema.core.metapath.item.function.IMapItem;
 import gov.nist.secauto.metaschema.core.metapath.item.function.IMapKey;
@@ -40,20 +40,20 @@ public final class MapPut {
       .focusIndependent()
       .argument(IArgument.builder()
           .name("map")
-          .type(IMapItem.class)
+          .type(IMapItem.type())
           .one()
           .build())
       .argument(IArgument.builder()
           .name("key")
-          .type(IAnyAtomicItem.class)
+          .type(IAnyAtomicItem.type())
           .one()
           .build())
       .argument(IArgument.builder()
           .name("value")
-          .type(IItem.class)
+          .type(IItem.type())
           .zeroOrMore()
           .build())
-      .returnType(IMapItem.class)
+      .returnType(IMapItem.type())
       .returnOne()
       .functionHandler(MapPut::execute)
       .build();
@@ -73,7 +73,7 @@ public final class MapPut {
     @SuppressWarnings("unchecked")
     V value = (V) ObjectUtils.requireNonNull(arguments.get(2)).toCollectionValue();
 
-    return put(map, key, value).asSequence();
+    return put(map, key, value).toSequence();
   }
 
   /**

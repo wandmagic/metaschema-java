@@ -7,8 +7,6 @@ package gov.nist.secauto.metaschema.core.model;
 
 import java.util.function.Predicate;
 
-import javax.xml.namespace.QName;
-
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 
@@ -18,8 +16,8 @@ public interface INamedModelInstance extends IModelInstance, INamedInstance {
    * Tests if the provided instance represents complex data. The data is complex
    * if one of the following is true:
    * <ul>
-   * <li>The instance is a {@link IAssemblyInstance}.</li>
-   * <li>The instance is a {@link IFieldInstance} that has flags.</li>
+   * <li>The instance is a {@link IAssemblyInstance}.
+   * <li>The instance is a {@link IFieldInstance} that has flags.
    * </ul>
    *
    * This method can be used as a {@link Predicate}.
@@ -74,14 +72,4 @@ public interface INamedModelInstance extends IModelInstance, INamedInstance {
    */
   @Nullable
   IFlagInstance getJsonKey();
-
-  @Override
-  default QName getReferencedDefinitionQName() {
-    return getContainingModule().toModelQName(getName());
-  }
-
-  @Override
-  default QName getXmlQName() {
-    return getContainingModule().toModelQName(getEffectiveName());
-  }
 }

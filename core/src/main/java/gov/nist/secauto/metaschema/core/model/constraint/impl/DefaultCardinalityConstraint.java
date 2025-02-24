@@ -7,9 +7,12 @@ package gov.nist.secauto.metaschema.core.model.constraint.impl;
 
 import gov.nist.secauto.metaschema.core.datatype.markup.MarkupLine;
 import gov.nist.secauto.metaschema.core.datatype.markup.MarkupMultiline;
+import gov.nist.secauto.metaschema.core.metapath.IMetapathExpression;
 import gov.nist.secauto.metaschema.core.model.IAttributable;
 import gov.nist.secauto.metaschema.core.model.ISource;
+import gov.nist.secauto.metaschema.core.model.constraint.ConstraintInitializationException;
 import gov.nist.secauto.metaschema.core.model.constraint.ICardinalityConstraint;
+import gov.nist.secauto.metaschema.core.model.constraint.IConstraint;
 
 import java.util.Map;
 import java.util.Set;
@@ -68,7 +71,7 @@ public final class DefaultCardinalityConstraint
       @Nullable MarkupLine description,
       @NonNull ISource source,
       @NonNull Level level,
-      @NonNull String target,
+      @NonNull IMetapathExpression target,
       @NonNull Map<IAttributable.Key, Set<String>> properties,
       @Nullable Integer minOccurs,
       @Nullable Integer maxOccurs,
@@ -76,7 +79,10 @@ public final class DefaultCardinalityConstraint
       @Nullable MarkupMultiline remarks) {
     super(id, formalName, description, source, level, target, properties, message, remarks);
     if (minOccurs == null && maxOccurs == null) {
-      throw new IllegalArgumentException("at least one of minOccurs or maxOccurs must be provided");
+      throw new ConstraintInitializationException(
+          String.format("The constraint %s must provide at least one of minOccurs or maxOccurs in '%s'",
+              IConstraint.getConstraintIdentity(this),
+              source.getLocationHint()));
     }
     this.minOccurs = minOccurs;
     this.maxOccurs = maxOccurs;

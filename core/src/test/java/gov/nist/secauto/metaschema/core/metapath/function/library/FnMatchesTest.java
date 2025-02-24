@@ -13,12 +13,13 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import gov.nist.secauto.metaschema.core.metapath.DynamicContext;
 import gov.nist.secauto.metaschema.core.metapath.ExpressionTestBase;
-import gov.nist.secauto.metaschema.core.metapath.ISequence;
+import gov.nist.secauto.metaschema.core.metapath.IMetapathExpression;
 import gov.nist.secauto.metaschema.core.metapath.MetapathException;
-import gov.nist.secauto.metaschema.core.metapath.MetapathExpression;
 import gov.nist.secauto.metaschema.core.metapath.function.regex.RegularExpressionMetapathException;
+import gov.nist.secauto.metaschema.core.metapath.item.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IBooleanItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IStringItem;
+import gov.nist.secauto.metaschema.core.qname.IEnhancedQName;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 
 import org.junit.jupiter.api.Test;
@@ -28,8 +29,6 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.List;
 import java.util.stream.Stream;
-
-import javax.xml.namespace.QName;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
@@ -71,8 +70,8 @@ class FnMatchesTest
   @ParameterizedTest
   @MethodSource("provideValues")
   void test(@NonNull IBooleanItem expected, @NonNull String metapath) {
-    assertEquals(expected, MetapathExpression.compile(metapath)
-        .evaluateAs(null, MetapathExpression.ResultType.ITEM,
+    assertEquals(expected, IMetapathExpression.compile(metapath)
+        .evaluateAs(null, IMetapathExpression.ResultType.ITEM,
             newDynamicContext()));
   }
 
@@ -85,7 +84,7 @@ class FnMatchesTest
   protected static DynamicContext newDynamicContext() {
     DynamicContext retval = ExpressionTestBase.newDynamicContext();
 
-    retval.bindVariableValue(new QName("poem"), ISequence.of(IStringItem.valueOf(POEM)));
+    retval.bindVariableValue(IEnhancedQName.of("poem"), ISequence.of(IStringItem.valueOf(POEM)));
 
     return retval;
   }

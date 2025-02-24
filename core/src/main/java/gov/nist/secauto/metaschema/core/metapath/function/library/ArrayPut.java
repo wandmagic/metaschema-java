@@ -6,13 +6,13 @@
 package gov.nist.secauto.metaschema.core.metapath.function.library;
 
 import gov.nist.secauto.metaschema.core.metapath.DynamicContext;
-import gov.nist.secauto.metaschema.core.metapath.ICollectionValue;
-import gov.nist.secauto.metaschema.core.metapath.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.MetapathConstants;
 import gov.nist.secauto.metaschema.core.metapath.function.FunctionUtils;
 import gov.nist.secauto.metaschema.core.metapath.function.IArgument;
 import gov.nist.secauto.metaschema.core.metapath.function.IFunction;
+import gov.nist.secauto.metaschema.core.metapath.item.ICollectionValue;
 import gov.nist.secauto.metaschema.core.metapath.item.IItem;
+import gov.nist.secauto.metaschema.core.metapath.item.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IIntegerItem;
 import gov.nist.secauto.metaschema.core.metapath.item.function.ArrayException;
 import gov.nist.secauto.metaschema.core.metapath.item.function.IArrayItem;
@@ -41,20 +41,20 @@ public final class ArrayPut {
       .focusIndependent()
       .argument(IArgument.builder()
           .name("array")
-          .type(IArrayItem.class)
+          .type(IArrayItem.type())
           .one()
           .build())
       .argument(IArgument.builder()
           .name("position")
-          .type(IIntegerItem.class)
+          .type(IIntegerItem.type())
           .one()
           .build())
       .argument(IArgument.builder()
           .name("member")
-          .type(IItem.class)
+          .type(IItem.type())
           .zeroOrMore()
           .build())
-      .returnType(IArrayItem.class)
+      .returnType(IArrayItem.type())
       .returnOne()
       .functionHandler(ArrayPut::execute)
       .build();
@@ -76,7 +76,7 @@ public final class ArrayPut {
     @SuppressWarnings("unchecked")
     T member = (T) arguments.get(2).toCollectionValue();
 
-    return put(array, position, member).asSequence();
+    return put(array, position, member).toSequence();
   }
 
   /**
@@ -100,7 +100,7 @@ public final class ArrayPut {
       @NonNull IArrayItem<T> array,
       @NonNull IIntegerItem positionItem,
       @NonNull T member) {
-    return put(array, positionItem.asInteger().intValueExact(), member);
+    return put(array, positionItem.toIntValueExact(), member);
   }
 
   /**

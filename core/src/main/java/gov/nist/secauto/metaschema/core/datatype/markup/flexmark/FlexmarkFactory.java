@@ -12,6 +12,9 @@ import com.vladsch.flexmark.parser.ListOptions;
 import com.vladsch.flexmark.parser.Parser;
 import com.vladsch.flexmark.util.data.DataHolder;
 
+import gov.nist.secauto.metaschema.core.datatype.markup.flexmark.impl.FixedEmphasisDelimiterProcessor;
+import gov.nist.secauto.metaschema.core.datatype.markup.flexmark.impl.FlexmarkConfiguration;
+
 import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
@@ -58,7 +61,7 @@ public final class FlexmarkFactory {
   }
 
   private FlexmarkFactory() {
-    this(FlexmarkConfiguration.FLEXMARK_CONFIG);
+    this(FlexmarkConfiguration.instance());
   }
 
   @SuppressWarnings("null")

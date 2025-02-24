@@ -14,6 +14,8 @@ import gov.nist.secauto.metaschema.cli.processor.ExitCode;
 import gov.nist.secauto.metaschema.cli.processor.ExitStatus;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -28,6 +30,7 @@ import nl.altindag.log.LogCaptor;
 /**
  * Unit test for simple CLI.
  */
+@Execution(value = ExecutionMode.SAME_THREAD, reason = "Log capturing needs to be single threaded")
 public class CLITest {
   private static final ExitCode NO_EXCEPTION_CLASS = null;
 
@@ -202,7 +205,7 @@ public class CLITest {
   }
 
   @Test
-  void test() {
+  void testValidateContent() {
     try (LogCaptor captor = LogCaptor.forRoot()) {
       String[] cliArgs = { "validate-content",
           "-m",
@@ -215,14 +218,31 @@ public class CLITest {
           .contains("expect-default-non-zero: Expect constraint '. > 0' did not match the data",
               "expect-custom-non-zero: No default message, custom error message for expect-custom-non-zero constraint.",
               "matches-default-regex-letters-only: Value '1' did not match the pattern",
-              "matches-custom-regex-letters-only: No default message, custom error message for matches-custom-regex-letters-only constraint.",
-              "cardinality-default-two-minimum: The cardinality '1' is below the required minimum '2' for items matching",
+              "matches-custom-regex-letters-only: No default message, custom error message for" +
+                  " matches-custom-regex-letters-only constraint.",
+              "cardinality-default-two-minimum: The cardinality '1' is below the required minimum '2' for items" +
+                  " matching",
               "index-items-default: Index 'index-items-default' has duplicate key for items",
               "index-items-custom: No default message, custom error message for index-item-custom.",
               "is-unique-default: Unique constraint violation at paths",
               "is-unique-custom: No default message, custom error message for is-unique-custom.",
               "index-has-key-default: Key reference [2] not found in index 'index-items-default' for item",
               "index-has-key-custom: No default message, custom error message for index-has-key-custom.");
+    }
+  }
+
+  @Test
+  void testValidateConstraints() {
+    try (LogCaptor captor = LogCaptor.forRoot()) {
+      String[] cliArgs = { "validate",
+          "src/test/resources/content/constraint-example.xml",
+          "-c",
+          "src/test/resources/content/constraint-constraints.xml",
+          "--disable-schema-validation",
+      };
+      CLI.runCli(cliArgs);
+      assertThat(captor.getErrorLogs().toString())
+          .contains("This constraint SHOULD be violated if test passes.");
     }
   }
 }

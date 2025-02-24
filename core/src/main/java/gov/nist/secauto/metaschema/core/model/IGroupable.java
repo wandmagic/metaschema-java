@@ -5,22 +5,37 @@
 
 package gov.nist.secauto.metaschema.core.model;
 
+import gov.nist.secauto.metaschema.core.qname.IEnhancedQName;
 import gov.nist.secauto.metaschema.core.util.CollectionUtil;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 
 import java.util.Collection;
 
-import javax.xml.namespace.QName;
-
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 
+/**
+ * This behavioral interface represents an instance that supports grouped
+ * values.
+ */
 public interface IGroupable extends IInstance {
 
+  /**
+   * The default Metaschema grouping minimum occurrence.
+   */
   int DEFAULT_GROUP_AS_MIN_OCCURS = 0;
+  /**
+   * The default Metaschema grouping maximum occurrence.
+   */
   int DEFAULT_GROUP_AS_MAX_OCCURS = 1;
+  /**
+   * The default Metaschema grouping behavior for JSON data.
+   */
   @NonNull
   JsonGroupAsBehavior DEFAULT_JSON_GROUP_AS_BEHAVIOR = JsonGroupAsBehavior.SINGLETON_OR_LIST;
+  /**
+   * The default Metaschema grouping behavior for XML data.
+   */
   @NonNull
   XmlGroupAsBehavior DEFAULT_XML_GROUP_AS_BEHAVIOR = XmlGroupAsBehavior.UNGROUPED;
 
@@ -58,51 +73,23 @@ public interface IGroupable extends IInstance {
   }
 
   /**
-   * Retrieve the XML namespace for this grouping.
-   *
-   * @return the XML namespace or {@code null} if no namespace is configured
-   */
-  @Nullable
-  default String getGroupAsXmlNamespace() {
-    return getContainingDefinition().getXmlNamespace();
-  }
-
-  /**
-   * Retrieve the XML namespace for this grouping.
-   * <p>
-   * If this instance doesn't have a namespace defined, then the module's XML
-   * namespace will be used.
-   *
-   * @return the XML namespace
-   */
-  // REFACTOR: remove this method
-  // REFACTOR: consider pushing down the call for getGroupAsXmlNamespace
-  @NonNull
-  default String getEffectiveGroupAsNamespace() {
-    @Nullable
-    String namespace = getGroupAsXmlNamespace();
-    if (namespace == null) {
-      namespace = ObjectUtils.notNull(getContainingModule().getXmlNamespace().toASCIIString());
-    }
-    return namespace;
-  }
-
-  /**
    * Get the name used for the associated element wrapping a collection of
    * elements in XML. This value is required when {@link #getXmlGroupAsBehavior()}
    * = {@link XmlGroupAsBehavior#GROUPED}. This name will be the element name
    * wrapping a collection of elements.
+   * <p>
+   * If this instance doesn't have a namespace defined, then the module's XML
+   * namespace will be used.
    *
    * @return the groupAs QName or {@code null} if no name is configured, such as
    *         when {@link #getMaxOccurs()} = 1.
    */
-  // REFACTOR: rename to getXmlGroupAsQName
   @Nullable
-  default QName getEffectiveXmlGroupAsQName() {
+  default IEnhancedQName getEffectiveXmlGroupAsQName() {
     return XmlGroupAsBehavior.GROUPED.equals(getXmlGroupAsBehavior())
-        // require a group-as name in this case
-        ? new QName(getEffectiveGroupAsNamespace(), ObjectUtils.requireNonNull(getGroupAsName()))
-        // no group-as name in this case
+        ? IEnhancedQName.of(
+            getContainingDefinition().getQName().getNamespace(),
+            ObjectUtils.requireNonNull(getGroupAsName()))
         : null;
   }
 

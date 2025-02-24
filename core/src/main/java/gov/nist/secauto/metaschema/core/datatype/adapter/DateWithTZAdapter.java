@@ -9,7 +9,9 @@ import com.fasterxml.jackson.databind.jsonFormatVisitors.JsonFormatTypes;
 
 import gov.nist.secauto.metaschema.core.datatype.AbstractDataTypeAdapter;
 import gov.nist.secauto.metaschema.core.metapath.MetapathConstants;
-import gov.nist.secauto.metaschema.core.metapath.item.atomic.IDateItem;
+import gov.nist.secauto.metaschema.core.metapath.item.atomic.IDateWithTimeZoneItem;
+import gov.nist.secauto.metaschema.core.qname.EQNameFactory;
+import gov.nist.secauto.metaschema.core.qname.IEnhancedQName;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 
 import java.time.DateTimeException;
@@ -19,16 +21,19 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.xml.namespace.QName;
-
 import edu.umd.cs.findbugs.annotations.NonNull;
 
+/**
+ * Support for the Metaschema <a href=
+ * "https://pages.nist.gov/metaschema/specification/datatypes/#date-with-timezone">date-with-timezone</a>
+ * data type.
+ */
 public class DateWithTZAdapter
-    extends AbstractDataTypeAdapter<ZonedDateTime, IDateItem> {
+    extends AbstractDataTypeAdapter<ZonedDateTime, IDateWithTimeZoneItem> {
   @NonNull
-  private static final List<QName> NAMES = ObjectUtils.notNull(
+  private static final List<IEnhancedQName> NAMES = ObjectUtils.notNull(
       List.of(
-          new QName(MetapathConstants.NS_METAPATH.toASCIIString(), "date-with-timezone")));
+          EQNameFactory.instance().newQName(MetapathConstants.NS_METAPATH, "date-with-timezone")));
   private static final Pattern DATE_TIMEZONE = Pattern.compile("^("
       + "^(?:(?:2000|2400|2800|(?:19|2[0-9](?:0[48]|[2468][048]|[13579][26])))-02-29)"
       + "|(?:(?:(?:19|2[0-9])[0-9]{2})-02-(?:0[1-9]|1[0-9]|2[0-8]))"
@@ -38,11 +43,11 @@ public class DateWithTZAdapter
       + "(Z|[+-][0-9]{2}:[0-9]{2})$");
 
   DateWithTZAdapter() {
-    super(ZonedDateTime.class);
+    super(ZonedDateTime.class, IDateWithTimeZoneItem.class, IDateWithTimeZoneItem::cast);
   }
 
   @Override
-  public List<QName> getNames() {
+  public List<IEnhancedQName> getNames() {
     return NAMES;
   }
 
@@ -70,7 +75,7 @@ public class DateWithTZAdapter
   @Override
   public String asString(Object value) {
     try {
-      return DateFormats.DATE_WITH_TZ.format((ZonedDateTime) value);
+      return DateFormats.DATE_WITH_TZ.format(toValue(value));
     } catch (DateTimeException ex) {
       throw new IllegalArgumentException(
           String.format("The provided value '%s' cannot be formatted as a date value. %s",
@@ -87,13 +92,8 @@ public class DateWithTZAdapter
   }
 
   @Override
-  public Class<IDateItem> getItemClass() {
-    return IDateItem.class;
-  }
-
-  @Override
-  public IDateItem newItem(Object value) {
+  public IDateWithTimeZoneItem newItem(Object value) {
     ZonedDateTime item = toValue(value);
-    return IDateItem.valueOf(item);
+    return IDateWithTimeZoneItem.valueOf(item);
   }
 }

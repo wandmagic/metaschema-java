@@ -19,6 +19,11 @@ import edu.umd.cs.findbugs.annotations.Nullable;
  * and/or conform to an identified data type.
  */
 public interface IMatchesConstraint extends IConfigurableMessageConstraint {
+  @Override
+  default Type getType() {
+    return Type.MATCHES;
+  }
+
   /**
    * Get the expected pattern.
    *
@@ -108,7 +113,7 @@ public interface IMatchesConstraint extends IConfigurableMessageConstraint {
       super.validate();
 
       if (getPattern() == null && getDatatype() == null) {
-        throw new IllegalStateException("A pattern or data type must be provided at minimum.");
+        throw new ConstraintInitializationException("A pattern or data type must be provided at minimum.");
       }
     }
 

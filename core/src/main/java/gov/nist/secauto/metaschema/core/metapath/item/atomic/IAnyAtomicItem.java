@@ -6,27 +6,36 @@
 package gov.nist.secauto.metaschema.core.metapath.item.atomic;
 
 import gov.nist.secauto.metaschema.core.datatype.IDataTypeAdapter;
-import gov.nist.secauto.metaschema.core.metapath.IPrintable;
+import gov.nist.secauto.metaschema.core.metapath.function.ComparisonFunctions;
+import gov.nist.secauto.metaschema.core.metapath.function.InvalidValueForCastFunctionException;
+import gov.nist.secauto.metaschema.core.metapath.item.ICollectionValue;
 import gov.nist.secauto.metaschema.core.metapath.item.IItemVisitor;
 import gov.nist.secauto.metaschema.core.metapath.item.function.IMapItem;
 import gov.nist.secauto.metaschema.core.metapath.item.function.IMapKey;
+import gov.nist.secauto.metaschema.core.metapath.type.IAtomicOrUnionType;
+import gov.nist.secauto.metaschema.core.metapath.type.IItemType;
+import gov.nist.secauto.metaschema.core.metapath.type.InvalidTypeMetapathException;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 
-import java.util.Set;
+import java.util.stream.Stream;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
-public interface IAnyAtomicItem extends IAtomicValuedItem, IPrintable {
+/**
+ * The interface shared by all atomic items, representing indivisible data
+ * values that serve as the fundamental building blocks for complex data
+ * structures in the Metaschema framework.
+ */
+public interface IAnyAtomicItem extends IAtomicValuedItem {
+  /**
+   * Get the type information for this item.
+   *
+   * @return the type information
+   */
   @NonNull
-  Set<Class<? extends IAnyAtomicItem>> PRIMITIVE_ITEM_TYPES = ObjectUtils.notNull(Set.of(
-      IStringItem.class,
-      IBooleanItem.class,
-      IDecimalItem.class,
-      IDurationItem.class,
-      IDateTimeItem.class,
-      IDateItem.class,
-      IBase64BinaryItem.class,
-      IAnyUriItem.class));
+  static IAtomicOrUnionType<?> type() {
+    return IItemType.anyAtomic();
+  }
 
   @Override
   @NonNull
@@ -43,18 +52,30 @@ public interface IAnyAtomicItem extends IAtomicValuedItem, IPrintable {
   @NonNull
   Object getValue();
 
-  @Override
+  /**
+   * Converts this atomic item to a string item representation.
+   *
+   * @return a new {@link IStringItem} containing the string representation of
+   *         this item
+   * @see #asString()
+   */
   @NonNull
-  String toString();
+  default IStringItem asStringItem() {
+    return IStringItem.valueOf(asString());
+  }
 
   /**
    * Get the item's string value.
    *
    * @return the string value value of the item
    */
-  @Override
   @NonNull
   String asString();
+
+  @Override
+  default Stream<IAnyAtomicItem> atomize() {
+    return ObjectUtils.notNull(Stream.of(this));
+  }
 
   /**
    * Get the atomic item value as a map key for use with an {@link IMapItem}.
@@ -65,32 +86,35 @@ public interface IAnyAtomicItem extends IAtomicValuedItem, IPrintable {
   IMapKey asMapKey();
 
   /**
-   * Get a new {@link IStringItem} based on the the textual value of the item's
-   * "wrapped" value.
-   *
-   * @return a new string item
-   */
-  @NonNull
-  default IStringItem asStringItem() {
-    return IStringItem.valueOf(asString());
-  }
-
-  /**
    * Get the item's type adapter.
    *
    * @return the type adapter for the item
    */
   @NonNull
   IDataTypeAdapter<?> getJavaTypeAdapter();
-  //
-  // <T extends IValuedItem> T cast(IValuedItem item);
+
+  /**
+   * Cast the provided type to this item type.
+   * <p>
+   * This method simply returns the provided item, since it is already the same
+   * type.
+   *
+   * @param item
+   *          the item to cast
+   * @return the provided item
+   */
+  static IAnyAtomicItem cast(@NonNull IAnyAtomicItem item) {
+    return item;
+  }
 
   /**
    * Cast the provided {@code item} to be the same type as this item.
    *
    * @param item
    *          the item to cast
-   * @return the result from casting
+   * @return an atomic item of this type
+   * @throws InvalidValueForCastFunctionException
+   *           if the provided item type cannot be cast to this item type
    */
   @NonNull
   IAnyAtomicItem castAsType(@NonNull IAnyAtomicItem item);
@@ -104,6 +128,20 @@ public interface IAnyAtomicItem extends IAtomicValuedItem, IPrintable {
    *         than, equal to, or greater than the {@code item}.
    */
   int compareTo(@NonNull IAnyAtomicItem other);
+
+  @Override
+  default boolean deepEquals(ICollectionValue other) {
+    boolean retval;
+    try {
+      retval = other instanceof IAnyAtomicItem
+          && ComparisonFunctions.valueCompairison(this, ComparisonFunctions.Operator.EQ, (IAnyAtomicItem) other)
+              .toBoolean();
+    } catch (@SuppressWarnings("unused") InvalidTypeMetapathException ex) {
+      // incompatible types are a non-match
+      retval = false;
+    }
+    return retval;
+  }
 
   @Override
   default void accept(IItemVisitor visitor) {

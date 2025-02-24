@@ -6,12 +6,11 @@
 package gov.nist.secauto.metaschema.core.model.constraint;
 
 import gov.nist.secauto.metaschema.core.datatype.markup.MarkupMultiline;
+import gov.nist.secauto.metaschema.core.metapath.IMetapathExpression;
 import gov.nist.secauto.metaschema.core.metapath.MetapathException;
-import gov.nist.secauto.metaschema.core.metapath.MetapathExpression;
 import gov.nist.secauto.metaschema.core.model.ISource;
 import gov.nist.secauto.metaschema.core.model.constraint.impl.DefaultLet;
-
-import javax.xml.namespace.QName;
+import gov.nist.secauto.metaschema.core.qname.IEnhancedQName;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
@@ -38,14 +37,14 @@ public interface ILet {
   @SuppressWarnings("PMD.ShortMethodName")
   @NonNull
   static ILet of(
-      @NonNull QName name,
+      @NonNull IEnhancedQName name,
       @NonNull String valueExpression,
       @NonNull ISource source,
       @Nullable MarkupMultiline remarks) {
     try {
       return of(
           name,
-          MetapathExpression.compile(valueExpression, source.getStaticContext()),
+          IMetapathExpression.compile(valueExpression, source.getStaticContext()),
           source,
           remarks);
     } catch (MetapathException ex) {
@@ -75,8 +74,8 @@ public interface ILet {
   @SuppressWarnings("PMD.ShortMethodName")
   @NonNull
   static ILet of(
-      @NonNull QName name,
-      @NonNull MetapathExpression valueExpression,
+      @NonNull IEnhancedQName name,
+      @NonNull IMetapathExpression valueExpression,
       @NonNull ISource source,
       @Nullable MarkupMultiline remarks) {
     return new DefaultLet(name, valueExpression, source, remarks);
@@ -88,7 +87,7 @@ public interface ILet {
    * @return the name
    */
   @NonNull
-  QName getName();
+  IEnhancedQName getName();
 
   /**
    * Get the Metapath expression to use to query the value.
@@ -96,7 +95,7 @@ public interface ILet {
    * @return the Metapath expression to use to query the value
    */
   @NonNull
-  MetapathExpression getValueExpression();
+  IMetapathExpression getValueExpression();
 
   /**
    * Information about the source resource containing the let statement.

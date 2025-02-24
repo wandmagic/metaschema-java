@@ -19,7 +19,6 @@ import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import gov.nist.secauto.metaschema.core.MetaschemaConstants;
-import gov.nist.secauto.metaschema.core.datatype.markup.flexmark.XmlMarkupParser;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 
 import org.codehaus.stax2.XMLStreamWriter2;
@@ -83,7 +82,7 @@ class CommonmarkConformanceTest {
     Matcher matcher = INITIAL_ELEMENT_PATTERN.matcher(vector);
 
     assertTrue(matcher.matches());
-    assertTrue(XmlMarkupParser.BLOCK_ELEMENTS.contains(matcher.group(1)));
+    assertTrue(XmlMarkupParser.XHTML_BLOCK_ELEMENTS.contains(matcher.group(1)));
   }
 
   private static List<Entry> generateTestVectors() throws JsonParseException, IOException {
@@ -123,7 +122,7 @@ class CommonmarkConformanceTest {
   public boolean isBlockElement(@NonNull String html) {
     Matcher matcher = INITIAL_ELEMENT_PATTERN.matcher(html);
 
-    return matcher.matches() && XmlMarkupParser.BLOCK_ELEMENTS.contains(matcher.group(1));
+    return matcher.matches() && XmlMarkupParser.XHTML_BLOCK_ELEMENTS.contains(matcher.group(1));
   }
 
   @NonNull

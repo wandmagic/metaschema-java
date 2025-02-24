@@ -5,8 +5,6 @@
 
 package gov.nist.secauto.metaschema.core.model;
 
-import javax.xml.namespace.QName;
-
 public interface IFlagInstance extends IFlag, IValuedInstance, IInstanceAbsolute {
 
   boolean DEFAULT_FLAG_REQUIRED = false;
@@ -30,16 +28,5 @@ public interface IFlagInstance extends IFlag, IValuedInstance, IInstanceAbsolute
    */
   default boolean isRequired() {
     return DEFAULT_FLAG_REQUIRED;
-  }
-
-  @Override
-  default QName getReferencedDefinitionQName() {
-    return getContainingModule().toFlagQName(getName());
-  }
-
-  @Override
-  default QName getXmlQName() {
-    // flags do not have a namespace by default
-    return getContainingModule().toFlagQName(getEffectiveName());
   }
 }

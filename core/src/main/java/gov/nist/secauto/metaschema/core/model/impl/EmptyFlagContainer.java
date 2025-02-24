@@ -11,16 +11,27 @@ import gov.nist.secauto.metaschema.core.util.CollectionUtil;
 
 import java.util.Map;
 
-import javax.xml.namespace.QName;
-
 import edu.umd.cs.findbugs.annotations.NonNull;
 
-public class EmptyFlagContainer<FI extends IFlagInstance> implements IContainerFlagSupport<FI> {
+/**
+ * Represents an flag container with no flags.
+ *
+ * @param <FI>
+ *          the Java type of the flags supported by the container
+ */
+public final class EmptyFlagContainer<FI extends IFlagInstance> implements IContainerFlagSupport<FI> {
+  /**
+   * The singleton instance.
+   */
   @NonNull
   public static final EmptyFlagContainer<?> EMPTY = new EmptyFlagContainer<>();
 
+  private EmptyFlagContainer() {
+    // diable construction
+  }
+
   @Override
-  public Map<QName, FI> getFlagInstanceMap() {
+  public Map<Integer, FI> getFlagInstanceMap() {
     return CollectionUtil.emptyMap();
   }
 

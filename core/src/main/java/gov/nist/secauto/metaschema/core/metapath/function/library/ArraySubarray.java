@@ -6,13 +6,13 @@
 package gov.nist.secauto.metaschema.core.metapath.function.library;
 
 import gov.nist.secauto.metaschema.core.metapath.DynamicContext;
-import gov.nist.secauto.metaschema.core.metapath.ICollectionValue;
-import gov.nist.secauto.metaschema.core.metapath.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.MetapathConstants;
 import gov.nist.secauto.metaschema.core.metapath.function.FunctionUtils;
 import gov.nist.secauto.metaschema.core.metapath.function.IArgument;
 import gov.nist.secauto.metaschema.core.metapath.function.IFunction;
+import gov.nist.secauto.metaschema.core.metapath.item.ICollectionValue;
 import gov.nist.secauto.metaschema.core.metapath.item.IItem;
+import gov.nist.secauto.metaschema.core.metapath.item.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IIntegerItem;
 import gov.nist.secauto.metaschema.core.metapath.item.function.ArrayException;
 import gov.nist.secauto.metaschema.core.metapath.item.function.IArrayItem;
@@ -39,15 +39,15 @@ public final class ArraySubarray {
       .focusIndependent()
       .argument(IArgument.builder()
           .name("array")
-          .type(IArrayItem.class)
+          .type(IArrayItem.type())
           .one()
           .build())
       .argument(IArgument.builder()
           .name("start")
-          .type(IIntegerItem.class)
+          .type(IIntegerItem.type())
           .one()
           .build())
-      .returnType(IArrayItem.class)
+      .returnType(IArrayItem.type())
       .returnOne()
       .functionHandler(ArraySubarray::executeTwoArg)
       .build();
@@ -60,20 +60,20 @@ public final class ArraySubarray {
       .focusIndependent()
       .argument(IArgument.builder()
           .name("array")
-          .type(IArrayItem.class)
+          .type(IArrayItem.type())
           .one()
           .build())
       .argument(IArgument.builder()
           .name("start")
-          .type(IIntegerItem.class)
+          .type(IIntegerItem.type())
           .one()
           .build())
       .argument(IArgument.builder()
           .name("length")
-          .type(IIntegerItem.class)
+          .type(IIntegerItem.type())
           .one()
           .build())
-      .returnType(IArrayItem.class)
+      .returnType(IArrayItem.type())
       .returnOne()
       .functionHandler(ArraySubarray::executeThreeArg)
       .build();
@@ -128,7 +128,7 @@ public final class ArraySubarray {
   public static <T extends ICollectionValue> IArrayItem<T> subarray(
       @NonNull IArrayItem<T> array,
       @NonNull IIntegerItem startItem) {
-    return subarray(array, startItem.asInteger().intValueExact());
+    return subarray(array, startItem.toIntValueExact());
   }
 
   /**
@@ -155,7 +155,7 @@ public final class ArraySubarray {
       @NonNull IArrayItem<T> array,
       @NonNull IIntegerItem startItem,
       @NonNull IIntegerItem lengthItem) {
-    return subarray(array, startItem.asInteger().intValueExact(), lengthItem.asInteger().intValueExact());
+    return subarray(array, startItem.toIntValueExact(), lengthItem.toIntValueExact());
   }
 
   /**

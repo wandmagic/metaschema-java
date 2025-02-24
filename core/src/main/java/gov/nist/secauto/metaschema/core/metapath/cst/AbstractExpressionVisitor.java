@@ -5,26 +5,53 @@
 
 package gov.nist.secauto.metaschema.core.metapath.cst;
 
-import gov.nist.secauto.metaschema.core.metapath.cst.comparison.GeneralComparison;
-import gov.nist.secauto.metaschema.core.metapath.cst.comparison.ValueComparison;
+import gov.nist.secauto.metaschema.core.metapath.IExpression;
+import gov.nist.secauto.metaschema.core.metapath.cst.items.ArraySequenceConstructor;
+import gov.nist.secauto.metaschema.core.metapath.cst.items.ArraySquareConstructor;
+import gov.nist.secauto.metaschema.core.metapath.cst.items.DecimalLiteral;
+import gov.nist.secauto.metaschema.core.metapath.cst.items.EmptySequence;
+import gov.nist.secauto.metaschema.core.metapath.cst.items.Except;
+import gov.nist.secauto.metaschema.core.metapath.cst.items.IntegerLiteral;
+import gov.nist.secauto.metaschema.core.metapath.cst.items.Intersect;
+import gov.nist.secauto.metaschema.core.metapath.cst.items.MapConstructor;
+import gov.nist.secauto.metaschema.core.metapath.cst.items.PostfixLookup;
+import gov.nist.secauto.metaschema.core.metapath.cst.items.Quantified;
+import gov.nist.secauto.metaschema.core.metapath.cst.items.Range;
+import gov.nist.secauto.metaschema.core.metapath.cst.items.SequenceExpression;
+import gov.nist.secauto.metaschema.core.metapath.cst.items.SimpleMap;
+import gov.nist.secauto.metaschema.core.metapath.cst.items.StringConcat;
+import gov.nist.secauto.metaschema.core.metapath.cst.items.StringLiteral;
+import gov.nist.secauto.metaschema.core.metapath.cst.items.UnaryLookup;
+import gov.nist.secauto.metaschema.core.metapath.cst.items.Union;
+import gov.nist.secauto.metaschema.core.metapath.cst.logic.And;
+import gov.nist.secauto.metaschema.core.metapath.cst.logic.GeneralComparison;
+import gov.nist.secauto.metaschema.core.metapath.cst.logic.If;
+import gov.nist.secauto.metaschema.core.metapath.cst.logic.Or;
+import gov.nist.secauto.metaschema.core.metapath.cst.logic.PredicateExpression;
+import gov.nist.secauto.metaschema.core.metapath.cst.logic.ValueComparison;
 import gov.nist.secauto.metaschema.core.metapath.cst.math.Addition;
 import gov.nist.secauto.metaschema.core.metapath.cst.math.Division;
 import gov.nist.secauto.metaschema.core.metapath.cst.math.IntegerDivision;
 import gov.nist.secauto.metaschema.core.metapath.cst.math.Modulo;
 import gov.nist.secauto.metaschema.core.metapath.cst.math.Multiplication;
+import gov.nist.secauto.metaschema.core.metapath.cst.math.Negate;
 import gov.nist.secauto.metaschema.core.metapath.cst.math.Subtraction;
-import gov.nist.secauto.metaschema.core.metapath.cst.path.Axis;
 import gov.nist.secauto.metaschema.core.metapath.cst.path.ContextItem;
-import gov.nist.secauto.metaschema.core.metapath.cst.path.Flag;
-import gov.nist.secauto.metaschema.core.metapath.cst.path.ModelInstance;
-import gov.nist.secauto.metaschema.core.metapath.cst.path.NameTest;
+import gov.nist.secauto.metaschema.core.metapath.cst.path.FlagStep;
+import gov.nist.secauto.metaschema.core.metapath.cst.path.KindNodeTest;
+import gov.nist.secauto.metaschema.core.metapath.cst.path.ModelInstanceStep;
+import gov.nist.secauto.metaschema.core.metapath.cst.path.NameNodeTest;
 import gov.nist.secauto.metaschema.core.metapath.cst.path.RelativeDoubleSlashPath;
 import gov.nist.secauto.metaschema.core.metapath.cst.path.RelativeSlashPath;
 import gov.nist.secauto.metaschema.core.metapath.cst.path.RootDoubleSlashPath;
 import gov.nist.secauto.metaschema.core.metapath.cst.path.RootSlashOnlyPath;
 import gov.nist.secauto.metaschema.core.metapath.cst.path.RootSlashPath;
 import gov.nist.secauto.metaschema.core.metapath.cst.path.Step;
-import gov.nist.secauto.metaschema.core.metapath.cst.path.Wildcard;
+import gov.nist.secauto.metaschema.core.metapath.cst.path.WildcardNodeTest;
+import gov.nist.secauto.metaschema.core.metapath.cst.type.Cast;
+import gov.nist.secauto.metaschema.core.metapath.cst.type.Castable;
+import gov.nist.secauto.metaschema.core.metapath.cst.type.InstanceOf;
+import gov.nist.secauto.metaschema.core.metapath.cst.type.Treat;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
@@ -139,11 +166,6 @@ public abstract class AbstractExpressionVisitor<RESULT, CONTEXT> implements IExp
   }
 
   @Override
-  public RESULT visitAxis(@NonNull Axis expr, @NonNull CONTEXT context) {
-    return visitChildren(expr, context);
-  }
-
-  @Override
   public RESULT visitStep(Step expr, CONTEXT context) {
     return visitChildren(expr, context);
   }
@@ -179,12 +201,22 @@ public abstract class AbstractExpressionVisitor<RESULT, CONTEXT> implements IExp
   }
 
   @Override
-  public RESULT visitFlag(Flag expr, CONTEXT context) {
+  public RESULT visitFlagStep(FlagStep expr, CONTEXT context) {
     return visitChildren(expr, context);
   }
 
   @Override
-  public RESULT visitFunctionCall(StaticFunctionCall expr, CONTEXT context) {
+  public RESULT visitStaticFunctionCall(StaticFunctionCall expr, CONTEXT context) {
+    return visitChildren(expr, context);
+  }
+
+  @Override
+  public RESULT visitDynamicFunctionCall(DynamicFunctionCall expr, CONTEXT context) {
+    return visitChildren(expr, context);
+  }
+
+  @Override
+  public RESULT visitAnonymousFunctionCall(AnonymousFunctionCall expr, CONTEXT context) {
     return visitChildren(expr, context);
   }
 
@@ -204,7 +236,7 @@ public abstract class AbstractExpressionVisitor<RESULT, CONTEXT> implements IExp
   }
 
   @Override
-  public RESULT visitMetapath(Metapath expr, CONTEXT context) {
+  public RESULT visitMetapath(SequenceExpression expr, CONTEXT context) {
     return visitChildren(expr, context);
   }
 
@@ -214,7 +246,7 @@ public abstract class AbstractExpressionVisitor<RESULT, CONTEXT> implements IExp
   }
 
   @Override
-  public RESULT visitModelInstance(ModelInstance expr, CONTEXT context) {
+  public RESULT visitModelInstanceStep(ModelInstanceStep expr, CONTEXT context) {
     return visitChildren(expr, context);
   }
 
@@ -224,7 +256,7 @@ public abstract class AbstractExpressionVisitor<RESULT, CONTEXT> implements IExp
   }
 
   @Override
-  public RESULT visitName(NameTest expr, CONTEXT context) {
+  public RESULT visitNameNodeTest(NameNodeTest expr, CONTEXT context) {
     return defaultResult();
   }
 
@@ -289,7 +321,7 @@ public abstract class AbstractExpressionVisitor<RESULT, CONTEXT> implements IExp
   }
 
   @Override
-  public RESULT visitWildcard(Wildcard expr, CONTEXT context) {
+  public RESULT visitWildcardNodeTest(WildcardNodeTest expr, CONTEXT context) {
     return defaultResult();
   }
 
@@ -300,6 +332,11 @@ public abstract class AbstractExpressionVisitor<RESULT, CONTEXT> implements IExp
 
   @Override
   public RESULT visitVariableReference(VariableReference expr, CONTEXT context) {
+    return visitChildren(expr, context);
+  }
+
+  @Override
+  public RESULT visitNamedFunctionReference(NamedFunctionReference expr, CONTEXT context) {
     return visitChildren(expr, context);
   }
 
@@ -366,5 +403,30 @@ public abstract class AbstractExpressionVisitor<RESULT, CONTEXT> implements IExp
   @Override
   public RESULT visitUnaryLookup(UnaryLookup expr, CONTEXT context) {
     return defaultResult();
+  }
+
+  @Override
+  public RESULT visitInstanceOf(InstanceOf expr, CONTEXT context) {
+    return visitChildren(expr, context);
+  }
+
+  @Override
+  public RESULT visitCast(Cast expr, CONTEXT context) {
+    return visitChildren(expr, context);
+  }
+
+  @Override
+  public RESULT visitCastable(Castable expr, CONTEXT context) {
+    return visitChildren(expr, context);
+  }
+
+  @Override
+  public RESULT visitTreat(Treat expr, CONTEXT context) {
+    return visitChildren(expr, context);
+  }
+
+  @Override
+  public RESULT visitKindNodeTest(KindNodeTest expr, CONTEXT context) {
+    return visitChildren(expr, context);
   }
 }

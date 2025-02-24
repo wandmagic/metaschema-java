@@ -10,11 +10,10 @@ import gov.nist.secauto.metaschema.core.configuration.IConfiguration;
 import gov.nist.secauto.metaschema.core.configuration.IMutableConfiguration;
 import gov.nist.secauto.metaschema.core.datatype.IDataTypeAdapter;
 import gov.nist.secauto.metaschema.core.metapath.DynamicContext;
-import gov.nist.secauto.metaschema.core.metapath.ISequence;
+import gov.nist.secauto.metaschema.core.metapath.IMetapathExpression;
 import gov.nist.secauto.metaschema.core.metapath.MetapathException;
-import gov.nist.secauto.metaschema.core.metapath.MetapathExpression;
 import gov.nist.secauto.metaschema.core.metapath.function.library.FnBoolean;
-import gov.nist.secauto.metaschema.core.metapath.function.library.FnData;
+import gov.nist.secauto.metaschema.core.metapath.item.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.item.node.AbstractNodeItemVisitor;
 import gov.nist.secauto.metaschema.core.metapath.item.node.IAssemblyNodeItem;
 import gov.nist.secauto.metaschema.core.metapath.item.node.IDefinitionNodeItem;
@@ -25,6 +24,7 @@ import gov.nist.secauto.metaschema.core.metapath.item.node.INodeItem;
 import gov.nist.secauto.metaschema.core.model.IAssemblyDefinition;
 import gov.nist.secauto.metaschema.core.model.IFieldDefinition;
 import gov.nist.secauto.metaschema.core.model.IFlagDefinition;
+import gov.nist.secauto.metaschema.core.qname.IEnhancedQName;
 import gov.nist.secauto.metaschema.core.util.CollectionUtil;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 
@@ -40,8 +40,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
-
-import javax.xml.namespace.QName;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
@@ -386,13 +386,13 @@ public class DefaultConstraintValidator
       @NonNull Throwable ex) {
     StringBuilder builder = new StringBuilder(128);
     builder.append("A ")
-        .append(constraint.getClass().getName())
+        .append(constraint.getType().getName())
         .append(" constraint");
 
     String id = constraint.getId();
     if (id == null) {
       builder.append(" targeting the metapath '")
-          .append(constraint.getTarget())
+          .append(constraint.getTarget().getPath())
           .append('\'');
     } else {
       builder.append(" with id '")
@@ -402,7 +402,7 @@ public class DefaultConstraintValidator
 
     builder.append(", matching the item at path '")
         .append(item.getMetapath())
-        .append("', resulted in an unexpected error. The error was: ")
+        .append("', resulted in an unexpected error. ")
         .append(ex.getLocalizedMessage());
     return ObjectUtils.notNull(builder.toString());
   }
@@ -541,7 +541,7 @@ public class DefaultConstraintValidator
       @NonNull INodeItem node,
       @NonNull INodeItem item,
       @NonNull DynamicContext dynamicContext) {
-    String value = FnData.fnDataItem(item).asString();
+    String value = item.toAtomicItem().asString();
 
     IConstraintValidationHandler handler = getConstraintValidationHandler();
     boolean valid = true;
@@ -622,8 +622,7 @@ public class DefaultConstraintValidator
       indexNameToKeyRefMap.put(indexName, keyRefItems);
     }
 
-    KeyRef keyRef = new KeyRef(constraint, node, new ArrayList<>(targets.getValue()));
-    keyRefItems.add(keyRef);
+    keyRefItems.add(new KeyRef(constraint, node, new ArrayList<>(targets)));
   }
 
   /**
@@ -676,28 +675,29 @@ public class DefaultConstraintValidator
       @NonNull INodeItem node,
       @NonNull ISequence<? extends INodeItem> targets,
       @NonNull DynamicContext dynamicContext) {
-    MetapathExpression metapath = MetapathExpression.compile(
-        constraint.getTest(),
-        dynamicContext.getStaticContext());
+    try {
+      IMetapathExpression metapath = constraint.getTest();
+      IConstraintValidationHandler handler = getConstraintValidationHandler();
+      targets.stream()
+          .forEachOrdered(item -> {
+            assert item != null;
 
-    IConstraintValidationHandler handler = getConstraintValidationHandler();
-    targets.stream()
-        .forEachOrdered(item -> {
-          assert item != null;
-
-          if (item.hasValue()) {
-            try {
-              ISequence<?> result = metapath.evaluate(item, dynamicContext);
-              if (FnBoolean.fnBoolean(result).toBoolean()) {
-                handlePass(constraint, node, item, dynamicContext);
-              } else {
-                handler.handleExpectViolation(constraint, node, item, dynamicContext);
+            if (item.hasValue()) {
+              try {
+                ISequence<?> result = metapath.evaluate(item, dynamicContext);
+                if (FnBoolean.fnBoolean(result).toBoolean()) {
+                  handlePass(constraint, node, item, dynamicContext);
+                } else {
+                  handler.handleExpectViolation(constraint, node, item, dynamicContext);
+                }
+              } catch (MetapathException ex) {
+                handleError(constraint, item, ex, dynamicContext);
               }
-            } catch (MetapathException ex) {
-              handleError(constraint, item, ex, dynamicContext);
             }
-          }
-        });
+          });
+    } catch (MetapathException ex) {
+      handleError(constraint, node, ex, dynamicContext);
+    }
   }
 
   /**
@@ -881,18 +881,12 @@ public class DefaultConstraintValidator
 
     public ValueStatus(@NonNull INodeItem item) {
       this.item = item;
-      this.value = FnData.fnDataItem(item).asString();
+      this.value = item.toAtomicItem().asString();
     }
 
     public void registerAllowedValue(
         @NonNull IAllowedValuesConstraint allowedValues,
         @NonNull IDefinitionNodeItem<?, ?> node) {
-      this.constraints.add(Pair.of(allowedValues, node));
-      if (!allowedValues.isAllowedOther()) {
-        // record the most restrictive value
-        allowOthers = false;
-      }
-
       IAllowedValuesConstraint.Extensible newExtensible = allowedValues.getExtensible();
       if (newExtensible.ordinal() > extensible.ordinal()) {
         // record the most restrictive value
@@ -901,7 +895,18 @@ public class DefaultConstraintValidator
           && IAllowedValuesConstraint.Extensible.NONE.equals(extensible)) {
         // this is an error, where there are two none constraints that conflict
         throw new MetapathException(
-            String.format("Multiple constraints have extensibility scope=none at path '%s'", item.getMetapath()));
+            String.format(
+                "Multiple constraints matching path '%s' have scope='none', which prevents extension. Involved" +
+                    " constraints are those: %s",
+                Stream.concat(
+                    Stream.of(allowedValues),
+                    constraints.stream()
+                        .map(Pair::getLeft)
+                        .filter(
+                            constraint -> IAllowedValuesConstraint.Extensible.NONE.equals(constraint.getExtensible())))
+                    .map(IConstraint::getConstraintIdentity)
+                    .collect(Collectors.joining(", ", "{", "}")),
+                item.getMetapath()));
       } else if (allowedValues.getExtensible().ordinal() < extensible.ordinal()) {
         String msg = String.format(
             "An allowed values constraint with an extensibility scope '%s'"
@@ -909,6 +914,11 @@ public class DefaultConstraintValidator
             allowedValues.getExtensible().name(), extensible.name(), item.getMetapath());
         LOGGER.atError().log(msg);
         throw new MetapathException(msg);
+      }
+      this.constraints.add(Pair.of(allowedValues, node));
+      if (!allowedValues.isAllowedOther()) {
+        // record the most restrictive value
+        allowOthers = false;
       }
     }
 
@@ -948,7 +958,7 @@ public class DefaultConstraintValidator
     @NonNull
     private DynamicContext handleLetStatements(
         @NonNull INodeItem focus,
-        @NonNull Map<QName, ILet> letExpressions,
+        @NonNull Map<IEnhancedQName, ILet> letExpressions,
         @NonNull DynamicContext dynamicContext) {
 
       DynamicContext retval;
@@ -959,13 +969,12 @@ public class DefaultConstraintValidator
         final DynamicContext subContext = dynamicContext.subContext();
 
         for (ILet let : lets) {
-          QName name = let.getName();
+          IEnhancedQName name = let.getName();
           ISequence<?> result = let.getValueExpression().evaluate(focus, subContext);
-
-          // ensure the sequence is list backed
-          result.getValue();
-
-          subContext.bindVariableValue(name, result);
+          subContext.bindVariableValue(
+              name,
+              // ensure the sequence is list backed
+              result.reusable());
         }
         retval = subContext;
       }
@@ -1012,7 +1021,7 @@ public class DefaultConstraintValidator
 
     @Override
     public Void visitMetaschema(@NonNull IModuleNodeItem item, DynamicContext context) {
-      throw new UnsupportedOperationException("not needed");
+      throw new UnsupportedOperationException("Method not used.");
     }
 
     @Override

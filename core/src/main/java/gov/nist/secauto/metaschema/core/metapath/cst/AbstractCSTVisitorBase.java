@@ -5,10 +5,11 @@
 
 package gov.nist.secauto.metaschema.core.metapath.cst;
 
+import gov.nist.secauto.metaschema.core.metapath.IExpression;
 import gov.nist.secauto.metaschema.core.metapath.StaticContext;
 import gov.nist.secauto.metaschema.core.metapath.StaticMetapathException;
 import gov.nist.secauto.metaschema.core.metapath.antlr.AbstractAstVisitor;
-import gov.nist.secauto.metaschema.core.metapath.antlr.Metapath10.EqnameContext;
+import gov.nist.secauto.metaschema.core.metapath.antlr.Metapath10;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 
 import org.antlr.v4.runtime.ParserRuleContext;
@@ -28,6 +29,24 @@ import javax.xml.namespace.QName;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 
+/**
+ * Provides utility methods for processing Metapath abstract syntax tree (AST)
+ * nodes to produce a compact syntax tree (CST).
+ * <p>
+ * This base class implements common visitor patterns for transforming AST nodes
+ * into a more compact representation. The CST is optimized for efficient
+ * evaluation of Metapath expressions.
+ * <p>
+ * Key utility methods include:
+ * <ul>
+ * <li>{@link #nairyToList} - Processes n-airy expressions into a list
+ * <li>{@link #nairyToCollection} - Processes n-airy expressions into a
+ * collection
+ * <li>{@link #handleNAiryCollection} - Handles n-airy expressions with
+ * operators
+ * <li>{@link #handleGroupedNAiry} - Processes grouped n-airy expressions
+ * </ul>
+ */
 @SuppressWarnings({
     "PMD.CouplingBetweenObjects"
 })
@@ -55,7 +74,8 @@ public abstract class AbstractCSTVisitorBase
    */
   @SuppressWarnings({ "PMD.CyclomaticComplexity", "PMD.CognitiveComplexity" })
   @NonNull
-  static QName toQName(@NonNull EqnameContext eqname, @NonNull StaticContext context, boolean requireNamespace) {
+  static QName toQName(@NonNull Metapath10.EqnameContext eqname, @NonNull StaticContext context,
+      boolean requireNamespace) {
     String namespaceUri;
     String localName;
     TerminalNode node;
@@ -63,13 +83,12 @@ public abstract class AbstractCSTVisitorBase
       // BracedURILiteral - Q{uri}name -
       // https://www.w3.org/TR/xpath-31/#doc-xpath31-BracedURILiteral
       Matcher matcher = QUALIFIED_NAME_PATTERN.matcher(node.getText());
-      if (matcher.matches()) {
-        namespaceUri = matcher.group(1);
-        localName = matcher.group(2);
-      } else {
+      if (!matcher.matches()) {
         // the syntax should always match above, since ANTLR is parsing it
         throw new IllegalStateException();
       }
+      namespaceUri = matcher.group(1);
+      localName = matcher.group(2);
     } else {
       String prefix;
       String[] tokens = eqname.getText().split(":", 2);
@@ -114,7 +133,46 @@ public abstract class AbstractCSTVisitorBase
   }
 
   /**
-   * Parse the provided context as an n-ary phrase.
+   * Parse the provided context as an n-airy phrase.
+   *
+   * @param <CONTEXT>
+   *          the Java type of the antlr context to parse
+   * @param <T>
+   *          the Java type of the child expressions produced by this parser
+   * @param <R>
+   *          the Java type of the outer expression produced by the parser
+   * @param context
+   *          the antlr context to parse
+   * @param startIndex
+   *          the child index to start parsing on
+   * @param step
+   *          the increment to advance while parsing child expressions
+   * @param parser
+   *          a binary function used to produce child expressions
+   * @return the outer expression or {@code null} if no children exist to parse
+   */
+  @Nullable
+  protected <CONTEXT extends ParserRuleContext, T, R>
+      List<R> nairyToList(
+          @NonNull CONTEXT context,
+          int startIndex,
+          int step,
+          @NonNull BiFunction<CONTEXT, Integer, R> parser) {
+    int numChildren = context.getChildCount();
+
+    List<R> retval = null;
+    if (startIndex < numChildren) {
+      retval = new ArrayList<>((numChildren - startIndex) / step);
+      for (int idx = startIndex; idx < numChildren; idx += step) {
+        R result = parser.apply(context, idx);
+        retval.add(result);
+      }
+    }
+    return retval;
+  }
+
+  /**
+   * Parse the provided context as an n-airy phrase.
    *
    * @param <CONTEXT>
    *          the Java type of the antlr context to parse
@@ -135,7 +193,7 @@ public abstract class AbstractCSTVisitorBase
    * @return the outer expression or {@code null} if no children exist to parse
    */
   @Nullable
-  protected <CONTEXT extends ParserRuleContext, T extends IExpression, R extends IExpression>
+  protected <CONTEXT extends ParserRuleContext, T, R>
       R nairyToCollection(
           @NonNull CONTEXT context,
           int startIndex,
@@ -157,19 +215,16 @@ public abstract class AbstractCSTVisitorBase
   }
 
   /**
-   * Parse the provided context as an n-ary phrase, which will be one of the
+   * Parse the provided context as an n-airy phrase, which will be one of the
    * following.
    * <ol>
-   * <li>A single <code>expr</code> for which that expr will be returned</li>
+   * <li>A single <code>expr</code> for which that expr will be returned
    * <li><code>left (operator right)*</code> for which a collection of the left
-   * and right members will be returned based on what is provided by the
-   * supplier.</li>
+   * and right members will be returned based on what is provided by the supplier.
    * </ol>
    *
    * @param <CONTEXT>
    *          the context type to parse
-   * @param <NODE>
-   *          the type of expression
    * @param context
    *          the context instance
    * @param supplier
@@ -178,27 +233,24 @@ public abstract class AbstractCSTVisitorBase
    * @return the left expression or the supplied expression for a collection
    */
   @NonNull
-  protected <CONTEXT extends ParserRuleContext, NODE extends IExpression> IExpression
+  protected <CONTEXT extends ParserRuleContext> IExpression
       handleNAiryCollection(
           @NonNull CONTEXT context,
-          @NonNull Function<List<NODE>, IExpression> supplier) {
+          @NonNull Function<List<IExpression>, IExpression> supplier) {
     return handleNAiryCollection(context, 1, 2, (ctx, idx) -> {
       // skip operator, since we know what it is
       ParseTree tree = ctx.getChild(idx + 1);
-      @SuppressWarnings({ "unchecked", "null" })
-      @NonNull
-      NODE node = (NODE) tree.accept(this);
-      return node;
+      return tree.accept(this);
     }, supplier);
   }
 
   /**
-   * Parse the provided context as an n-ary phrase, which will be one of the
+   * Parse the provided context as an n-airy phrase, which will be one of the
    * following.
    * <ol>
-   * <li><code>expr</code> for which the expr will be returned.</li>
+   * <li><code>expr</code> for which the expr will be returned.
    * <li><code>left</code> plus a number of additional recurring tokens as defined
-   * by the <em>step</em>.</li>
+   * by the <em>step</em>.
    * </ol>
    * <p>
    * In the second case, the supplier will be used to generate an expression from
@@ -206,8 +258,6 @@ public abstract class AbstractCSTVisitorBase
    *
    * @param <CONTEXT>
    *          the context type to parse
-   * @param <EXPRESSION>
-   *          the child expression type
    * @param context
    *          the context instance
    * @param startIndex
@@ -222,34 +272,35 @@ public abstract class AbstractCSTVisitorBase
    * @return the left expression or the supplied expression for a collection
    */
   @NonNull
-  protected <CONTEXT extends ParserRuleContext, EXPRESSION extends IExpression> IExpression
+  protected <CONTEXT extends ParserRuleContext> IExpression
       handleNAiryCollection(
           @NonNull CONTEXT context,
           int startIndex,
           int step,
-          @NonNull BiFunction<CONTEXT, Integer, EXPRESSION> parser,
-          @NonNull Function<List<EXPRESSION>, IExpression> supplier) {
+          @NonNull BiFunction<CONTEXT, Integer, IExpression> parser,
+          @NonNull Function<List<IExpression>, IExpression> supplier) {
     int numChildren = context.getChildCount();
 
     if (numChildren == 0) {
       throw new IllegalStateException("there should always be a child expression");
-    } else if (startIndex > numChildren) {
+    }
+    if (startIndex > numChildren) {
       throw new IllegalStateException("Start index is out of bounds");
     }
 
     ParseTree leftTree = context.getChild(0);
-    @SuppressWarnings({ "unchecked", "null" })
+    @SuppressWarnings({ "null" })
     @NonNull
-    EXPRESSION leftResult = (EXPRESSION) leftTree.accept(this);
+    IExpression leftResult = leftTree.accept(this);
 
     IExpression retval;
     if (numChildren == 1) {
       retval = leftResult;
     } else {
-      List<EXPRESSION> children = new ArrayList<>(numChildren - 1 / step);
+      List<IExpression> children = new ArrayList<>(numChildren - 1 / step);
       children.add(leftResult);
       for (int i = startIndex; i < numChildren; i = i + step) {
-        EXPRESSION result = parser.apply(context, i);
+        IExpression result = parser.apply(context, i);
         children.add(result);
       }
       IExpression result = ObjectUtils.notNull(supplier.apply(children));
@@ -259,10 +310,10 @@ public abstract class AbstractCSTVisitorBase
   }
 
   /**
-   * Parse the provided context as a simple n-ary phrase, which will be one of the
-   * following.
+   * Parse the provided context as a simple n-airy phrase, which will be one of
+   * the following.
    * <ol>
-   * <li><code>expr</code> for which the expr will be returned</li>
+   * <li><code>expr</code> for which the expr will be returned
    * <li><code>left (operator right)*</code> for which a collection of the left
    * and right members will be returned based on what is provided by the supplier.
    * </ol>

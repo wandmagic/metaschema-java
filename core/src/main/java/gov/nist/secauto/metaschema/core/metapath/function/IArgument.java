@@ -5,7 +5,14 @@
 
 package gov.nist.secauto.metaschema.core.metapath.function;
 
+import gov.nist.secauto.metaschema.core.metapath.StaticContext;
+import gov.nist.secauto.metaschema.core.metapath.StaticMetapathException;
 import gov.nist.secauto.metaschema.core.metapath.item.IItem;
+import gov.nist.secauto.metaschema.core.metapath.type.IItemType;
+import gov.nist.secauto.metaschema.core.metapath.type.ISequenceType;
+import gov.nist.secauto.metaschema.core.metapath.type.Occurrence;
+import gov.nist.secauto.metaschema.core.qname.EQNameFactory;
+import gov.nist.secauto.metaschema.core.qname.IEnhancedQName;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 
 import java.util.Objects;
@@ -16,13 +23,19 @@ import edu.umd.cs.findbugs.annotations.NonNull;
  * Represents a single function argument signature.
  */
 public interface IArgument {
+  @SuppressWarnings("PMD.ShortMethodName")
+  @NonNull
+  static IArgument of(@NonNull IEnhancedQName name, @NonNull ISequenceType sequenceType) {
+    return new ArgumentImpl(name, sequenceType);
+  }
+
   /**
    * Get the argument's name.
    *
    * @return the argument's name
    */
   @NonNull
-  String getName();
+  IEnhancedQName getName();
 
   /**
    * Get information about the type of sequence supported by the argument.
@@ -50,21 +63,26 @@ public interface IArgument {
     return new Builder();
   }
 
+  @NonNull
+  static String resolveArgumentName(@NonNull String prefix) {
+    if (!"".equals(prefix)) {
+      throw new UnsupportedOperationException("Lexical qualified names are not allowed.");
+    }
+    return "";
+  }
+
   /**
    * Used to create an argument's signature using a builder pattern.
    */
   final class Builder {
-    private String name;
+    private IEnhancedQName name;
     @NonNull
-    private Class<? extends IItem> type = IItem.class;
+    private IItemType type;
     private Occurrence occurrence;
 
     private Builder() {
       // construct a new non-initialized builder
-    }
-
-    private Builder(@NonNull String name) {
-      this.name = name;
+      this.type = IItem.type();
     }
 
     /**
@@ -79,7 +97,27 @@ public interface IArgument {
       if (Objects.requireNonNull(name, "name").isBlank()) {
         throw new IllegalArgumentException("the name must be non-blank");
       }
-      this.name = name.trim();
+      this.name = EQNameFactory.instance().parseName(name, IArgument::resolveArgumentName);
+      return this;
+    }
+
+    /**
+     * Define the type of the function argument.
+     * <p>
+     * By default an argument has the type {@link IItem}.
+     *
+     * @param name
+     *          the qualified name of the argument's type
+     * @return this builder
+     */
+    @NonNull
+    public Builder type(@NonNull IEnhancedQName name) {
+      try {
+        this.type = StaticContext.lookupAtomicType(name);
+      } catch (StaticMetapathException ex) {
+        throw new IllegalArgumentException(
+            String.format("No data type with the name '%s'.", name), ex);
+      }
       return this;
     }
 
@@ -93,8 +131,8 @@ public interface IArgument {
      * @return this builder
      */
     @NonNull
-    public Builder type(@NonNull Class<? extends IItem> type) {
-      this.type = Objects.requireNonNull(type, "type");
+    public Builder type(@NonNull IItemType type) {
+      this.type = type;
       return this;
     }
 

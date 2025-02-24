@@ -6,9 +6,10 @@
 package gov.nist.secauto.metaschema.core.metapath.cst;
 
 import gov.nist.secauto.metaschema.core.metapath.DynamicContext;
-import gov.nist.secauto.metaschema.core.metapath.ISequence;
+import gov.nist.secauto.metaschema.core.metapath.IExpression;
 import gov.nist.secauto.metaschema.core.metapath.cst.Let.VariableDeclaration;
 import gov.nist.secauto.metaschema.core.metapath.item.IItem;
+import gov.nist.secauto.metaschema.core.metapath.item.ISequence;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 
 import java.util.LinkedList;
@@ -22,21 +23,28 @@ import edu.umd.cs.findbugs.annotations.NonNull;
  * expression</a> supporting variable-based iteration.
  */
 @SuppressWarnings("PMD.ShortClassName")
-public class For implements IExpression {
+public class For
+    extends AbstractExpression {
   @NonNull
   private final Let.VariableDeclaration variable;
   @NonNull
   private final IExpression returnExpression;
 
   /**
-   * Construct a new let expression using the provided variable and return clause.
+   * Construct a new for expression using the provided variable and return clause.
    *
+   * @param text
+   *          the parsed text of the expression
    * @param variable
    *          the variable declaration
    * @param returnExpr
    *          the return clause that makes use of variables for evaluation
    */
-  public For(@NonNull VariableDeclaration variable, @NonNull IExpression returnExpr) {
+  public For(
+      @NonNull String text,
+      @NonNull VariableDeclaration variable,
+      @NonNull IExpression returnExpr) {
+    super(text);
     this.variable = variable;
     this.returnExpression = returnExpr;
   }
@@ -73,7 +81,7 @@ public class For implements IExpression {
   }
 
   @Override
-  public ISequence<? extends IItem> accept(DynamicContext dynamicContext, ISequence<?> focus) {
+  protected ISequence<?> evaluate(DynamicContext dynamicContext, ISequence<?> focus) {
     Let.VariableDeclaration variable = getVariable();
     ISequence<?> variableResult = variable.getBoundExpression().accept(dynamicContext, focus);
 
@@ -89,7 +97,7 @@ public class For implements IExpression {
 
   @SuppressWarnings("null")
   @Override
-  public String toASTString() {
+  public String toCSTString() {
     return String.format("%s[variable=%s]", getClass().getName(), getVariable().getName());
   }
 }

@@ -1,8 +1,12 @@
 
 package gov.nist.secauto.metaschema.core.metapath.item.node;
 
+import gov.nist.secauto.metaschema.core.metapath.StaticContext;
 import gov.nist.secauto.metaschema.core.metapath.format.IPathFormatter;
-import gov.nist.secauto.metaschema.core.metapath.item.atomic.IAtomicValuedItem;
+import gov.nist.secauto.metaschema.core.metapath.item.ICollectionValue;
+import gov.nist.secauto.metaschema.core.metapath.type.IAtomicOrUnionType;
+import gov.nist.secauto.metaschema.core.metapath.type.IItemType;
+import gov.nist.secauto.metaschema.core.metapath.type.IKindTest;
 import gov.nist.secauto.metaschema.core.model.IFieldDefinition;
 import gov.nist.secauto.metaschema.core.model.IFieldInstance;
 
@@ -16,15 +20,44 @@ import edu.umd.cs.findbugs.annotations.Nullable;
  */
 public interface IFieldNodeItem
     extends IModelNodeItem<IFieldDefinition, IFieldInstance>,
-    IAtomicValuedItem {
+    IAtomicValuedNodeItem {
+  /**
+   * Get the static type information of the node item.
+   *
+   * @return the item type
+   */
+  @NonNull
+  static IItemType type() {
+    return IItemType.field();
+  }
+
   @Override
-  default NodeItemType getNodeItemType() {
-    return NodeItemType.FIELD;
+  default NodeItemKind getNodeItemKind() {
+    return NodeItemKind.FIELD;
+  }
+
+  @Override
+  default NodeType getNodeType() {
+    return NodeType.FIELD;
   }
 
   @Override
   default IFieldNodeItem getNodeItem() {
     return this;
+  }
+
+  @Override
+  default IKindTest<IFieldNodeItem> getType() {
+    StaticContext staticContext = getStaticContext();
+    return IItemType.field(
+        getQName(),
+        getDefinition().getDefinitionQName().toEQName(staticContext),
+        staticContext);
+  }
+
+  @Override
+  default IAtomicOrUnionType<?> getValueItemType() {
+    return getDefinition().getJavaTypeAdapter().getItemType();
   }
 
   @Override
@@ -43,5 +76,11 @@ public interface IFieldNodeItem
   @Override
   default <CONTEXT, RESULT> RESULT accept(@NonNull INodeItemVisitor<CONTEXT, RESULT> visitor, CONTEXT context) {
     return visitor.visitField(this, context);
+  }
+
+  @Override
+  default boolean deepEquals(ICollectionValue other) {
+    return other instanceof IFieldNodeItem
+        && NodeComparators.compareNodeItem(this, (IFieldNodeItem) other) == 0;
   }
 }

@@ -35,7 +35,7 @@ class MetaschemaModuleMetaschemaTest
 
   @Test
   @Disabled
-  void testMetaschemaMetaschema() throws MetaschemaException, IOException, ClassNotFoundException, BindingException {
+  void testMetaschemaMetaschema() throws MetaschemaException, IOException, ClassNotFoundException {
     runTests(
         ObjectUtils.notNull(METASCHEMA_FILE),
         ObjectUtils.notNull(
@@ -47,7 +47,6 @@ class MetaschemaModuleMetaschemaTest
   }
 
   @Test
-  @Disabled
   void testReadMetaschemaAsXml() throws IOException {
     IBindingContext context = IBindingContext.newInstance();
 
@@ -99,7 +98,7 @@ class MetaschemaModuleMetaschemaTest
     IBindingModuleLoader loader = newBindingContext().newModuleLoader();
     loader.allowEntityResolution();
     IBindingMetaschemaModule module = loader.load(ObjectUtils.notNull(URI.create(
-        "https://raw.githubusercontent.com/usnistgov/OSCAL/refs/tags/v1.1.2/src/metaschema/oscal_complete_metaschema.xml")));
+        "https://raw.githubusercontent.com/usnistgov/OSCAL/refs/tags/v1.1.3/src/metaschema/oscal_complete_metaschema.xml")));
     assertNotNull(module);
   }
 
@@ -109,7 +108,7 @@ class MetaschemaModuleMetaschemaTest
     // loader.allowEntityResolution();
 
     IXmlMetaschemaModule module = loader.load(ObjectUtils.notNull(URI.create(
-        "https://raw.githubusercontent.com/usnistgov/OSCAL/refs/tags/v1.1.2/src/metaschema/oscal_complete_metaschema.xml")));
+        "https://raw.githubusercontent.com/usnistgov/OSCAL/refs/tags/v1.1.3/src/metaschema/oscal_complete_metaschema.xml")));
     assertNotNull(module);
   }
 }

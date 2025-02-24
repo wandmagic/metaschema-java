@@ -5,11 +5,18 @@
 
 package gov.nist.secauto.metaschema.core.util;
 
+import gov.nist.secauto.metaschema.core.metapath.item.IItem;
+import gov.nist.secauto.metaschema.core.metapath.item.ISequence;
+
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.function.BiConsumer;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -19,6 +26,28 @@ import java.util.stream.Stream;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
+/**
+ * Provides a variety of collector and other stream utilities.
+ * <p>
+ * This class provides thread-safe collectors and utilities for stream
+ * operations. Common usage patterns include:
+ *
+ * <pre>
+ * // Example 1: Using distinctByKey
+ * {@code
+ * Stream<Item> uniqueItems = items.stream()
+ *     .collect(CustomCollectors.distinctByKey(Item::getId));
+ * }
+ *
+ * // Example 2: Using toSequence
+ * {@code
+ * ISequence<IItem> sequence = items.stream()
+ *     .collect(CustomCollectors.toSequence());
+ * }
+ * </pre>
+ *
+ * @since 1.0.0
+ */
 @SuppressWarnings("PMD.CouplingBetweenObjects")
 public final class CustomCollectors {
   /**
@@ -66,6 +95,9 @@ public final class CustomCollectors {
    * Produce a new stream with duplicates removed based on the provided
    * {@code keyMapper}. When a duplicate key is encountered, the second item is
    * used. The original sequencing is preserved if the input stream is sequential.
+   * <p>
+   * Note: This method uses an underlying map that is not thread safe to maintain
+   * insertion order.
    *
    * @param <V>
    *          the item value for the streams
@@ -88,6 +120,9 @@ public final class CustomCollectors {
    * {@code keyMapper}. When a duplicate key is encountered, the provided
    * {@code duplicateHandler} is used to determine which item to keep. The
    * original sequencing is preserved if the input stream is sequential.
+   * <p>
+   * Note: This method uses an underlying map that is not thread safe to maintain
+   * insertion order.
    *
    * @param <V>
    *          the item value for the streams
@@ -245,6 +280,48 @@ public final class CustomCollectors {
   @NonNull
   public static <T> BinaryOperator<T> useLastMapper() {
     return (value1, value2) -> value2;
+  }
+
+  /**
+   * A {@link Collector} implementation to generates a sequence from a stream of
+   * Metapath items.
+   *
+   * @param <ITEM_TYPE>
+   *          the Java type of the items
+   * @return a collector that will generate a sequence
+   */
+  @NonNull
+  public static <ITEM_TYPE extends IItem> Collector<ITEM_TYPE, ?, ISequence<ITEM_TYPE>> toSequence() {
+    return new Collector<ITEM_TYPE, List<ITEM_TYPE>, ISequence<ITEM_TYPE>>() {
+      @SuppressWarnings("null")
+      @Override
+      public Supplier<List<ITEM_TYPE>> supplier() {
+        return ArrayList::new;
+      }
+
+      @Override
+      public BiConsumer<List<ITEM_TYPE>, ITEM_TYPE> accumulator() {
+        return List::add;
+      }
+
+      @Override
+      public BinaryOperator<List<ITEM_TYPE>> combiner() {
+        return (list1, list2) -> {
+          list1.addAll(list2);
+          return list1;
+        };
+      }
+
+      @Override
+      public Function<List<ITEM_TYPE>, ISequence<ITEM_TYPE>> finisher() {
+        return list -> ISequence.ofCollection(ObjectUtils.notNull(list));
+      }
+
+      @Override
+      public Set<Characteristics> characteristics() {
+        return Collections.emptySet();
+      }
+    };
   }
 
   private CustomCollectors() {

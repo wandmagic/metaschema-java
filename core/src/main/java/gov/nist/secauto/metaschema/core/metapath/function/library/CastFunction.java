@@ -6,16 +6,18 @@
 package gov.nist.secauto.metaschema.core.metapath.function.library;
 
 import gov.nist.secauto.metaschema.core.metapath.DynamicContext;
-import gov.nist.secauto.metaschema.core.metapath.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.function.FunctionUtils;
 import gov.nist.secauto.metaschema.core.metapath.function.IArgument;
 import gov.nist.secauto.metaschema.core.metapath.function.IFunction;
 import gov.nist.secauto.metaschema.core.metapath.function.IFunctionExecutor;
 import gov.nist.secauto.metaschema.core.metapath.item.IItem;
+import gov.nist.secauto.metaschema.core.metapath.item.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IAnyAtomicItem;
+import gov.nist.secauto.metaschema.core.metapath.type.AbstractAtomicOrUnionType;
+import gov.nist.secauto.metaschema.core.metapath.type.IAtomicOrUnionType;
+import gov.nist.secauto.metaschema.core.qname.IEnhancedQName;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 
-import java.net.URI;
 import java.util.List;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -30,27 +32,22 @@ import edu.umd.cs.findbugs.annotations.NonNull;
  */
 public final class CastFunction<ITEM extends IAnyAtomicItem> implements IFunctionExecutor {
   @NonNull
-  private final ICastExecutor<ITEM> castExecutor;
+  private final IAtomicOrUnionType.ICastExecutor<ITEM> castExecutor;
 
   @NonNull
   static <ITEM extends IAnyAtomicItem> IFunction signature(
-      @NonNull URI namespace,
-      @NonNull String name,
-      @NonNull Class<ITEM> resulingAtomicType,
-      @NonNull ICastExecutor<ITEM> executor) {
-    return signature(
-        ObjectUtils.notNull(namespace.toASCIIString()),
-        name,
-        resulingAtomicType,
-        executor);
+      @NonNull IEnhancedQName name,
+      @NonNull IAtomicOrUnionType<?> resultingAtomicType,
+      @NonNull IAtomicOrUnionType.ICastExecutor<ITEM> executor) {
+    return signature(name.getNamespace(), name.getLocalName(), resultingAtomicType, executor);
   }
 
   @NonNull
   static <ITEM extends IAnyAtomicItem> IFunction signature(
       @NonNull String namespace,
       @NonNull String name,
-      @NonNull Class<ITEM> resulingAtomicType,
-      @NonNull ICastExecutor<ITEM> executor) {
+      @NonNull IAtomicOrUnionType<?> resultingAtomicType,
+      @NonNull IAtomicOrUnionType.ICastExecutor<ITEM> executor) {
     return IFunction.builder()
         .name(name)
         .namespace(namespace)
@@ -59,10 +56,10 @@ public final class CastFunction<ITEM extends IAnyAtomicItem> implements IFunctio
         .focusIndependent()
         .argument(IArgument.builder()
             .name("arg1")
-            .type(IAnyAtomicItem.class)
+            .type(IAnyAtomicItem.type())
             .zeroOrOne()
             .build())
-        .returnType(resulingAtomicType)
+        .returnType(resultingAtomicType)
         .returnZeroOrOne()
         .functionHandler(newCastExecutor(executor))
         .build();
@@ -70,11 +67,11 @@ public final class CastFunction<ITEM extends IAnyAtomicItem> implements IFunctio
 
   @NonNull
   private static <ITEM extends IAnyAtomicItem> CastFunction<ITEM>
-      newCastExecutor(@NonNull ICastExecutor<ITEM> executor) {
+      newCastExecutor(@NonNull IAtomicOrUnionType.ICastExecutor<ITEM> executor) {
     return new CastFunction<>(executor);
   }
 
-  private CastFunction(@NonNull ICastExecutor<ITEM> castExecutor) {
+  private CastFunction(@NonNull AbstractAtomicOrUnionType.ICastExecutor<ITEM> castExecutor) {
     this.castExecutor = castExecutor;
   }
 
@@ -94,18 +91,5 @@ public final class CastFunction<ITEM extends IAnyAtomicItem> implements IFunctio
 
     ITEM castItem = castExecutor.cast(item);
     return ISequence.of(castItem);
-  }
-
-  @FunctionalInterface
-  public interface ICastExecutor<ITEM extends IAnyAtomicItem> {
-    /**
-     * Cast the provided {@code item}.
-     *
-     * @param item
-     *          the item to cast
-     * @return the item cast to the appropriate type
-     */
-    @NonNull
-    ITEM cast(@NonNull IAnyAtomicItem item);
   }
 }

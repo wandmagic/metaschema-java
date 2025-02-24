@@ -10,6 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import gov.nist.secauto.metaschema.core.metapath.item.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IBooleanItem;
 
 import org.junit.jupiter.api.Disabled;
@@ -35,7 +36,7 @@ class MetapathExpressionTest {
         continue;
       }
       // System.out.println(line);
-      MetapathExpression.compile(line);
+      IMetapathExpression.compile(line);
     }
   }
   //
@@ -58,17 +59,25 @@ class MetapathExpressionTest {
   @Test
   void testSyntaxError() {
     assertThrows(MetapathException.class, () -> {
-      MetapathExpression.compile("**");
+      IMetapathExpression.compile("**");
     });
   }
 
   @Test
   void test() {
-    MetapathExpression path = MetapathExpression.compile("2 eq 1 + 1");
+    IMetapathExpression path = IMetapathExpression.compile("2 eq 1 + 1");
     ISequence<?> result = path.evaluate();
     assertNotNull(result, "null result");
     assertTrue(!result.isEmpty(), "result was empty");
     assertEquals(1, result.size(), "unexpected size");
-    assertEquals(true, ((IBooleanItem) result.getValue().iterator().next()).toBoolean(), "unexpected result");
+    assertEquals(true, ((IBooleanItem) result.iterator().next()).toBoolean(), "unexpected result");
+  }
+
+  @Test
+  void testMalformedIf() {
+    StaticMetapathException ex = assertThrows(StaticMetapathException.class, () -> {
+      IMetapathExpression.compile("if 'a' = '1.1.2' then true() else false()");
+    });
+    assertEquals(StaticMetapathException.INVALID_PATH_GRAMMAR, ex.getCode());
   }
 }

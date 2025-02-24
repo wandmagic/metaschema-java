@@ -7,12 +7,14 @@ package gov.nist.secauto.metaschema.core.model.constraint;
 
 import gov.nist.secauto.metaschema.core.datatype.markup.MarkupMultiline;
 import gov.nist.secauto.metaschema.core.metapath.DynamicContext;
-import gov.nist.secauto.metaschema.core.metapath.ISequence;
+import gov.nist.secauto.metaschema.core.metapath.IMetapathExpression;
 import gov.nist.secauto.metaschema.core.metapath.MetapathException;
+import gov.nist.secauto.metaschema.core.metapath.item.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.item.node.IDefinitionNodeItem;
 import gov.nist.secauto.metaschema.core.model.IAttributable;
 import gov.nist.secauto.metaschema.core.model.IDescribable;
 import gov.nist.secauto.metaschema.core.model.ISource;
+import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
@@ -22,6 +24,31 @@ import edu.umd.cs.findbugs.annotations.Nullable;
  * flag. Provides a common interface for all constraint definitions.
  */
 public interface IConstraint extends IAttributable, IDescribable {
+  /**
+   * The type of constraint.
+   */
+  enum Type {
+    ALLOWED_VALUES("allowed-values"),
+    CARDINALITY("cardinality"),
+    EXPECT("expect"),
+    INDEX("index"),
+    UNIQUE("unique"),
+    INDEX_HAS_KEY("index-has-key"),
+    MATCHES("matches");
+
+    @NonNull
+    private final String name;
+
+    Type(@NonNull String name) {
+      this.name = name;
+    }
+
+    @NonNull
+    public String getName() {
+      return name;
+    }
+  }
+
   /**
    * The degree to which a constraint violation is significant.
    * <p>
@@ -64,10 +91,39 @@ public interface IConstraint extends IAttributable, IDescribable {
   Level DEFAULT_LEVEL = Level.ERROR;
 
   /**
-   * The default target Metapath expression to use if no target is provided.
+   * The compiled default target Metapath to use if no target is provided.
    */
   @NonNull
-  String DEFAULT_TARGET_METAPATH = ".";
+  IMetapathExpression DEFAULT_TARGET_METAPATH = IMetapathExpression.contextNode();
+
+  /**
+   * Get a string that identifies the provided constraint using the most specific
+   * information available.
+   *
+   * @param constraint
+   *          the constraint to identify
+   * @return the constraint identification statement
+   */
+  @NonNull
+  static String getConstraintIdentity(@NonNull IConstraint constraint) {
+    String identity;
+    if (constraint.getId() != null) {
+      identity = String.format("with id '%s'", constraint.getId());
+    } else if (constraint.getFormalName() != null) {
+      identity = String.format("with the formal name '%s'", constraint.getFormalName());
+    } else {
+      identity = String.format("targeting '%s'", constraint.getTarget().getPath());
+    }
+    return ObjectUtils.notNull(identity);
+  }
+
+  /**
+   * Get the constraint type.
+   *
+   * @return the constraint type
+   */
+  @NonNull
+  Type getType();
 
   /**
    * Retrieve the unique identifier for the constraint.
@@ -100,7 +156,7 @@ public interface IConstraint extends IAttributable, IDescribable {
    * @return a Metapath expression
    */
   @NonNull
-  String getTarget();
+  IMetapathExpression getTarget();
 
   /**
    * Based on the provided {@code contextNodeItem}, find all nodes matching the

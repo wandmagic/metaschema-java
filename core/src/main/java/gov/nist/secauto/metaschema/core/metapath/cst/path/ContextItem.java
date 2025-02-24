@@ -7,9 +7,9 @@ package gov.nist.secauto.metaschema.core.metapath.cst.path;
 
 import gov.nist.secauto.metaschema.core.metapath.DynamicContext;
 import gov.nist.secauto.metaschema.core.metapath.DynamicMetapathException;
-import gov.nist.secauto.metaschema.core.metapath.ISequence;
-import gov.nist.secauto.metaschema.core.metapath.cst.IExpression;
+import gov.nist.secauto.metaschema.core.metapath.IExpression;
 import gov.nist.secauto.metaschema.core.metapath.cst.IExpressionVisitor;
+import gov.nist.secauto.metaschema.core.metapath.item.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.item.node.INodeItem;
 
 import java.util.Collections;
@@ -41,6 +41,7 @@ public final class ContextItem
 
   private ContextItem() {
     // disable construction
+    super(".");
   }
 
   @Override
@@ -65,7 +66,7 @@ public final class ContextItem
   }
 
   @Override
-  public ISequence<?> accept(DynamicContext dynamicContext, ISequence<?> focus) {
+  protected ISequence<?> evaluate(DynamicContext dynamicContext, ISequence<?> focus) {
     if (focus.isEmpty()) {
       throw new DynamicMetapathException(DynamicMetapathException.DYNAMIC_CONTEXT_ABSENT, "The context is empty");
     }

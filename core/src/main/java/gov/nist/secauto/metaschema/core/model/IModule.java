@@ -7,15 +7,13 @@ package gov.nist.secauto.metaschema.core.model;
 
 import gov.nist.secauto.metaschema.core.datatype.markup.MarkupLine;
 import gov.nist.secauto.metaschema.core.datatype.markup.MarkupMultiline;
-import gov.nist.secauto.metaschema.core.metapath.EQNameUtils;
 import gov.nist.secauto.metaschema.core.metapath.StaticContext;
+import gov.nist.secauto.metaschema.core.qname.IEnhancedQName;
 
 import java.net.URI;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-
-import javax.xml.namespace.QName;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
@@ -30,6 +28,16 @@ public interface IModule {
    * @return the location, or {@code null} if this information is not available
    */
   URI getLocation();
+
+  /**
+   * Get a hint about where the source is location.
+   * <p>
+   * This value will typically be a URI or class name.
+   *
+   * @return the hint
+   */
+  @NonNull
+  String getLocationHint();
 
   /**
    * Get the source information for the module.
@@ -93,9 +101,8 @@ public interface IModule {
    *
    * @return the qualified name
    */
-  default QName getQName() {
-    return new QName(getXmlNamespace().toASCIIString(), getShortName());
-  }
+  @NonNull
+  IEnhancedQName getQName();
 
   /**
    * Retrieves all Metaschema modules imported by this Metaschema module.
@@ -134,7 +141,7 @@ public interface IModule {
    * @return the matching assembly definition, or {@code null} if none match
    */
   @Nullable
-  IAssemblyDefinition getAssemblyDefinitionByName(@NonNull QName name);
+  IAssemblyDefinition getAssemblyDefinitionByName(@NonNull Integer name);
 
   /**
    * Retrieves the top-level field definitions in this Metaschema module.
@@ -154,7 +161,7 @@ public interface IModule {
    * @return the matching field definition, or {@code null} if none match
    */
   @Nullable
-  IFieldDefinition getFieldDefinitionByName(@NonNull QName name);
+  IFieldDefinition getFieldDefinitionByName(@NonNull Integer name);
 
   /**
    * Retrieves the top-level assembly and field definitions in this Metaschema
@@ -183,7 +190,7 @@ public interface IModule {
    * @return the matching flag definition, or {@code null} if none match
    */
   @Nullable
-  IFlagDefinition getFlagDefinitionByName(@NonNull QName name);
+  IFlagDefinition getFlagDefinitionByName(@NonNull IEnhancedQName name);
 
   /**
    * Retrieves the assembly definition with a matching name from either: 1) the
@@ -196,7 +203,7 @@ public interface IModule {
    * @return the assembly definition
    */
   @Nullable
-  IAssemblyDefinition getScopedAssemblyDefinitionByName(@NonNull QName name);
+  IAssemblyDefinition getScopedAssemblyDefinitionByName(@NonNull Integer name);
 
   /**
    * Retrieves the field definition with a matching name from either: 1) the
@@ -208,7 +215,7 @@ public interface IModule {
    * @return the field definition
    */
   @Nullable
-  IFieldDefinition getScopedFieldDefinitionByName(@NonNull QName name);
+  IFieldDefinition getScopedFieldDefinitionByName(@NonNull Integer name);
 
   /**
    * Retrieves the flag definition with a matching name from either: 1) the
@@ -220,7 +227,7 @@ public interface IModule {
    * @return the flag definition
    */
   @Nullable
-  IFlagDefinition getScopedFlagDefinitionByName(@NonNull QName name);
+  IFlagDefinition getScopedFlagDefinitionByName(@NonNull IEnhancedQName name);
 
   /**
    * Retrieves the top-level assembly definitions that are marked as roots from
@@ -256,7 +263,7 @@ public interface IModule {
    * @return the flag definition, or {@code null} if it doesn't exist.
    */
   @Nullable
-  IFlagDefinition getExportedFlagDefinitionByName(@NonNull QName name);
+  IFlagDefinition getExportedFlagDefinitionByName(@NonNull IEnhancedQName name);
 
   /**
    * Retrieve the top-level field definitions that are marked global in this
@@ -283,7 +290,7 @@ public interface IModule {
    * @return the field definition, or {@code null} if it doesn't exist.
    */
   @Nullable
-  IFieldDefinition getExportedFieldDefinitionByName(@NonNull QName name);
+  IFieldDefinition getExportedFieldDefinitionByName(@NonNull Integer name);
 
   /**
    * Retrieve the top-level assembly definitions that are marked global in this
@@ -310,7 +317,7 @@ public interface IModule {
    * @return the assembly definition, or {@code null} if it doesn't exist.
    */
   @Nullable
-  IAssemblyDefinition getExportedAssemblyDefinitionByName(@NonNull QName name);
+  IAssemblyDefinition getExportedAssemblyDefinitionByName(@NonNull Integer name);
 
   /**
    * Retrieves the top-level assembly definitions that are marked as roots from
@@ -332,7 +339,7 @@ public interface IModule {
    * @return the assembly definition, or {@code null} if it doesn't exist.
    */
   @Nullable
-  IAssemblyDefinition getExportedRootAssemblyDefinitionByName(QName name);
+  IAssemblyDefinition getExportedRootAssemblyDefinitionByName(Integer name);
 
   /**
    * Get the mapping of prefix to namespace URI for use in resolving the namespace
@@ -342,65 +349,6 @@ public interface IModule {
    */
   @NonNull
   Map<String, String> getNamespaceBindings();
-
-  /**
-   * Used to parse a flag name reference to produce a qualified name.
-   *
-   * @param nameRef
-   *          the name reference
-   * @return the qualified name
-   */
-  @NonNull
-  default QName toFlagQName(@NonNull String nameRef) {
-    return EQNameUtils.parseName(
-        nameRef,
-        getModuleStaticContext().getFlagPrefixResolver());
-  }
-
-  /**
-   * Used to parse a flag name reference to produce a qualified name.
-   *
-   * @param modelNamespace
-   *          the namespace to use or {@code null}
-   * @param nameRef
-   *          the name reference
-   * @return the qualified name
-   */
-  @NonNull
-  default QName toFlagQName(@Nullable String modelNamespace, @NonNull String nameRef) {
-    return modelNamespace == null
-        ? new QName(nameRef)
-        : new QName(modelNamespace, nameRef);
-  }
-
-  /**
-   * Used to parse a model name reference to produce a qualified name.
-   *
-   * @param nameRef
-   *          the name reference
-   * @return the qualified name
-   */
-  @NonNull
-  default QName toModelQName(@NonNull String nameRef) {
-    return EQNameUtils.parseName(
-        nameRef,
-        getModuleStaticContext().getModelPrefixResolver());
-  }
-
-  /**
-   * Used to parse a flag name reference to produce a qualified name.
-   *
-   * @param modelNamespace
-   *          the namespace to use or {@code null}
-   * @param nameRef
-   *          the name reference
-   * @return the qualified name
-   */
-  @NonNull
-  default QName toModelQName(@Nullable String modelNamespace, @NonNull String nameRef) {
-    String namespace = modelNamespace == null ? getXmlNamespace().toASCIIString() : modelNamespace;
-    return new QName(namespace, nameRef);
-  }
 
   /**
    * Get the Metapath static context for compiling Metapath expressions that query

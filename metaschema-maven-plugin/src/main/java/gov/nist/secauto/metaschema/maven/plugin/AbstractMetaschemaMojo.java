@@ -8,6 +8,7 @@ package gov.nist.secauto.metaschema.maven.plugin;
 import gov.nist.secauto.metaschema.core.metapath.MetapathException;
 import gov.nist.secauto.metaschema.core.model.IConstraintLoader;
 import gov.nist.secauto.metaschema.core.model.IModule;
+import gov.nist.secauto.metaschema.core.model.IModuleLoader;
 import gov.nist.secauto.metaschema.core.model.IResourceLocation;
 import gov.nist.secauto.metaschema.core.model.MetaschemaException;
 import gov.nist.secauto.metaschema.core.model.constraint.ConstraintValidationFinding;
@@ -34,8 +35,10 @@ import gov.nist.secauto.metaschema.databind.codegen.ModuleCompilerHelper;
 import gov.nist.secauto.metaschema.databind.codegen.config.DefaultBindingConfiguration;
 import gov.nist.secauto.metaschema.databind.codegen.config.IBindingConfiguration;
 import gov.nist.secauto.metaschema.databind.model.IBoundModule;
+import gov.nist.secauto.metaschema.databind.model.metaschema.BindingModuleLoader;
 import gov.nist.secauto.metaschema.databind.model.metaschema.IBindingMetaschemaModule;
 import gov.nist.secauto.metaschema.databind.model.metaschema.IBindingModuleLoader;
+import gov.nist.secauto.metaschema.databind.model.metaschema.binding.MetaschemaModelModule;
 
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.DependencyResolutionRequiredException;
@@ -60,6 +63,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -125,11 +129,11 @@ public abstract class AbstractMetaschemaMojo
    * non-null value found is used for encoding):
    * <ol>
    * <li>If the configuration property is explicitly given within the plugin's
-   * configuration, use that value.</li>
+   * configuration, use that value.
    * <li>If the Maven property <code>project.build.sourceEncoding</code> is
-   * defined, use its value.</li>
+   * defined, use its value.
    * <li>Otherwise use the value from the system property
-   * <code>file.encoding</code>.</li>
+   * <code>file.encoding</code>.
    * </ol>
    * </p>
    *
@@ -242,11 +246,11 @@ public abstract class AbstractMetaschemaMojo
    * </p>
    * <ol>
    * <li>If the configuration property is explicitly given within the plugin's
-   * configuration, use that value.</li>
+   * configuration, use that value.
    * <li>If the Maven property <code>project.build.sourceEncoding</code> is
-   * defined, use its value.</li>
+   * defined, use its value.
    * <li>Otherwise use the value from the system property
-   * <code>file.encoding</code>.</li>
+   * <code>file.encoding</code>.
    * </ol>
    *
    * @return The encoding to be used by this AbstractJaxbMojo and its tools.
@@ -286,13 +290,19 @@ public abstract class AbstractMetaschemaMojo
   }
 
   @NonNull
-  protected IBindingContext newBindingContext() throws IOException, MetaschemaException {
+  protected IModuleLoader.IModulePostProcessor newModulePostProcessor()
+      throws MetaschemaException, IOException {
     List<IConstraintSet> constraints = getConstraints();
+    return new LimitedExternalConstraintsModulePostProcessor(constraints);
+  }
 
+  @NonNull
+  protected IBindingContext newBindingContext() throws IOException, MetaschemaException {
     // generate Java sources based on provided metaschema sources
     return new DefaultBindingContext(
         new PostProcessingModuleLoaderStrategy(
-            CollectionUtil.singletonList(new ExternalConstraintsModulePostProcessor(constraints)),
+            // ensure that the external constraints do not apply to the built in module
+            CollectionUtil.singletonList(newModulePostProcessor()),
             new SimpleModuleLoaderStrategy(
                 // this is used instead of the default generator to ensure that plugin classpath
                 // entries are used for compilation
@@ -419,7 +429,17 @@ public abstract class AbstractMetaschemaMojo
   @NonNull
   protected Set<IModule> getModulesToGenerateFor(@NonNull IBindingContext bindingContext)
       throws MetaschemaException, IOException {
-    IBindingModuleLoader loader = bindingContext.newModuleLoader();
+
+    // Don't use the normal loader, since it attempts to register and compile the
+    // module.
+    // We only care about the module content for generating sources and schemas
+    IBindingModuleLoader loader = new BindingModuleLoader(bindingContext, (module, ctx) -> {
+      try {
+        newModulePostProcessor().processModule(module);
+      } catch (IOException | MetaschemaException ex) {
+        throw new IllegalStateException(ex);
+      }
+    });
     loader.allowEntityResolution();
 
     LoggingValidationHandler validationHandler = new LoggingValidationHandler();
@@ -460,6 +480,99 @@ public abstract class AbstractMetaschemaMojo
       throw new MojoExecutionException("Failed to write stale file: " + staleFile.getPath(), ex);
     }
   }
+
+  @SuppressWarnings("PMD.AvoidCatchingGenericException")
+  @Override
+  public void execute() throws MojoExecutionException {
+    File staleFile = getStaleFile();
+    try {
+      staleFile = ObjectUtils.notNull(staleFile.getCanonicalFile());
+    } catch (IOException ex) {
+      if (getLog().isWarnEnabled()) {
+        getLog().warn("Unable to resolve canonical path to stale file. Treating it as not existing.", ex);
+      }
+    }
+
+    boolean generate;
+    if (shouldExecutionBeSkipped()) {
+      if (getLog().isDebugEnabled()) {
+        getLog().debug(String.format("Generation is configured to be skipped. Skipping."));
+      }
+      generate = false;
+    } else if (staleFile.exists()) {
+      generate = isGenerationRequired();
+    } else {
+      if (getLog().isInfoEnabled()) {
+        getLog().info(String.format("Stale file '%s' doesn't exist! Generation is required.", staleFile.getPath()));
+      }
+      generate = true;
+    }
+
+    if (generate) {
+
+      List<File> generatedFiles;
+      try {
+        generatedFiles = performGeneration();
+      } finally {
+        // ensure the stale file is created to ensure that regeneration is only
+        // performed when a
+        // change is made
+        createStaleFile(staleFile);
+      }
+
+      if (getLog().isInfoEnabled()) {
+        getLog().info(String.format("Generated %d files.", generatedFiles.size()));
+      }
+
+      // for m2e
+      for (File file : generatedFiles) {
+        getBuildContext().refresh(file);
+      }
+    }
+  }
+
+  @SuppressWarnings({ "PMD.AvoidCatchingGenericException", "PMD.ExceptionAsFlowControl" })
+  @NonNull
+  private List<File> performGeneration() throws MojoExecutionException {
+    File outputDir = getOutputDirectory();
+    if (getLog().isDebugEnabled()) {
+      getLog().debug(String.format("Using outputDirectory: %s", outputDir.getPath()));
+    }
+
+    if (!outputDir.exists() && !outputDir.mkdirs()) {
+      throw new MojoExecutionException("Unable to create output directory: " + outputDir);
+    }
+
+    IBindingContext bindingContext;
+    try {
+      bindingContext = newBindingContext();
+    } catch (MetaschemaException | IOException ex) {
+      throw new MojoExecutionException("Failed to create the binding context", ex);
+    }
+
+    // generate Java sources based on provided metaschema sources
+    Set<IModule> modules;
+    try {
+      modules = getModulesToGenerateFor(bindingContext);
+    } catch (Exception ex) {
+      throw new MojoExecutionException("Loading of metaschema modules failed", ex);
+    }
+
+    return generate(modules);
+  }
+
+  /**
+   * Perform the generation operation.
+   *
+   * @param modules
+   *          the modules to generate resources/sources for
+   *
+   * @return the files generated during the operation
+   * @throws MojoExecutionException
+   *           if an error occurred while performing the generation operation
+   */
+  @NonNull
+  protected abstract List<File> generate(@NonNull Set<IModule> modules) throws MojoExecutionException;
 
   protected final class LoggingValidationHandler
       extends AbstractValidationResultProcessor {
@@ -629,10 +742,32 @@ public abstract class AbstractMetaschemaMojo
           .collect(Collectors.toUnmodifiableList()));
 
       JavaCompilerSupport compiler = new JavaCompilerSupport(classDir);
+      compiler.setLogger(new JavaCompilerSupport.Logger() {
+
+        @Override
+        public boolean isDebugEnabled() {
+          return getLog().isDebugEnabled();
+        }
+
+        @Override
+        public boolean isInfoEnabled() {
+          return getLog().isInfoEnabled();
+        }
+
+        @Override
+        public void debug(String msg) {
+          getLog().debug(msg);
+        }
+
+        @Override
+        public void info(String msg) {
+          getLog().info(msg);
+        }
+      });
 
       getClassPath().forEach(compiler::addToClassPath);
 
-      JavaCompilerSupport.CompilationResult result = compiler.compile(classes, null);
+      JavaCompilerSupport.CompilationResult result = compiler.compile(classes);
 
       if (!result.isSuccessful()) {
         DiagnosticCollector<?> diagnostics = new DiagnosticCollector<>();
@@ -662,6 +797,26 @@ public abstract class AbstractMetaschemaMojo
         throw new IllegalStateException(ex);
       }
     }
+  }
 
+  private static class LimitedExternalConstraintsModulePostProcessor
+      extends ExternalConstraintsModulePostProcessor {
+
+    public LimitedExternalConstraintsModulePostProcessor(
+        @NonNull Collection<IConstraintSet> additionalConstraintSets) {
+      super(additionalConstraintSets);
+    }
+
+    /**
+     * This method ensures that constraints are not applied to the built-in
+     * Metaschema module module twice, when this module is selected as the source
+     * for generation.
+     */
+    @Override
+    public void processModule(IModule module) {
+      if (!(module instanceof MetaschemaModelModule)) {
+        super.processModule(module);
+      }
+    }
   }
 }

@@ -7,11 +7,14 @@ package gov.nist.secauto.metaschema.core.datatype.object;
 
 import gov.nist.secauto.metaschema.core.datatype.AbstractCustomJavaDataType;
 
-import java.time.ZonedDateTime;
+import java.time.temporal.Temporal;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
+ * Implementations of this class represent a temporal value which may not have a
+ * timezone making it ambiguous as a point/window in time.
+ * <p>
  * Metaschema has a need to represent dates and times that allow for an
  * ambiguous time zone. This is due to some models not requiring a time zone as
  * part of a date/time. An ambiguous dateTime allows a time zone to be inferred,
@@ -22,10 +25,14 @@ import edu.umd.cs.findbugs.annotations.NonNull;
  * written back out in such cases.
  *
  * @param <TYPE>
- *          the bound object type
+ *          the bound object type that extends this class, used for proper type
+ *          inheritance in implementing classes like {@code AmbiguousDate} or
+ *          {@code AmbiguousDateTime}
+ * @param <U>
+ *          the Java type of the temporal value
  */
-public abstract class AbstractAmbiguousTemporal<TYPE extends AbstractAmbiguousTemporal<TYPE>>
-    extends AbstractCustomJavaDataType<TYPE, ZonedDateTime> {
+public abstract class AbstractAmbiguousTemporal<TYPE extends AbstractAmbiguousTemporal<TYPE, U>, U extends Temporal>
+    extends AbstractCustomJavaDataType<TYPE, U> {
   private final boolean timeZone;
 
   /**
@@ -38,7 +45,7 @@ public abstract class AbstractAmbiguousTemporal<TYPE extends AbstractAmbiguousTe
    *          {@code true} if the date is intended to have an associated time zone
    *          or {@code false} otherwise
    */
-  public AbstractAmbiguousTemporal(@NonNull ZonedDateTime value, boolean hasTimeZone) {
+  public AbstractAmbiguousTemporal(@NonNull U value, boolean hasTimeZone) {
     super(value);
     this.timeZone = hasTimeZone;
   }
@@ -52,4 +59,10 @@ public abstract class AbstractAmbiguousTemporal<TYPE extends AbstractAmbiguousTe
   public boolean hasTimeZone() {
     return timeZone;
   }
+
+  @Override
+  public String toString() {
+    return getValue().toString() + (hasTimeZone() ? "" : "(abiguous)");
+  }
+
 }

@@ -10,6 +10,7 @@ import gov.nist.secauto.metaschema.core.datatype.markup.MarkupMultiline;
 import gov.nist.secauto.metaschema.core.metapath.item.node.IAssemblyNodeItem;
 import gov.nist.secauto.metaschema.core.model.AbstractFlagInstance;
 import gov.nist.secauto.metaschema.core.model.IAttributable;
+import gov.nist.secauto.metaschema.core.model.IFeatureDefinitionReferenceInstance;
 import gov.nist.secauto.metaschema.core.model.IFeatureValueless;
 import gov.nist.secauto.metaschema.core.model.IFlagDefinition;
 import gov.nist.secauto.metaschema.core.model.IFlagInstance;
@@ -31,7 +32,8 @@ public class InstanceFlagReference
     extends AbstractFlagInstance<
         IBindingDefinitionModel,
         IFlagDefinition, IFlagInstance>
-    implements IFeatureValueless, IBindingInstance {
+    implements IFeatureValueless, IBindingInstance,
+    IFeatureDefinitionReferenceInstance<IFlagDefinition, IFlagInstance> {
   @NonNull
   private final FlagReference binding;
   @NonNull
@@ -56,7 +58,7 @@ public class InstanceFlagReference
     this.defaultValue = ModelSupport.defaultValue(binding.getDefault(), definition.getJavaTypeAdapter());
     this.boundNodeItem = ObjectUtils.notNull(
         Lazy.lazy(() -> (IAssemblyNodeItem) ObjectUtils.notNull(parent.getSourceNodeItem())
-            .getModelItemsByName(bindingInstance.getXmlQName())
+            .getModelItemsByName(bindingInstance.getQName())
             .get(position)));
   }
 

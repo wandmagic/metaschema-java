@@ -6,17 +6,22 @@
 package gov.nist.secauto.metaschema.core.metapath.cst.math;
 
 import gov.nist.secauto.metaschema.core.metapath.DynamicContext;
-import gov.nist.secauto.metaschema.core.metapath.ISequence;
-import gov.nist.secauto.metaschema.core.metapath.cst.IExpression;
+import gov.nist.secauto.metaschema.core.metapath.IExpression;
 import gov.nist.secauto.metaschema.core.metapath.cst.IExpressionVisitor;
 import gov.nist.secauto.metaschema.core.metapath.function.FunctionUtils;
-import gov.nist.secauto.metaschema.core.metapath.function.OperationFunctions;
+import gov.nist.secauto.metaschema.core.metapath.function.impl.OperationFunctions;
+import gov.nist.secauto.metaschema.core.metapath.item.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IIntegerItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.INumericItem;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 
+/**
+ * An XPath 3.1
+ * <a href="https://www.w3.org/TR/xpath-31/#id-arithmetic">arithmetic
+ * expression</a> supporting integer division.
+ */
 public class IntegerDivision
     extends AbstractArithmeticExpression<IIntegerItem> {
 
@@ -24,13 +29,18 @@ public class IntegerDivision
    * Create an expression that gets the whole number quotient result by dividing
    * the dividend by the divisor.
    *
+   * @param text
+   *          the parsed text of the expression
    * @param dividend
    *          the expression whose item result will be divided
    * @param divisor
    *          the expression whose item result will be divided by
    */
-  public IntegerDivision(@NonNull IExpression dividend, @NonNull IExpression divisor) {
-    super(dividend, divisor, IIntegerItem.class);
+  public IntegerDivision(
+      @NonNull String text,
+      @NonNull IExpression dividend,
+      @NonNull IExpression divisor) {
+    super(text, dividend, divisor, IIntegerItem.class);
   }
 
   @Override
@@ -44,11 +54,11 @@ public class IntegerDivision
   }
 
   @Override
-  public ISequence<? extends IIntegerItem> accept(DynamicContext dynamicContext, ISequence<?> focus) {
+  protected ISequence<? extends IIntegerItem> evaluate(DynamicContext dynamicContext, ISequence<?> focus) {
     INumericItem dividend = FunctionUtils.toNumericOrNull(
-        getFirstDataItem(getLeft().accept(dynamicContext, focus), true));
+        ISequence.of(getLeft().accept(dynamicContext, focus).atomize()).getFirstItem(true));
     INumericItem divisor = FunctionUtils.toNumericOrNull(
-        getFirstDataItem(getRight().accept(dynamicContext, focus), true));
+        ISequence.of(getRight().accept(dynamicContext, focus).atomize()).getFirstItem(true));
 
     return resultOrEmpty(dividend, divisor);
   }

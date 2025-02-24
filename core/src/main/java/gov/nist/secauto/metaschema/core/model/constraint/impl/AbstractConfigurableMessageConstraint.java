@@ -8,13 +8,16 @@ package gov.nist.secauto.metaschema.core.model.constraint.impl;
 import gov.nist.secauto.metaschema.core.datatype.markup.MarkupLine;
 import gov.nist.secauto.metaschema.core.datatype.markup.MarkupMultiline;
 import gov.nist.secauto.metaschema.core.metapath.DynamicContext;
-import gov.nist.secauto.metaschema.core.metapath.MetapathExpression;
+import gov.nist.secauto.metaschema.core.metapath.IMetapathExpression;
+import gov.nist.secauto.metaschema.core.metapath.MetapathException;
 import gov.nist.secauto.metaschema.core.metapath.item.node.INodeItem;
 import gov.nist.secauto.metaschema.core.model.IAttributable;
 import gov.nist.secauto.metaschema.core.model.ISource;
+import gov.nist.secauto.metaschema.core.model.constraint.ConstraintInitializationException;
 import gov.nist.secauto.metaschema.core.model.constraint.IConfigurableMessageConstraint;
+import gov.nist.secauto.metaschema.core.model.constraint.IConstraint;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
-import gov.nist.secauto.metaschema.core.util.ReplacementScanner;
+import gov.nist.secauto.metaschema.core.util.StringUtils;
 
 import java.util.Map;
 import java.util.Set;
@@ -68,7 +71,7 @@ public abstract class AbstractConfigurableMessageConstraint
       @Nullable MarkupLine description,
       @NonNull ISource source,
       @NonNull Level level,
-      @NonNull String target,
+      @NonNull IMetapathExpression target,
       @NonNull Map<IAttributable.Key, Set<String>> properties,
       @Nullable String message,
       @Nullable MarkupMultiline remarks) {
@@ -85,13 +88,34 @@ public abstract class AbstractConfigurableMessageConstraint
   public String generateMessage(@NonNull INodeItem item, @NonNull DynamicContext context) {
     String message = getMessage();
     if (message == null) {
-      throw new IllegalStateException("A custom message is not defined.");
+      throw new ConstraintInitializationException(
+          String.format("A custom message is not defined in the constraint %s in %s.",
+              IConstraint.getConstraintIdentity(this),
+              getSource().getLocationHint()));
     }
 
-    return ObjectUtils.notNull(ReplacementScanner.replaceTokens(message, METAPATH_VALUE_TEMPLATE_PATTERN, match -> {
+    return ObjectUtils.notNull(StringUtils.replaceTokens(message, METAPATH_VALUE_TEMPLATE_PATTERN, match -> {
       String metapath = ObjectUtils.notNull(match.group(2));
-      MetapathExpression expr = MetapathExpression.compile(metapath, context.getStaticContext());
-      return expr.evaluateAs(item, MetapathExpression.ResultType.STRING, context);
+      try {
+        IMetapathExpression expr = IMetapathExpression.compile(
+            metapath,
+            // need to use the static context of the source to resolve prefixes, etc., since
+            // this is where the message is defined
+            getSource().getStaticContext());
+        return expr.evaluateAs(
+            item,
+            IMetapathExpression.ResultType.STRING,
+            // here we are using the static context of the instance, since this is how
+            // variables and nodes are resolved.
+            context);
+      } catch (MetapathException ex) {
+        throw new MetapathException(
+            String.format("Unable to evaluate the message replacement expression '%s' in constraint '%s'. %s",
+                metapath,
+                IConstraint.getConstraintIdentity(this),
+                ex.getLocalizedMessage()),
+            ex);
+      }
     }).toString());
   }
 }

@@ -6,12 +6,12 @@
 package gov.nist.secauto.metaschema.core.metapath.function.library;
 
 import gov.nist.secauto.metaschema.core.metapath.DynamicContext;
-import gov.nist.secauto.metaschema.core.metapath.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.MetapathConstants;
 import gov.nist.secauto.metaschema.core.metapath.function.FunctionUtils;
 import gov.nist.secauto.metaschema.core.metapath.function.IArgument;
 import gov.nist.secauto.metaschema.core.metapath.function.IFunction;
 import gov.nist.secauto.metaschema.core.metapath.item.IItem;
+import gov.nist.secauto.metaschema.core.metapath.item.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IIntegerItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.INumericItem;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
@@ -36,10 +36,10 @@ public final class FnRound {
       .focusIndependent()
       .argument(IArgument.builder()
           .name("arg")
-          .type(INumericItem.class)
+          .type(INumericItem.type())
           .zeroOrOne()
           .build())
-      .returnType(INumericItem.class)
+      .returnType(INumericItem.type())
       .returnZeroOrOne()
       .functionHandler(FnRound::executeOneArg)
       .build();
@@ -53,15 +53,15 @@ public final class FnRound {
       .focusIndependent()
       .argument(IArgument.builder()
           .name("arg1")
-          .type(INumericItem.class)
+          .type(INumericItem.type())
           .zeroOrOne()
           .build())
       .argument(IArgument.builder()
           .name("precision")
-          .type(IIntegerItem.class)
+          .type(IIntegerItem.type())
           .one()
           .build())
-      .returnType(INumericItem.class)
+      .returnType(INumericItem.type())
       .returnZeroOrOne()
       .functionHandler(FnRound::executeTwoArg)
       .build();

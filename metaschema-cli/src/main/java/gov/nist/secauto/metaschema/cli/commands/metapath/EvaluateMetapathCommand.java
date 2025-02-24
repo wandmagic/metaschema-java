@@ -13,11 +13,11 @@ import gov.nist.secauto.metaschema.cli.processor.command.CommandExecutionExcepti
 import gov.nist.secauto.metaschema.cli.processor.command.ExtraArgument;
 import gov.nist.secauto.metaschema.cli.processor.command.ICommandExecutor;
 import gov.nist.secauto.metaschema.core.metapath.DynamicContext;
-import gov.nist.secauto.metaschema.core.metapath.ISequence;
-import gov.nist.secauto.metaschema.core.metapath.MetapathExpression;
+import gov.nist.secauto.metaschema.core.metapath.IMetapathExpression;
 import gov.nist.secauto.metaschema.core.metapath.StaticContext;
 import gov.nist.secauto.metaschema.core.metapath.item.DefaultItemWriter;
 import gov.nist.secauto.metaschema.core.metapath.item.IItemWriter;
+import gov.nist.secauto.metaschema.core.metapath.item.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.item.node.INodeItem;
 import gov.nist.secauto.metaschema.core.metapath.item.node.INodeItemFactory;
 import gov.nist.secauto.metaschema.core.model.IModule;
@@ -49,12 +49,12 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
  * The query is executed using one of the following configurations:
  * <ol>
  * <li><b>module and content:</b> on a content instance parsed using a provided
- * Metaschema module,</li>
+ * Metaschema module,
  * <li><b>module-only:</b> against the Metaschema module itself if no content
- * instance is provided, or</li>
+ * instance is provided, or
  * <li><b>without content or module:</b> if both a module and content are
  * omitted then the execution will be limited to operations that do not act on
- * content.</li>
+ * content.
  * </ol>
  */
 class EvaluateMetapathCommand
@@ -192,8 +192,8 @@ class EvaluateMetapathCommand
 
     try {
       // Parse and compile the Metapath expression
-      MetapathExpression compiledMetapath = MetapathExpression.compile(expression, staticContext);
-      ISequence<?> sequence = compiledMetapath.evaluate(item, new DynamicContext(staticContext));
+      ISequence<?> sequence = IMetapathExpression.compile(expression, staticContext)
+          .evaluate(item, new DynamicContext(staticContext));
 
       // handle the metapath results
       try (Writer stringWriter = new StringWriter()) {

@@ -5,18 +5,25 @@
 
 package gov.nist.secauto.metaschema.core.metapath;
 
+import gov.nist.secauto.metaschema.core.metapath.item.ICollectionValue;
 import gov.nist.secauto.metaschema.core.metapath.item.IItem;
+import gov.nist.secauto.metaschema.core.metapath.item.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IAnyAtomicItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IAnyUriItem;
+import gov.nist.secauto.metaschema.core.metapath.item.atomic.IBase64BinaryItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IBooleanItem;
+import gov.nist.secauto.metaschema.core.metapath.item.atomic.IDateItem;
+import gov.nist.secauto.metaschema.core.metapath.item.atomic.IDateTimeItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IDayTimeDurationItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IDecimalItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IIntegerItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IStringItem;
+import gov.nist.secauto.metaschema.core.metapath.item.atomic.ITimeItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IYearMonthDurationItem;
 import gov.nist.secauto.metaschema.core.metapath.item.function.IArrayItem;
 import gov.nist.secauto.metaschema.core.metapath.item.function.IMapItem;
 import gov.nist.secauto.metaschema.core.metapath.item.function.IMapKey;
+import gov.nist.secauto.metaschema.core.qname.IEnhancedQName;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 
 import java.math.BigDecimal;
@@ -116,6 +123,18 @@ public final class TestUtils {
   }
 
   /**
+   * Create a base64 item using the provided value.
+   *
+   * @param value
+   *          the value
+   * @return the boolean item
+   */
+  @NonNull
+  public static IBase64BinaryItem base64(@NonNull String value) {
+    return IBase64BinaryItem.valueOf(value);
+  }
+
+  /**
    * Create a boolean item using the provided value.
    *
    * @param value
@@ -201,6 +220,42 @@ public final class TestUtils {
   }
 
   /**
+   * Create a date item using the provided value.
+   *
+   * @param value
+   *          the date value
+   * @return the date item
+   */
+  @NonNull
+  public static IDateItem date(@NonNull String value) {
+    return IDateItem.valueOf(value);
+  }
+
+  /**
+   * Create a date/time item using the provided value.
+   *
+   * @param value
+   *          the date/time value
+   * @return the date/time item
+   */
+  @NonNull
+  public static IDateTimeItem dateTime(@NonNull String value) {
+    return IDateTimeItem.valueOf(value);
+  }
+
+  /**
+   * Create a time item using the provided value.
+   *
+   * @param value
+   *          the time value
+   * @return the time item
+   */
+  @NonNull
+  public static ITimeItem time(@NonNull String value) {
+    return ITimeItem.valueOf(value);
+  }
+
+  /**
    * Create a duration item using the provided value indicating the years, months,
    * and days of the duration.
    *
@@ -224,6 +279,11 @@ public final class TestUtils {
   @NonNull
   public static IDayTimeDurationItem dayTimeDuration(@NonNull String value) {
     return IDayTimeDurationItem.valueOf(value);
+  }
+
+  @NonNull
+  public static IEnhancedQName qname(@NonNull String namespace, @NonNull String localname) {
+    return IEnhancedQName.of(namespace, localname);
   }
 
   private TestUtils() {

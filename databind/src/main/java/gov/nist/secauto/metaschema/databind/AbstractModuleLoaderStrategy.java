@@ -7,6 +7,8 @@ package gov.nist.secauto.metaschema.databind;
 
 import gov.nist.secauto.metaschema.core.model.IBoundObject;
 import gov.nist.secauto.metaschema.core.model.IModule;
+import gov.nist.secauto.metaschema.core.model.constraint.DefaultConstraintValidator;
+import gov.nist.secauto.metaschema.core.qname.IEnhancedQName;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 import gov.nist.secauto.metaschema.databind.IBindingContext.IBindingMatcher;
 import gov.nist.secauto.metaschema.databind.model.IBoundDefinitionModelAssembly;
@@ -18,10 +20,15 @@ import gov.nist.secauto.metaschema.databind.model.annotations.MetaschemaModule;
 import gov.nist.secauto.metaschema.databind.model.annotations.ModelUtil;
 import gov.nist.secauto.metaschema.databind.model.impl.DefinitionAssembly;
 import gov.nist.secauto.metaschema.databind.model.impl.DefinitionField;
+import gov.nist.secauto.metaschema.databind.model.metaschema.binding.MetaschemaModelModule;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -37,9 +44,11 @@ import edu.umd.cs.findbugs.annotations.NonNull;
  * @since 2.0.0
  */
 public abstract class AbstractModuleLoaderStrategy implements IBindingContext.IModuleLoaderStrategy {
+  private static final Logger LOGGER = LogManager.getLogger(DefaultConstraintValidator.class);
+
   @SuppressWarnings("PMD.UseConcurrentHashMap")
   @NonNull
-  private final Map<IBoundDefinitionModelAssembly, IBindingMatcher> bindingMatchers = new HashMap<>();
+  private final Map<IEnhancedQName, IBindingMatcher> bindingMatchers = new LinkedHashMap<>();
   @NonNull
   private final Map<IModule, IBoundModule> moduleToBoundModuleMap = new ConcurrentHashMap<>();
   @SuppressWarnings("PMD.UseConcurrentHashMap")
@@ -138,17 +147,31 @@ public abstract class AbstractModuleLoaderStrategy implements IBindingContext.IM
     IBindingMatcher retval;
     modulesLock.lock();
     try {
-      retval = bindingMatchers.get(definition);
-      if (retval == null) {
-        if (!definition.isRoot()) {
-          throw new IllegalArgumentException(
-              String.format("The provided definition '%s' is not a root assembly.",
-                  definition.getBoundClass().getName()));
-        }
-
-        retval = IBindingMatcher.of(definition);
-        bindingMatchers.put(definition, retval);
+      if (!definition.isRoot()) {
+        throw new IllegalArgumentException(
+            String.format("The provided definition '%s' is not a root assembly.",
+                definition.getBoundClass().getName()));
       }
+      IEnhancedQName qname = definition.getRootQName();
+      retval = IBindingMatcher.of(definition);
+      // always replace the existing matcher to ensure the last loaded module wins
+      IBindingMatcher old = bindingMatchers.put(qname, retval);
+      if (old != null && !(definition.getContainingModule() instanceof MetaschemaModelModule)) {
+        // FIXME: find existing causes of this in unit tests
+        LOGGER.atWarn().log("Replacing matcher for QName: {}", qname);
+      }
+
+      // retval = bindingMatchers.get(definition);
+      // if (retval == null) {
+      // if (!definition.isRoot()) {
+      // throw new IllegalArgumentException(
+      // String.format("The provided definition '%s' is not a root assembly.",
+      // definition.getBoundClass().getName()));
+      // }
+      //
+      // retval = IBindingMatcher.of(definition);
+      // bindingMatchers.put(definition, retval);
+      // }
     } finally {
       modulesLock.unlock();
     }

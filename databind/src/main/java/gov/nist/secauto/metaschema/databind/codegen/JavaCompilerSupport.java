@@ -7,11 +7,8 @@ package gov.nist.secauto.metaschema.databind.codegen;
 
 import gov.nist.secauto.metaschema.core.util.CollectionUtil;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import java.io.IOException;
-import java.io.Writer;
+import java.io.StringWriter;
 import java.nio.file.Path;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
@@ -29,8 +26,8 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 
 public class JavaCompilerSupport {
-  private static final Logger LOGGER = LogManager.getLogger(JavaCompilerSupport.class);
-
+  @Nullable
+  private Logger logger;
   @NonNull
   private final Path classDir;
   @NonNull
@@ -68,6 +65,10 @@ public class JavaCompilerSupport {
     rootModuleNames.add(entry);
   }
 
+  public void setLogger(@NonNull Logger logger) {
+    this.logger = logger;
+  }
+
   @NonNull
   protected List<String> generateCompilerOptions() {
     List<String> options = new LinkedList<>();
@@ -96,9 +97,6 @@ public class JavaCompilerSupport {
    *
    * @param classFiles
    *          the files to compile
-   * @param compileOut
-   *          a Writer for additional output from the compiler; use System.err if
-   *          null
    * @return information about the generated classes
    * @throws IOException
    *           if an error occurred while compiling the classes
@@ -108,7 +106,7 @@ public class JavaCompilerSupport {
    *           {@link javax.tools.JavaFileObject.Kind#SOURCE}
    */
 
-  public CompilationResult compile(@NonNull List<Path> classFiles, @Nullable Writer compileOut) throws IOException {
+  public CompilationResult compile(@NonNull List<Path> classFiles) throws IOException {
     DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
 
     JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
@@ -124,21 +122,30 @@ public class JavaCompilerSupport {
 
       List<String> options = generateCompilerOptions();
 
-      if (LOGGER.isDebugEnabled()) {
-        LOGGER.atDebug().log("Using options: {}", options);
+      Logger logger = this.logger;
+      if (logger != null && logger.isDebugEnabled()) {
+        logger.debug(String.format("Using options: %s", options));
       }
 
-      JavaCompiler.CompilationTask task = compiler.getTask(
-          compileOut,
-          fileManager,
-          diagnostics,
-          options,
-          null,
-          compilationUnits);
+      boolean result;
+      try (StringWriter writer = new StringWriter()) {
+        JavaCompiler.CompilationTask task = compiler.getTask(
+            writer,
+            fileManager,
+            diagnostics,
+            options,
+            null,
+            compilationUnits);
+        task.addModules(rootModuleNames);
 
-      task.addModules(rootModuleNames);
-
-      return new CompilationResult(task.call(), diagnostics);
+        result = task.call();
+        writer.flush();
+        String output = writer.toString();
+        if (!output.isBlank() && logger != null && logger.isInfoEnabled()) {
+          logger.info(String.format("compiler output: %s", writer.toString()));
+        }
+      }
+      return new CompilationResult(result, diagnostics);
     }
   }
 
@@ -159,5 +166,15 @@ public class JavaCompilerSupport {
     public DiagnosticCollector<?> getDiagnostics() {
       return diagnostics;
     }
+  }
+
+  public interface Logger {
+    boolean isDebugEnabled();
+
+    boolean isInfoEnabled();
+
+    void debug(String msg);
+
+    void info(String msg);
   }
 }

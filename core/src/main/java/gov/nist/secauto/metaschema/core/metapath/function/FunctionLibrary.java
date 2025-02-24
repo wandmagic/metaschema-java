@@ -5,6 +5,7 @@
 
 package gov.nist.secauto.metaschema.core.metapath.function;
 
+import gov.nist.secauto.metaschema.core.qname.IEnhancedQName;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 
 import java.util.HashMap;
@@ -14,17 +15,13 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Stream;
 
-import javax.xml.namespace.QName;
-
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 
 public class FunctionLibrary implements IFunctionLibrary {
 
   @NonNull
-  private final Map<QName, NamedFunctionSet> libraryByQName = new HashMap<>(); // NOPMD - intentional
-  @NonNull
-  private final Map<String, NamedFunctionSet> libraryByName = new HashMap<>(); // NOPMD - intentional
+  private final Map<IEnhancedQName, NamedFunctionSet> libraryByQName = new HashMap<>(); // NOPMD - intentional
   @NonNull
   private final ReadWriteLock instanceLock = new ReentrantReadWriteLock();
 
@@ -39,11 +36,10 @@ public class FunctionLibrary implements IFunctionLibrary {
    */
   public final void registerFunction(@NonNull IFunction function) {
     registerFunctionByQName(function);
-    registerFunctionByName(function);
   }
 
   private void registerFunctionByQName(@NonNull IFunction function) {
-    QName qname = function.getQName();
+    IEnhancedQName qname = function.getQName();
     IFunction duplicate;
     Lock writeLock = instanceLock.writeLock();
     writeLock.lock();
@@ -63,23 +59,6 @@ public class FunctionLibrary implements IFunctionLibrary {
     }
   }
 
-  private void registerFunctionByName(@NonNull IFunction function) {
-    String name = function.getName();
-    Lock writeLock = instanceLock.writeLock();
-    writeLock.lock();
-    try {
-      NamedFunctionSet functions = libraryByName.get(name);
-      if (functions == null) {
-        functions = new NamedFunctionSet();
-        libraryByName.put(name, functions);
-      }
-      // replace duplicates
-      functions.addFunction(function);
-    } finally {
-      writeLock.unlock();
-    }
-  }
-
   @Override
   public Stream<IFunction> stream() {
     Lock readLock = instanceLock.readLock();
@@ -92,23 +71,7 @@ public class FunctionLibrary implements IFunctionLibrary {
   }
 
   @Override
-  public IFunction getFunction(@NonNull String name, int arity) {
-    IFunction retval = null;
-    Lock readLock = instanceLock.readLock();
-    readLock.lock();
-    try {
-      NamedFunctionSet functions = libraryByName.get(name);
-      if (functions != null) {
-        retval = functions.getFunctionWithArity(arity);
-      }
-    } finally {
-      readLock.unlock();
-    }
-    return retval;
-  }
-
-  @Override
-  public IFunction getFunction(@NonNull QName name, int arity) {
+  public IFunction getFunction(@NonNull IEnhancedQName name, int arity) {
     IFunction retval = null;
     Lock readLock = instanceLock.readLock();
     readLock.lock();

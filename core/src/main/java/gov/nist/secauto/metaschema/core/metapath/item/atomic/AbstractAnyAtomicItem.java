@@ -5,18 +5,19 @@
 
 package gov.nist.secauto.metaschema.core.metapath.item.atomic;
 
-import gov.nist.secauto.metaschema.core.datatype.IDataTypeAdapter;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
- * Provides a common implementation for all atomic types.
+ * Provides a common implementation for all atomic types that have an underlying
+ * value.
  *
  * @param <TYPE>
  *          the Java type associated with the atomic type.
  */
-public abstract class AbstractAnyAtomicItem<TYPE> implements IAnyAtomicItem {
+public abstract class AbstractAnyAtomicItem<TYPE>
+    extends AbstractAtomicItemBase<TYPE> {
   @NonNull
   private final TYPE value;
 
@@ -34,19 +35,5 @@ public abstract class AbstractAnyAtomicItem<TYPE> implements IAnyAtomicItem {
   @NonNull
   public TYPE getValue() {
     return value;
-  }
-
-  @Override
-  @NonNull
-  public abstract IDataTypeAdapter<TYPE> getJavaTypeAdapter();
-
-  @Override
-  public String asString() {
-    return getJavaTypeAdapter().asString(getValue());
-  }
-
-  @Override
-  public String toString() {
-    return asString();
   }
 }

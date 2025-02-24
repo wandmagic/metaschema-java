@@ -8,10 +8,13 @@ package gov.nist.secauto.metaschema.core.datatype;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 
-import gov.nist.secauto.metaschema.core.metapath.function.InvalidValueForCastFunctionException;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IAnyAtomicItem;
+import gov.nist.secauto.metaschema.core.metapath.type.AbstractAtomicOrUnionType;
+import gov.nist.secauto.metaschema.core.metapath.type.DataTypeItemType;
+import gov.nist.secauto.metaschema.core.metapath.type.IAtomicOrUnionType;
 import gov.nist.secauto.metaschema.core.model.util.JsonUtil;
 import gov.nist.secauto.metaschema.core.model.util.XmlEventUtil;
+import gov.nist.secauto.metaschema.core.qname.IEnhancedQName;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 
 import org.codehaus.stax2.XMLEventReader2;
@@ -19,8 +22,8 @@ import org.codehaus.stax2.XMLStreamWriter2;
 import org.codehaus.stax2.evt.XMLEventFactory2;
 
 import java.io.IOException;
+import java.net.URI;
 
-import javax.xml.namespace.QName;
 import javax.xml.stream.XMLEventWriter;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.events.Characters;
@@ -36,8 +39,7 @@ import edu.umd.cs.findbugs.annotations.NonNull;
  * @param <TYPE>
  *          the raw Java type this adapter supports
  * @param <ITEM_TYPE>
- *          the metapath item type corresponding to the raw Java type supported
- *          by the adapter
+ *          the metapath item type supported by the adapter
  */
 public abstract class AbstractDataTypeAdapter<TYPE, ITEM_TYPE extends IAnyAtomicItem>
     implements IDataTypeAdapter<TYPE> {
@@ -47,16 +49,26 @@ public abstract class AbstractDataTypeAdapter<TYPE, ITEM_TYPE extends IAnyAtomic
   public static final String DEFAULT_JSON_FIELD_VALUE_NAME = "STRVALUE";
 
   @NonNull
-  private final Class<TYPE> clazz;
+  private final Class<TYPE> valueClass;
+  @NonNull
+  private final IAtomicOrUnionType<ITEM_TYPE> itemType;
 
   /**
    * Construct a new Java type adapter for a provided class.
    *
-   * @param clazz
-   *          the Java type this adapter supports
+   * @param valueClass
+   *          the Java value object type this adapter supports
+   * @param itemClass
+   *          the Java type of the Matepath item this adapter supports
+   * @param castExecutor
+   *          the method to call to cast an item to an item based on this type
    */
-  protected AbstractDataTypeAdapter(@NonNull Class<TYPE> clazz) {
-    this.clazz = clazz;
+  protected AbstractDataTypeAdapter(
+      @NonNull Class<TYPE> valueClass,
+      @NonNull Class<ITEM_TYPE> itemClass,
+      @NonNull AbstractAtomicOrUnionType.ICastExecutor<ITEM_TYPE> castExecutor) {
+    this.valueClass = valueClass;
+    this.itemType = new DataTypeItemType<>(this, itemClass, castExecutor);
   }
 
   @Override
@@ -67,11 +79,16 @@ public abstract class AbstractDataTypeAdapter<TYPE, ITEM_TYPE extends IAnyAtomic
 
   @Override
   public Class<TYPE> getJavaClass() {
-    return clazz;
+    return valueClass;
   }
 
   @Override
-  public boolean canHandleQName(QName nextQName) {
+  public IAtomicOrUnionType<ITEM_TYPE> getItemType() {
+    return itemType;
+  }
+
+  @Override
+  public boolean canHandleQName(IEnhancedQName nextQName) {
     return false;
   }
 
@@ -91,15 +108,14 @@ public abstract class AbstractDataTypeAdapter<TYPE, ITEM_TYPE extends IAnyAtomic
   }
 
   @Override
-  public TYPE parse(XMLEventReader2 eventReader) throws IOException {
+  public TYPE parse(XMLEventReader2 eventReader, URI resource) throws IOException {
     StringBuilder builder = new StringBuilder();
     XMLEvent nextEvent;
     try {
       while (!(nextEvent = eventReader.peek()).isEndElement()) {
         if (!nextEvent.isCharacters()) {
-          throw new IOException(String.format("Invalid content '%s' at %s",
-              XmlEventUtil.toString(nextEvent),
-              XmlEventUtil.toString(nextEvent.getLocation())));
+          throw new IOException(String.format("Invalid content %s",
+              XmlEventUtil.toString(nextEvent, resource)));
         }
         Characters characters = nextEvent.asCharacters();
         builder.append(characters.getData());
@@ -115,7 +131,7 @@ public abstract class AbstractDataTypeAdapter<TYPE, ITEM_TYPE extends IAnyAtomic
         throw new IOException(
             String.format("Malformed data '%s'%s. %s",
                 value,
-                XmlEventUtil.generateLocationMessage(nextEvent),
+                XmlEventUtil.generateLocationMessage(nextEvent, resource),
                 ex.getLocalizedMessage()),
             ex);
       }
@@ -129,12 +145,12 @@ public abstract class AbstractDataTypeAdapter<TYPE, ITEM_TYPE extends IAnyAtomic
    * the string-based parsing method.
    */
   @Override
-  public TYPE parse(JsonParser parser) throws IOException {
+  public TYPE parse(JsonParser parser, URI resource) throws IOException {
     String value = parser.getValueAsString();
     if (value == null) {
       throw new IOException(
           String.format("Unable to get null value as text%s",
-              JsonUtil.generateLocationMessage(parser)));
+              JsonUtil.generateLocationMessage(parser, resource)));
     }
     // skip over value
     parser.nextToken();
@@ -144,7 +160,7 @@ public abstract class AbstractDataTypeAdapter<TYPE, ITEM_TYPE extends IAnyAtomic
       throw new IOException(
           String.format("Malformed data '%s'%s. %s",
               value,
-              JsonUtil.generateLocationMessage(parser),
+              JsonUtil.generateLocationMessage(parser, resource),
               ex.getLocalizedMessage()),
           ex);
     }
@@ -173,7 +189,7 @@ public abstract class AbstractDataTypeAdapter<TYPE, ITEM_TYPE extends IAnyAtomic
   }
 
   @Override
-  public void writeXmlValue(Object value, QName parentName, XMLStreamWriter2 writer) throws IOException {
+  public void writeXmlValue(Object value, IEnhancedQName parentName, XMLStreamWriter2 writer) throws IOException {
     String content;
     try {
       content = asString(value);
@@ -193,50 +209,5 @@ public abstract class AbstractDataTypeAdapter<TYPE, ITEM_TYPE extends IAnyAtomic
   }
 
   @Override
-  public abstract Class<ITEM_TYPE> getItemClass();
-
-  @Override
   public abstract ITEM_TYPE newItem(Object value);
-
-  @SuppressWarnings("unchecked")
-  @Override
-  public ITEM_TYPE cast(IAnyAtomicItem item) {
-    if (item == null) {
-      throw new InvalidValueForCastFunctionException("item is null");
-    }
-    return getItemClass().isAssignableFrom(item.getClass())
-        ? (ITEM_TYPE) item
-        : castInternal(item);
-  }
-
-  /**
-   * Attempt to cast the provided item to this adapter's item type.
-   * <p>
-   * The default implementation of this will attempt to parse the provided item as
-   * a string using the {@link #parse(String)} method. If this behavior is
-   * undesirable, then a subclass should override this method.
-   *
-   * @param item
-   *          the item to cast
-   * @return the item casted to this adapter's item type
-   * @throws InvalidValueForCastFunctionException
-   *           if the casting of the item is not possible because the item
-   *           represents an invalid value for this adapter's item type
-   */
-  @NonNull
-  protected ITEM_TYPE castInternal(@NonNull IAnyAtomicItem item) {
-    // try string based casting as a fallback
-    String itemString = null;
-    try {
-      itemString = item.asString();
-      TYPE value = parse(itemString);
-      return newItem(value);
-    } catch (IllegalArgumentException | IllegalStateException ex) {
-      throw new InvalidValueForCastFunctionException(
-          String.format("The value '%s' is not compatible with the type '%s'",
-              item.getValue(),
-              getItemClass().getName()),
-          ex);
-    }
-  }
 }

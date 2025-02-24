@@ -6,12 +6,12 @@
 package gov.nist.secauto.metaschema.core.metapath.function.library;
 
 import gov.nist.secauto.metaschema.core.metapath.DynamicContext;
-import gov.nist.secauto.metaschema.core.metapath.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.MetapathConstants;
 import gov.nist.secauto.metaschema.core.metapath.function.FunctionUtils;
 import gov.nist.secauto.metaschema.core.metapath.function.IArgument;
 import gov.nist.secauto.metaschema.core.metapath.function.IFunction;
 import gov.nist.secauto.metaschema.core.metapath.item.IItem;
+import gov.nist.secauto.metaschema.core.metapath.item.ISequence;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IIntegerItem;
 import gov.nist.secauto.metaschema.core.metapath.item.function.ArrayException;
 import gov.nist.secauto.metaschema.core.metapath.item.function.IArrayItem;
@@ -42,15 +42,15 @@ public final class ArrayRemove {
       .focusIndependent()
       .argument(IArgument.builder()
           .name("array")
-          .type(IArrayItem.class)
+          .type(IArrayItem.type())
           .one()
           .build())
       .argument(IArgument.builder()
           .name("positions")
-          .type(IIntegerItem.class)
+          .type(IIntegerItem.type())
           .zeroOrMore()
           .build())
-      .returnType(IArrayItem.class)
+      .returnType(IArrayItem.type())
       .returnOne()
       .functionHandler(ArrayRemove::execute)
       .build();
@@ -90,10 +90,17 @@ public final class ArrayRemove {
   public static <T extends IItem> IArrayItem<T> removeItems(
       @NonNull IArrayItem<T> array,
       @NonNull Collection<? extends IIntegerItem> positions) {
+    int size = array.size();
     return remove(
         array,
         ObjectUtils.notNull(positions.stream()
-            .map(position -> position.asInteger().intValueExact())
+            .map(IIntegerItem::toIntValueExact)
+            .peek(position -> {
+              if (position < 1 || position > size) {
+                throw new ArrayException(ArrayException.INDEX_OUT_OF_BOUNDS,
+                    String.format("Index position '%d' is out of bounds for the array of size '%d'.", position, size));
+              }
+            })
             .collect(Collectors.toSet())));
   }
 
