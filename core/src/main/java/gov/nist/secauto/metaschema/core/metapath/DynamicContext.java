@@ -41,8 +41,8 @@ import edu.umd.cs.findbugs.annotations.Nullable;
 
 // TODO: add support for in-scope namespaces
 /**
- * The implementation of a Metapath <a href="https://www.w3.org/TR/xpath-31/#eval_context">dynamic
- * context</a>.
+ * The implementation of a Metapath
+ * <a href="https://www.w3.org/TR/xpath-31/#eval_context">dynamic context</a>.
  */
 public class DynamicContext { // NOPMD - intentional data class
   @NonNull
@@ -111,9 +111,10 @@ public class DynamicContext { // NOPMD - intentional data class
   /**
    * Generate a new dynamic context that is a copy of this dynamic context.
    * <p>
-   * This method can be used to create a new sub-context where changes can be made without affecting
-   * this context. This is useful for setting information that is only used in a limited evaluation
-   * sub-scope, such as for handling variable assignment.
+   * This method can be used to create a new sub-context where changes can be made
+   * without affecting this context. This is useful for setting information that
+   * is only used in a limited evaluation sub-scope, such as for handling variable
+   * assignment.
    *
    * @return a new dynamic context
    */
@@ -153,7 +154,8 @@ public class DynamicContext { // NOPMD - intentional data class
   }
 
   /**
-   * Get the mapping of loaded documents from the document URI to the document node.
+   * Get the mapping of loaded documents from the document URI to the document
+   * node.
    *
    * @return the map of document URIs to document nodes
    */
@@ -168,7 +170,8 @@ public class DynamicContext { // NOPMD - intentional data class
    *
    * @return the loader
    * @throws DynamicMetapathException
-   *           with an error code {@link DynamicMetapathException#DYNAMIC_CONTEXT_ABSENT} if a
+   *           with an error code
+   *           {@link DynamicMetapathException#DYNAMIC_CONTEXT_ABSENT} if a
    *           document loader is not configured for this dynamic context
    */
   @NonNull
@@ -192,11 +195,12 @@ public class DynamicContext { // NOPMD - intentional data class
   }
 
   /**
-   * Get the cached function call result for evaluating a function that has the property
-   * {@link FunctionProperty#DETERMINISTIC}.
+   * Get the cached function call result for evaluating a function that has the
+   * property {@link FunctionProperty#DETERMINISTIC}.
    *
    * @param callingContext
-   *          the function calling context information that distinguishes the call from any other call
+   *          the function calling context information that distinguishes the call
+   *          from any other call
    * @return the cached result sequence for the function call
    */
   @Nullable
@@ -205,10 +209,12 @@ public class DynamicContext { // NOPMD - intentional data class
   }
 
   /**
-   * Cache a function call result for a that has the property {@link FunctionProperty#DETERMINISTIC}.
+   * Cache a function call result for a that has the property
+   * {@link FunctionProperty#DETERMINISTIC}.
    *
    * @param callingContext
-   *          the calling context information that distinguishes the call from any other call
+   *          the calling context information that distinguishes the call from any
+   *          other call
    * @param result
    *          the function call result
    */
@@ -218,10 +224,12 @@ public class DynamicContext { // NOPMD - intentional data class
   }
 
   /**
-   * Used to disable the evaluation of predicate expressions during Metapath evaluation.
+   * Used to disable the evaluation of predicate expressions during Metapath
+   * evaluation.
    * <p>
-   * This can be useful for determining the potential targets identified by a Metapath expression as a
-   * partial evaluation, without evaluating that these targets match the predicate.
+   * This can be useful for determining the potential targets identified by a
+   * Metapath expression as a partial evaluation, without evaluating that these
+   * targets match the predicate.
    *
    * @return this dynamic context
    */
@@ -232,7 +240,8 @@ public class DynamicContext { // NOPMD - intentional data class
   }
 
   /**
-   * Used to enable the evaluation of predicate expressions during Metapath evaluation.
+   * Used to enable the evaluation of predicate expressions during Metapath
+   * evaluation.
    * <p>
    * This is the default behavior if unchanged.
    *
@@ -255,13 +264,15 @@ public class DynamicContext { // NOPMD - intentional data class
   }
 
   /**
-   * Get the sequence value assigned to a let variable with the provided qualified name.
+   * Get the sequence value assigned to a let variable with the provided qualified
+   * name.
    *
    * @param name
    *          the variable qualified name
    * @return the non-null variable value
    * @throws MetapathException
-   *           of the variable has not been assigned or if the variable value is {@code null}
+   *           of the variable has not been assigned or if the variable value is
+   *           {@code null}
    */
   @NonNull
   public ISequence<?> getVariableValue(@NonNull IEnhancedQName name) {
@@ -286,8 +297,8 @@ public class DynamicContext { // NOPMD - intentional data class
    *          the number of arguments in the requested function
    * @return the function
    * @throws StaticMetapathException
-   *           with the code {@link StaticMetapathException#NO_FUNCTION_MATCH} if a matching function
-   *           was not found
+   *           with the code {@link StaticMetapathException#NO_FUNCTION_MATCH} if
+   *           a matching function was not found
    */
   @NonNull
   public IFunction getFunction(@NonNull IEnhancedQName name, int arity) {
@@ -393,7 +404,8 @@ public class DynamicContext { // NOPMD - intentional data class
       /**
        * {@inheritDoc}
        * <p>
-       * This method first resolves the provided URI against the static context's base URI.
+       * This method first resolves the provided URI against the static context's base
+       * URI.
        */
       @Override
       public URI resolve(URI uri) {
