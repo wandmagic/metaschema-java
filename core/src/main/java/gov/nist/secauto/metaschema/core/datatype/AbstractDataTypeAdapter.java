@@ -5,22 +5,6 @@
 
 package gov.nist.secauto.metaschema.core.datatype;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonParser;
-
-import gov.nist.secauto.metaschema.core.metapath.item.atomic.IAnyAtomicItem;
-import gov.nist.secauto.metaschema.core.metapath.type.AbstractAtomicOrUnionType;
-import gov.nist.secauto.metaschema.core.metapath.type.DataTypeItemType;
-import gov.nist.secauto.metaschema.core.metapath.type.IAtomicOrUnionType;
-import gov.nist.secauto.metaschema.core.model.util.JsonUtil;
-import gov.nist.secauto.metaschema.core.model.util.XmlEventUtil;
-import gov.nist.secauto.metaschema.core.qname.IEnhancedQName;
-import gov.nist.secauto.metaschema.core.util.ObjectUtils;
-
-import org.codehaus.stax2.XMLEventReader2;
-import org.codehaus.stax2.XMLStreamWriter2;
-import org.codehaus.stax2.evt.XMLEventFactory2;
-
 import java.io.IOException;
 import java.net.URI;
 
@@ -30,7 +14,22 @@ import javax.xml.stream.events.Characters;
 import javax.xml.stream.events.StartElement;
 import javax.xml.stream.events.XMLEvent;
 
+import org.codehaus.stax2.XMLEventReader2;
+import org.codehaus.stax2.XMLStreamWriter2;
+import org.codehaus.stax2.evt.XMLEventFactory2;
+
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonParser;
+
 import edu.umd.cs.findbugs.annotations.NonNull;
+import gov.nist.secauto.metaschema.core.metapath.item.atomic.IAnyAtomicItem;
+import gov.nist.secauto.metaschema.core.metapath.type.AbstractAtomicOrUnionType;
+import gov.nist.secauto.metaschema.core.metapath.type.DataTypeItemType;
+import gov.nist.secauto.metaschema.core.metapath.type.IAtomicOrUnionType;
+import gov.nist.secauto.metaschema.core.model.util.JsonUtil;
+import gov.nist.secauto.metaschema.core.model.util.XmlEventUtil;
+import gov.nist.secauto.metaschema.core.qname.IEnhancedQName;
+import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 
 /**
  * Provides a basic Java type adapter implementation. This implementation should
