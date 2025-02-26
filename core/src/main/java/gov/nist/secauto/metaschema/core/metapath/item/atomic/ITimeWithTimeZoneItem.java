@@ -133,8 +133,19 @@ public interface ITimeWithTimeZoneItem extends ITimeItem {
           String.format("Unable to cast the temporal value '%s', since it lacks timezone information.",
               temporal.asString()));
     }
+    if (!temporal.hasTime()) {
+      // asString can throw IllegalStateException exception
+      throw new InvalidValueForCastFunctionException(
+          String.format("Unable to cast the temporal value '%s', since it lacks date information.",
+              temporal.asString()));
+    }
     // get the time
-    return valueOf(ObjectUtils.notNull(temporal.asZonedDateTime().toOffsetDateTime().toOffsetTime()));
+    return new TimeWithTimeZoneItemImpl(ObjectUtils.notNull(OffsetTime.of(
+        temporal.getHour(),
+        temporal.getMinute(),
+        temporal.getSecond(),
+        temporal.getNano(),
+        temporal.getZoneOffset())));
   }
 
   @Override

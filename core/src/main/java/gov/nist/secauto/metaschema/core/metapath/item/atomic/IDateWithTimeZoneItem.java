@@ -111,18 +111,26 @@ public interface IDateWithTimeZoneItem extends IDateItem {
           String.format("Unable to cast the temporal value '%s', since it lacks timezone information.",
               temporal.asString()));
     }
+    if (!temporal.hasDate()) {
+      // asString can throw IllegalStateException exception
+      throw new InvalidValueForCastFunctionException(
+          String.format("Unable to cast the temporal value '%s', since it lacks date information.",
+              temporal.asString()));
+    }
     // get the time at midnight
-    return valueOf(ObjectUtils.notNull(temporal.asZonedDateTime().truncatedTo(ChronoUnit.DAYS)));
+    return new DateWithTimeZoneItemImpl(ObjectUtils.notNull(ZonedDateTime.of(
+        temporal.getYear(),
+        temporal.getMonth(),
+        temporal.getDay(),
+        0,
+        0,
+        0,
+        0,
+        temporal.getZoneOffset())));
   }
 
   @Override
   default IDateWithTimeZoneItem castAsType(IAnyAtomicItem item) {
     return cast(item);
   }
-
-  @Override
-  default int compareTo(IAnyAtomicItem item) {
-    return compareTo(cast(item));
-  }
-
 }

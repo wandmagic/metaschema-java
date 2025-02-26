@@ -7,7 +7,6 @@ package gov.nist.secauto.metaschema.core.metapath.item.atomic.impl;
 
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.AbstractAnyAtomicItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.ITemporalItem;
-import gov.nist.secauto.metaschema.core.metapath.item.function.IMapKey;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
@@ -20,7 +19,6 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 public abstract class AbstractTemporalItem<TYPE>
     extends AbstractAnyAtomicItem<TYPE>
     implements ITemporalItem {
-
   /**
    * Construct a new temporal item.
    *
@@ -34,39 +32,5 @@ public abstract class AbstractTemporalItem<TYPE>
   @Override
   protected String getValueSignature() {
     return "'" + asString() + "'";
-  }
-
-  @Override
-  public IMapKey asMapKey() {
-    return new MapKey();
-  }
-
-  private final class MapKey
-      implements IMapKey {
-
-    @Override
-    public ITemporalItem getKey() {
-      return AbstractTemporalItem.this;
-    }
-
-    @Override
-    public int hashCode() {
-      return getKey().hashCode();
-    }
-
-    @SuppressWarnings("PMD.OnlyOneReturn")
-    @Override
-    public boolean equals(Object obj) {
-      if (this == obj) {
-        return true;
-      }
-
-      if (!(obj instanceof AbstractTemporalItem.MapKey)) {
-        return false;
-      }
-
-      AbstractTemporalItem<?>.MapKey other = (AbstractTemporalItem<?>.MapKey) obj;
-      return getKey().compareTo(other.getKey()) == 0;
-    }
   }
 }

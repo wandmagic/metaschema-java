@@ -5,6 +5,13 @@
 
 package gov.nist.secauto.metaschema.core.metapath;
 
+import gov.nist.secauto.metaschema.core.metapath.item.atomic.IDateItem;
+import gov.nist.secauto.metaschema.core.metapath.item.atomic.IDateTimeItem;
+import gov.nist.secauto.metaschema.core.util.ObjectUtils;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
 import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
@@ -93,6 +100,19 @@ public final class MetapathConstants {
    */
   @NonNull
   public static final String PREFIX_METAPATH_FUNCTIONS_MAP = "map";
+
+  /**
+   * A reference date/time value for use in date/time related calculations.
+   */
+  @NonNull
+  public static final IDateTimeItem REFERENCE_DATE_TIME
+      = IDateTimeItem.valueOf(ObjectUtils.notNull(LocalDateTime.of(1972, 1, 1, 0, 0)));
+
+  /**
+   * A reference date value for use in date/time related calculations.
+   */
+  @NonNull
+  public static final IDateItem REFERENCE_DATE_ITEM = IDateItem.valueOf(ObjectUtils.notNull(LocalDate.of(1972, 1, 1)));
 
   private MetapathConstants() {
     // disable construction

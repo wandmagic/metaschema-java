@@ -30,8 +30,14 @@ public class DefaultFunctionLibrary
     // https://www.w3.org/TR/xpath-functions-31/#func-abs
     registerFunction(FnAbs.SIGNATURE);
     // https://www.w3.org/TR/xpath-functions-31/#func-adjust-dateTime-to-timezone
+    registerFunction(FnAdjustDateTimeToTimezone.ONE_ARG_SIGNATURE);
+    registerFunction(FnAdjustDateTimeToTimezone.TWO_ARG_SIGNATURE);
     // https://www.w3.org/TR/xpath-functions-31/#func-adjust-date-to-timezone
+    registerFunction(FnAdjustDateToTimezone.ONE_ARG_SIGNATURE);
+    registerFunction(FnAdjustDateToTimezone.TWO_ARG_SIGNATURE);
     // https://www.w3.org/TR/xpath-functions-31/#func-adjust-time-to-timezone
+    registerFunction(FnAdjustTimeToTimezone.ONE_ARG_SIGNATURE);
+    registerFunction(FnAdjustTimeToTimezone.TWO_ARG_SIGNATURE);
     // https://www.w3.org/TR/xpath-functions-31/#func-avg
     registerFunction(FnAvg.SIGNATURE);
     // https://www.w3.org/TR/xpath-functions-31/#func-base-uri
@@ -58,6 +64,8 @@ public class DefaultFunctionLibrary
     // https://www.w3.org/TR/xpath-functions-31/#func-data
     registerFunction(FnData.SIGNATURE_NO_ARG);
     registerFunction(FnData.SIGNATURE_ONE_ARG);
+    // https://www.w3.org/TR/xpath-functions-31/#func-date-time
+    registerFunction(FnDateTime.SIGNATURE);
     // https://www.w3.org/TR/xpath-functions-31/#func-day-from-date
     // https://www.w3.org/TR/xpath-functions-31/#func-day-from-dateTime
     // https://www.w3.org/TR/xpath-functions-31/#func-days-from-duration

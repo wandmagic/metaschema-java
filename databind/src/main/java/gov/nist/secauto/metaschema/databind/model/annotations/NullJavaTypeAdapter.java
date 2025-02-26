@@ -74,13 +74,13 @@ public final class NullJavaTypeAdapter
 
     @Override
     public @NonNull
-        IAnyAtomicItem toAtomicItem() {
+    IAnyAtomicItem toAtomicItem() {
       throw new UnsupportedOperationException(NOT_VALID);
     }
 
     @Override
     public @NonNull
-        String asString() {
+    String asString() {
       throw new UnsupportedOperationException(NOT_VALID);
     }
 
@@ -91,11 +91,6 @@ public final class NullJavaTypeAdapter
 
     @Override
     public IAnyAtomicItem castAsType(IAnyAtomicItem item) {
-      throw new UnsupportedOperationException(NOT_VALID);
-    }
-
-    @Override
-    public int compareTo(IAnyAtomicItem item) {
       throw new UnsupportedOperationException(NOT_VALID);
     }
 

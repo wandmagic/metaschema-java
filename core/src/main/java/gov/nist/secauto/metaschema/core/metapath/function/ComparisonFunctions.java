@@ -5,6 +5,7 @@
 
 package gov.nist.secauto.metaschema.core.metapath.function;
 
+import gov.nist.secauto.metaschema.core.metapath.DynamicContext;
 import gov.nist.secauto.metaschema.core.metapath.function.impl.OperationFunctions;
 import gov.nist.secauto.metaschema.core.metapath.function.library.FnNot;
 import gov.nist.secauto.metaschema.core.metapath.item.ISequence;
@@ -16,9 +17,9 @@ import gov.nist.secauto.metaschema.core.metapath.item.atomic.IDateTimeItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IDayTimeDurationItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IDecimalItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IDurationItem;
-import gov.nist.secauto.metaschema.core.metapath.item.atomic.IIntegerItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.INumericItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IStringItem;
+import gov.nist.secauto.metaschema.core.metapath.item.atomic.ITimeItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IUntypedAtomicItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IYearMonthDurationItem;
 import gov.nist.secauto.metaschema.core.metapath.type.InvalidTypeMetapathException;
@@ -81,12 +82,17 @@ public final class ComparisonFunctions {
    *          the comparison operator
    * @param rightItem
    *          the second item to compare
+   * @param dynamicContext
+   *          used to get the implicit timezone from the evaluation context
    * @return the result of the comparison
    */
   @NonNull
-  public static IBooleanItem valueCompairison(@NonNull IAnyAtomicItem leftItem, @NonNull Operator operator,
-      @NonNull IAnyAtomicItem rightItem) {
-    return compare(leftItem, operator, rightItem);
+  public static IBooleanItem valueCompairison(
+      @NonNull IAnyAtomicItem leftItem,
+      @NonNull Operator operator,
+      @NonNull IAnyAtomicItem rightItem,
+      @NonNull DynamicContext dynamicContext) {
+    return compare(leftItem, operator, rightItem, dynamicContext);
   }
 
   /**
@@ -98,13 +104,16 @@ public final class ComparisonFunctions {
    *          the comparison operator
    * @param rightItems
    *          the second set of items to compare
+   * @param dynamicContext
+   *          used to get the implicit timezone from the evaluation context
    * @return a or an empty {@link ISequence} if either item is {@code null}
    */
   @NonNull
   public static IBooleanItem generalComparison( // NOPMD - acceptable complexity
       @NonNull ISequence<? extends IAnyAtomicItem> leftItems,
       @NonNull Operator operator,
-      @NonNull ISequence<? extends IAnyAtomicItem> rightItems) {
+      @NonNull ISequence<? extends IAnyAtomicItem> rightItems,
+      @NonNull DynamicContext dynamicContext) {
 
     IBooleanItem retval = IBooleanItem.FALSE;
     for (IAnyAtomicItem left : leftItems) {
@@ -130,7 +139,7 @@ public final class ComparisonFunctions {
         }
 
         assert leftCast != null;
-        IBooleanItem result = compare(leftCast, operator, rightCast);
+        IBooleanItem result = compare(leftCast, operator, rightCast, dynamicContext);
         if (IBooleanItem.TRUE.equals(result)) {
           retval = IBooleanItem.TRUE;
         }
@@ -150,7 +159,8 @@ public final class ComparisonFunctions {
    * @return the casted item
    */
   @NonNull
-  private static IAnyAtomicItem applyGeneralComparisonCast(@NonNull IAnyAtomicItem item,
+  private static IAnyAtomicItem applyGeneralComparisonCast(
+      @NonNull IAnyAtomicItem item,
       @NonNull IAnyAtomicItem other) {
     IAnyAtomicItem retval;
     if (item instanceof INumericItem) {
@@ -175,13 +185,16 @@ public final class ComparisonFunctions {
    *          the comparison operator
    * @param right
    *          the value to compare with
+   * @param dynamicContext
+   *          used to get the implicit timezone from the evaluation context
    * @return the comparison result
    */
   @NonNull
   public static IBooleanItem compare( // NOPMD - unavoidable
       @NonNull IAnyAtomicItem left,
       @NonNull Operator operator,
-      @NonNull IAnyAtomicItem right) {
+      @NonNull IAnyAtomicItem right,
+      @NonNull DynamicContext dynamicContext) {
     @NonNull
     IBooleanItem retval;
     if (left instanceof IStringItem || right instanceof IStringItem) {
@@ -191,9 +204,19 @@ public final class ComparisonFunctions {
     } else if (left instanceof IBooleanItem && right instanceof IBooleanItem) {
       retval = booleanCompare((IBooleanItem) left, operator, (IBooleanItem) right);
     } else if (left instanceof IDateTimeItem && right instanceof IDateTimeItem) {
-      retval = dateTimeCompare((IDateTimeItem) left, operator, (IDateTimeItem) right);
+      retval = dateTimeCompare((IDateTimeItem) left, operator, (IDateTimeItem) right, dynamicContext);
     } else if (left instanceof IDateItem && right instanceof IDateItem) {
-      retval = dateCompare((IDateItem) left, operator, (IDateItem) right);
+      retval = dateTimeCompare(
+          ((IDateItem) left).asDateTime(),
+          operator,
+          ((IDateItem) right).asDateTime(),
+          dynamicContext);
+    } else if (left instanceof ITimeItem && right instanceof ITimeItem) {
+      retval = dateTimeCompare(
+          IDateTimeItem.valueOf(OperationFunctions.DATE_1972_12_31, (ITimeItem) left),
+          operator,
+          IDateTimeItem.valueOf(OperationFunctions.DATE_1972_12_31, (ITimeItem) right),
+          dynamicContext);
     } else if (left instanceof IDurationItem && right instanceof IDurationItem) {
       retval = durationCompare((IDurationItem) left, operator, (IDurationItem) right);
     } else if (left instanceof IBase64BinaryItem && right instanceof IBase64BinaryItem) {
@@ -312,7 +335,9 @@ public final class ComparisonFunctions {
    * @return the comparison result
    */
   @NonNull
-  public static IBooleanItem booleanCompare(@NonNull IBooleanItem left, @NonNull Operator operator,
+  public static IBooleanItem booleanCompare(
+      @NonNull IBooleanItem left,
+      @NonNull Operator operator,
       @NonNull IBooleanItem right) {
     IBooleanItem retval;
     switch (operator) {
@@ -356,83 +381,45 @@ public final class ComparisonFunctions {
    *          the comparison operator
    * @param right
    *          the value to compare with
+   * @param dynamicContext
+   *          used to get the implicit timezone from the evaluation context
    * @return the comparison result
    */
   @NonNull
-  public static IBooleanItem dateTimeCompare(@NonNull IDateTimeItem left, @NonNull Operator operator,
-      @NonNull IDateTimeItem right) {
+  public static IBooleanItem dateTimeCompare(
+      @NonNull IDateTimeItem left,
+      @NonNull Operator operator,
+      @NonNull IDateTimeItem right,
+      @NonNull DynamicContext dynamicContext) {
     IBooleanItem retval;
     switch (operator) {
     case EQ:
-      retval = OperationFunctions.opDateTimeEqual(left, right);
+      retval = OperationFunctions.opDateTimeEqual(left, right, dynamicContext);
       break;
     case GE: {
-      IBooleanItem gt = OperationFunctions.opDateTimeGreaterThan(left, right);
-      IBooleanItem eq = OperationFunctions.opDateTimeEqual(left, right);
-      retval = IBooleanItem.valueOf(gt.toBoolean() || eq.toBoolean());
+      IDateTimeItem leftNormalized = left.normalize(dynamicContext);
+      IDateTimeItem rightNormalized = right.normalize(dynamicContext);
+      retval = IBooleanItem.valueOf(
+          OperationFunctions.opDateTimeGreaterThan(leftNormalized, rightNormalized, dynamicContext).toBoolean()
+              || OperationFunctions.opDateTimeEqual(leftNormalized, rightNormalized, dynamicContext).toBoolean());
       break;
     }
     case GT:
-      retval = OperationFunctions.opDateTimeGreaterThan(left, right);
+      retval = OperationFunctions.opDateTimeGreaterThan(left, right, dynamicContext);
       break;
     case LE: {
-      IBooleanItem lt = OperationFunctions.opDateTimeLessThan(left, right);
-      IBooleanItem eq = OperationFunctions.opDateTimeEqual(left, right);
-      retval = IBooleanItem.valueOf(lt.toBoolean() || eq.toBoolean());
+      IDateTimeItem leftNormalized = left.normalize(dynamicContext);
+      IDateTimeItem rightNormalized = right.normalize(dynamicContext);
+      retval = IBooleanItem.valueOf(
+          OperationFunctions.opDateTimeLessThan(leftNormalized, rightNormalized, dynamicContext).toBoolean()
+              || OperationFunctions.opDateTimeEqual(leftNormalized, rightNormalized, dynamicContext).toBoolean());
       break;
     }
     case LT:
-      retval = OperationFunctions.opDateTimeLessThan(left, right);
+      retval = OperationFunctions.opDateTimeLessThan(left, right, dynamicContext);
       break;
     case NE:
-      retval = FnNot.fnNot(OperationFunctions.opDateTimeEqual(left, right));
-      break;
-    default:
-      throw new IllegalArgumentException(String.format("Unsupported operator '%s'", operator.name()));
-    }
-    return retval;
-  }
-
-  /**
-   * Perform a date-based comparison of the {@code right} item against the
-   * {@code left} item using the specified {@code operator}.
-   *
-   * @param left
-   *          the value to compare against
-   * @param operator
-   *          the comparison operator
-   * @param right
-   *          the value to compare with
-   * @return the comparison result
-   */
-  @NonNull
-  public static IBooleanItem dateCompare(@NonNull IDateItem left, @NonNull Operator operator,
-      @NonNull IDateItem right) {
-    IBooleanItem retval;
-    switch (operator) {
-    case EQ:
-      retval = OperationFunctions.opDateEqual(left, right);
-      break;
-    case GE: {
-      IBooleanItem gt = OperationFunctions.opDateGreaterThan(left, right);
-      IBooleanItem eq = OperationFunctions.opDateEqual(left, right);
-      retval = IBooleanItem.valueOf(gt.toBoolean() || eq.toBoolean());
-      break;
-    }
-    case GT:
-      retval = OperationFunctions.opDateGreaterThan(left, right);
-      break;
-    case LE: {
-      IBooleanItem lt = OperationFunctions.opDateLessThan(left, right);
-      IBooleanItem eq = OperationFunctions.opDateEqual(left, right);
-      retval = IBooleanItem.valueOf(lt.toBoolean() || eq.toBoolean());
-      break;
-    }
-    case LT:
-      retval = OperationFunctions.opDateLessThan(left, right);
-      break;
-    case NE:
-      retval = FnNot.fnNot(OperationFunctions.opDateEqual(left, right));
+      retval = FnNot.fnNot(OperationFunctions.opDateTimeEqual(left, right, dynamicContext));
       break;
     default:
       throw new IllegalArgumentException(String.format("Unsupported operator '%s'", operator.name()));
@@ -576,22 +563,5 @@ public final class ComparisonFunctions {
       throw new IllegalArgumentException(String.format("Unsupported operator '%s'", operator.name()));
     }
     return retval;
-  }
-
-  /**
-   * Compare the {@code right} item with the {@code left} item using the specified
-   * {@code operator}.
-   *
-   * @param left
-   *          the value to compare against
-   * @param right
-   *          the value to compare with
-   * @return the comparison result
-   */
-  @NonNull
-  public static IIntegerItem compareTo(
-      @NonNull IAnyAtomicItem left,
-      @NonNull IAnyAtomicItem right) {
-    return IIntegerItem.valueOf(left.compareTo(right));
   }
 }

@@ -6,12 +6,15 @@
 package gov.nist.secauto.metaschema.core.metapath.item.atomic;
 
 import gov.nist.secauto.metaschema.core.datatype.adapter.MetaschemaDataTypeProvider;
+import gov.nist.secauto.metaschema.core.metapath.function.DateTimeFunctionException;
 import gov.nist.secauto.metaschema.core.metapath.function.InvalidValueForCastFunctionException;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.impl.DayTimeDurationItemImpl;
 import gov.nist.secauto.metaschema.core.metapath.type.IAtomicOrUnionType;
 import gov.nist.secauto.metaschema.core.metapath.type.InvalidTypeMetapathException;
+import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 
 import java.time.Duration;
+import java.time.ZoneOffset;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
@@ -53,9 +56,8 @@ public interface IDayTimeDurationItem extends IDurationItem {
     } catch (IllegalArgumentException ex) {
       throw new InvalidTypeMetapathException(
           null,
-          String.format("Invalid day/time value '%s'. %s",
-              value,
-              ex.getLocalizedMessage()),
+          String.format("Invalid day/time value '%s',",
+              value),
           ex);
     }
   }
@@ -70,6 +72,33 @@ public interface IDayTimeDurationItem extends IDurationItem {
   @NonNull
   static IDayTimeDurationItem valueOf(@NonNull Duration value) {
     return new DayTimeDurationItemImpl(value);
+  }
+
+  /**
+   * Get the items wrapped value as a duration.
+   *
+   * @return the wrapped value as a duration
+   */
+  @NonNull
+  Duration asDuration();
+
+  /**
+   * Get the "wrapped" duration value in seconds.
+   *
+   * @return the underlying duration in seconds
+   */
+  default long asSeconds() {
+    return asDuration().toSeconds();
+  }
+
+  /**
+   * Returns a copy of this duration with the amount negated.
+   *
+   * @return this duration with the amount negated
+   */
+  @NonNull
+  default IDayTimeDurationItem negate() {
+    return valueOf(ObjectUtils.notNull(asDuration().negated()));
   }
 
   /**
@@ -94,23 +123,6 @@ public interface IDayTimeDurationItem extends IDurationItem {
     }
   }
 
-  /**
-   * Get the items wrapped value as a duration.
-   *
-   * @return the wrapped value as a duration
-   */
-  @NonNull
-  Duration asDuration();
-
-  /**
-   * Get the "wrapped" duration value in seconds.
-   *
-   * @return the underlying duration in seconds
-   */
-  default long asSeconds() {
-    return asDuration().toSeconds();
-  }
-
   @Override
   default IDayTimeDurationItem castAsType(IAnyAtomicItem item) {
     return cast(item);
@@ -129,8 +141,15 @@ public interface IDayTimeDurationItem extends IDurationItem {
 
   }
 
-  @Override
-  default int compareTo(IAnyAtomicItem item) {
-    return compareTo(cast(item));
-  }
+  /**
+   * Get a zone offset for this duration.
+   *
+   * @return the offset
+   * @throws DateTimeFunctionException
+   *           with code
+   *           {@link DateTimeFunctionException#INVALID_TIME_ZONE_VALUE_ERROR} if
+   *           the offset is < -PT14H or > PT14H
+   */
+  @NonNull
+  ZoneOffset asZoneOffset();
 }

@@ -6,6 +6,7 @@
 package gov.nist.secauto.metaschema.core.metapath.item.atomic;
 
 import gov.nist.secauto.metaschema.core.datatype.IDataTypeAdapter;
+import gov.nist.secauto.metaschema.core.metapath.DynamicContext;
 import gov.nist.secauto.metaschema.core.metapath.function.ComparisonFunctions;
 import gov.nist.secauto.metaschema.core.metapath.function.InvalidValueForCastFunctionException;
 import gov.nist.secauto.metaschema.core.metapath.item.ICollectionValue;
@@ -119,22 +120,16 @@ public interface IAnyAtomicItem extends IAtomicValuedItem {
   @NonNull
   IAnyAtomicItem castAsType(@NonNull IAnyAtomicItem item);
 
-  /**
-   * Compares this value with the argument. Ordering is item type dependent.
-   *
-   * @param other
-   *          the item to compare with this value
-   * @return a negative integer, zero, or a positive integer if this value is less
-   *         than, equal to, or greater than the {@code item}.
-   */
-  int compareTo(@NonNull IAnyAtomicItem other);
-
   @Override
-  default boolean deepEquals(ICollectionValue other) {
+  default boolean deepEquals(ICollectionValue other, DynamicContext dynamicContext) {
     boolean retval;
     try {
       retval = other instanceof IAnyAtomicItem
-          && ComparisonFunctions.valueCompairison(this, ComparisonFunctions.Operator.EQ, (IAnyAtomicItem) other)
+          && ComparisonFunctions.valueCompairison(
+              this,
+              ComparisonFunctions.Operator.EQ,
+              (IAnyAtomicItem) other,
+              dynamicContext)
               .toBoolean();
     } catch (@SuppressWarnings("unused") InvalidTypeMetapathException ex) {
       // incompatible types are a non-match

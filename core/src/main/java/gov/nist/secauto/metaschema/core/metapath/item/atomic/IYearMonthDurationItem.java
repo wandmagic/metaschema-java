@@ -55,9 +55,8 @@ public interface IYearMonthDurationItem extends IDurationItem {
     } catch (IllegalArgumentException ex) {
       throw new InvalidTypeMetapathException(
           null,
-          String.format("Invalid year/month duration value '%s'. %s",
-              value,
-              ex.getLocalizedMessage()),
+          String.format("Invalid year/month duration value '%s'.",
+              value),
           ex);
     }
   }
@@ -90,6 +89,23 @@ public interface IYearMonthDurationItem extends IDurationItem {
   }
 
   /**
+   * Get the "wrapped" duration value.
+   *
+   * @return the underlying duration value
+   */
+  @NonNull
+  Period asPeriod();
+
+  default long asMonths() {
+    return asPeriod().toTotalMonths();
+  }
+
+  @NonNull
+  default IYearMonthDurationItem negate() {
+    return valueOf(ObjectUtils.notNull(asPeriod().negated()));
+  }
+
+  /**
    * Cast the provided type to this item type.
    *
    * @param item
@@ -111,26 +127,9 @@ public interface IYearMonthDurationItem extends IDurationItem {
     }
   }
 
-  /**
-   * Get the "wrapped" duration value.
-   *
-   * @return the underlying duration value
-   */
-  @NonNull
-  Period asPeriod();
-
-  default long asMonths() {
-    return asPeriod().toTotalMonths();
-  }
-
   @Override
   default IYearMonthDurationItem castAsType(IAnyAtomicItem item) {
     return cast(item);
-  }
-
-  @Override
-  default int compareTo(IAnyAtomicItem item) {
-    return compareTo(cast(item));
   }
 
   /**

@@ -10,6 +10,7 @@ import gov.nist.secauto.metaschema.core.metapath.function.InvalidValueForCastFun
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.impl.DateTimeWithTimeZoneItemImpl;
 import gov.nist.secauto.metaschema.core.metapath.type.IAtomicOrUnionType;
 import gov.nist.secauto.metaschema.core.metapath.type.InvalidTypeMetapathException;
+import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 
 import java.time.ZonedDateTime;
 
@@ -110,14 +111,29 @@ public interface IDateTimeWithTimeZoneItem extends IDateTimeItem {
 
   @NonNull
   private static IDateTimeWithTimeZoneItem fromTemporal(@NonNull ITemporalItem temporal) {
+    if (!temporal.hasDate()) {
+      // asString can throw IllegalStateException exception
+      throw new InvalidValueForCastFunctionException(
+          String.format("Unable to cast the temporal value '%s', since it lacks date information.",
+              temporal.asString()));
+    }
     if (!temporal.hasTimezone()) {
       // asString can throw IllegalStateException exception
       throw new InvalidValueForCastFunctionException(
           String.format("Unable to cast the temporal value '%s', since it lacks timezone information.",
               temporal.asString()));
     }
+
     // get the time at midnight
-    return valueOf(temporal.asZonedDateTime());
+    return valueOf(ObjectUtils.notNull(ZonedDateTime.of(
+        temporal.getYear(),
+        temporal.getMonth(),
+        temporal.getDay(),
+        temporal.getHour(),
+        temporal.getMinute(),
+        temporal.getSecond(),
+        temporal.getNano(),
+        temporal.getZoneOffset())));
   }
 
   @Override

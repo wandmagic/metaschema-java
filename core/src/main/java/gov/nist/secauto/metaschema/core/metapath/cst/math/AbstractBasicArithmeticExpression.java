@@ -25,8 +25,8 @@ import edu.umd.cs.findbugs.annotations.Nullable;
  * result type.
  * <p>
  * The arithmetic operation method
- * {@link #operation(IAnyAtomicItem, IAnyAtomicItem)} must be implemented by
- * extending classes to provide the evaluation logic.
+ * {@link #operation(IAnyAtomicItem, IAnyAtomicItem, DynamicContext)} must be
+ * implemented by extending classes to provide the evaluation logic.
  */
 public abstract class AbstractBasicArithmeticExpression
     extends AbstractArithmeticExpression<IAnyAtomicItem> {
@@ -58,7 +58,7 @@ public abstract class AbstractBasicArithmeticExpression
     IAnyAtomicItem leftItem = ISequence.of(getLeft().accept(dynamicContext, focus).atomize()).getFirstItem(true);
     IAnyAtomicItem rightItem = ISequence.of(getRight().accept(dynamicContext, focus).atomize()).getFirstItem(true);
 
-    return resultOrEmpty(leftItem, rightItem);
+    return resultOrEmpty(leftItem, rightItem, dynamicContext);
   }
 
   /**
@@ -74,12 +74,13 @@ public abstract class AbstractBasicArithmeticExpression
   @NonNull
   protected ISequence<? extends IAnyAtomicItem> resultOrEmpty(
       @Nullable IAnyAtomicItem leftItem,
-      @Nullable IAnyAtomicItem rightItem) {
+      @Nullable IAnyAtomicItem rightItem,
+      @NonNull DynamicContext dynamicContext) {
     ISequence<? extends IAnyAtomicItem> retval;
     if (leftItem == null || rightItem == null) {
       retval = ISequence.empty();
     } else {
-      IAnyAtomicItem result = operation(leftItem, rightItem);
+      IAnyAtomicItem result = operation(leftItem, rightItem, dynamicContext);
       retval = ISequence.of(result);
     }
     return retval;
@@ -98,7 +99,8 @@ public abstract class AbstractBasicArithmeticExpression
   @NonNull
   protected IAnyAtomicItem operation(
       @NonNull IAnyAtomicItem left,
-      @NonNull IAnyAtomicItem right) {
+      @NonNull IAnyAtomicItem right,
+      @NonNull DynamicContext dynamicContext) {
 
     Map<
         Class<? extends IAnyAtomicItem>,
@@ -127,7 +129,7 @@ public abstract class AbstractBasicArithmeticExpression
     for (Map.Entry<Class<? extends IAnyAtomicItem>, OperationStrategy> entry : typeStrategies.entrySet()) {
       if (entry.getKey().isAssignableFrom(rightClass)) {
         // this is matching strategy, execute it
-        return entry.getValue().execute(left, right);
+        return entry.getValue().execute(left, right, dynamicContext);
       }
     }
 
@@ -186,9 +188,14 @@ public abstract class AbstractBasicArithmeticExpression
      *          the left side of the arithmetic operation
      * @param right
      *          the right side of the arithmetic operation
+     * @param dynamicContext
+     *          the evaluation dynamic context
      * @return the arithmetic result
      */
     @NonNull
-    IAnyAtomicItem execute(@NonNull IAnyAtomicItem left, @NonNull IAnyAtomicItem right);
+    IAnyAtomicItem execute(
+        @NonNull IAnyAtomicItem left,
+        @NonNull IAnyAtomicItem right,
+        @NonNull DynamicContext dynamicContext);
   }
 }

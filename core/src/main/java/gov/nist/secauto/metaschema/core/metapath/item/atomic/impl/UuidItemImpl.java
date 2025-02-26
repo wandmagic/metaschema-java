@@ -7,14 +7,17 @@ package gov.nist.secauto.metaschema.core.metapath.item.atomic.impl;
 
 import gov.nist.secauto.metaschema.core.datatype.adapter.MetaschemaDataTypeProvider;
 import gov.nist.secauto.metaschema.core.datatype.adapter.UuidAdapter;
+import gov.nist.secauto.metaschema.core.metapath.impl.AbstractStringMapKey;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.AbstractAnyAtomicItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IStringItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IUuidItem;
 import gov.nist.secauto.metaschema.core.metapath.item.function.IMapKey;
+import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 
 import java.util.UUID;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
+import nl.talsmasoftware.lazy4j.Lazy;
 
 /**
  * An implementation of a Metapath atomic item containing a UUID data value.
@@ -22,6 +25,7 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 public class UuidItemImpl
     extends AbstractAnyAtomicItem<UUID>
     implements IUuidItem {
+  private final Lazy<String> stringValue = Lazy.lazy(super::asString);
 
   /**
    * Construct a new item with the provided {@code value}.
@@ -36,6 +40,11 @@ public class UuidItemImpl
   @Override
   public UUID asUuid() {
     return getValue();
+  }
+
+  @Override
+  public String asString() {
+    return ObjectUtils.notNull(stringValue.get());
   }
 
   @Override
@@ -71,22 +80,16 @@ public class UuidItemImpl
     return new MapKey();
   }
 
-  private final class MapKey implements IMapKey {
+  private final class MapKey
+      extends AbstractStringMapKey {
     @Override
     public IUuidItem getKey() {
       return UuidItemImpl.this;
     }
 
     @Override
-    public int hashCode() {
-      return getKey().asUuid().hashCode();
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-      return this == obj ||
-          obj instanceof MapKey
-              && getKey().asUuid().equals(((MapKey) obj).getKey().asUuid());
+    public String asString() {
+      return getKey().asString();
     }
   }
 }

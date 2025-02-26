@@ -78,7 +78,8 @@ public final class AnnotationGenerator {
    *          the annotation to analyze
    * @param member
    *          the annotation member to analyze
-   * @return the default value for the annotation member or {@code null} if there is not default value
+   * @return the default value for the annotation member or {@code null} if there
+   *         is not default value
    */
   public static Object getDefaultValue(Class<?> annotation, String member) {
     Method method;
@@ -229,6 +230,7 @@ public final class AnnotationGenerator {
       @NonNull AnnotationSpec.Builder annotation,
       @NonNull List<? extends IAllowedValuesConstraint> constraints) {
     for (IAllowedValuesConstraint constraint : constraints) {
+      assert constraint != null;
       AnnotationSpec.Builder constraintAnnotation = AnnotationSpec.builder(AllowedValues.class);
       buildConstraint(AllowedValues.class, constraintAnnotation, constraint);
 
@@ -263,6 +265,7 @@ public final class AnnotationGenerator {
       @NonNull AnnotationSpec.Builder annotation,
       @NonNull List<? extends IIndexHasKeyConstraint> constraints) {
     for (IIndexHasKeyConstraint constraint : constraints) {
+      assert constraint != null;
       AnnotationSpec.Builder constraintAnnotation = AnnotationSpec.builder(IndexHasKey.class);
       buildConstraint(IndexHasKey.class, constraintAnnotation, constraint);
 
@@ -288,6 +291,7 @@ public final class AnnotationGenerator {
       @NonNull Builder constraintAnnotation,
       @NonNull List<? extends IKeyField> keyFields) {
     for (IKeyField key : keyFields) {
+      assert key != null;
       AnnotationSpec.Builder keyAnnotation = AnnotationSpec.builder(KeyField.class);
 
       String target = key.getTarget().getPath();
@@ -313,6 +317,8 @@ public final class AnnotationGenerator {
       @NonNull AnnotationSpec.Builder annotation,
       @NonNull List<? extends IMatchesConstraint> constraints) {
     for (IMatchesConstraint constraint : constraints) {
+      assert constraint != null;
+
       AnnotationSpec.Builder constraintAnnotation = AnnotationSpec.builder(Matches.class);
       buildConstraint(Matches.class, constraintAnnotation, constraint);
 
@@ -343,6 +349,8 @@ public final class AnnotationGenerator {
       @NonNull AnnotationSpec.Builder annotation,
       @NonNull List<? extends IExpectConstraint> constraints) {
     for (IExpectConstraint constraint : constraints) {
+      assert constraint != null;
+
       AnnotationSpec.Builder constraintAnnotation = AnnotationSpec.builder(Expect.class);
 
       buildConstraint(Expect.class, constraintAnnotation, constraint);
@@ -366,6 +374,8 @@ public final class AnnotationGenerator {
       @NonNull AnnotationSpec.Builder annotation,
       @NonNull List<? extends IIndexConstraint> constraints) {
     for (IIndexConstraint constraint : constraints) {
+      assert constraint != null;
+
       AnnotationSpec.Builder constraintAnnotation = AnnotationSpec.builder(Index.class);
 
       buildConstraint(Index.class, constraintAnnotation, constraint);
@@ -392,6 +402,8 @@ public final class AnnotationGenerator {
       @NonNull AnnotationSpec.Builder annotation,
       @NonNull List<? extends IUniqueConstraint> constraints) {
     for (IUniqueConstraint constraint : constraints) {
+      assert constraint != null;
+
       AnnotationSpec.Builder constraintAnnotation = ObjectUtils.notNull(AnnotationSpec.builder(IsUnique.class));
 
       buildConstraint(IsUnique.class, constraintAnnotation, constraint);
@@ -512,6 +524,7 @@ public final class AnnotationGenerator {
     dynamicContext.disablePredicateEvaluation();
 
     for (ICardinalityConstraint constraint : constraints) {
+      assert constraint != null;
 
       IAssemblyNodeItem definitionNodeItem
           = INodeItemFactory.instance().newAssemblyNodeItem(definition);

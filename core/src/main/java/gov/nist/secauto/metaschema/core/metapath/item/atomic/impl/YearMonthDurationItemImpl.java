@@ -7,7 +7,7 @@ package gov.nist.secauto.metaschema.core.metapath.item.atomic.impl;
 
 import gov.nist.secauto.metaschema.core.datatype.adapter.MetaschemaDataTypeProvider;
 import gov.nist.secauto.metaschema.core.datatype.adapter.YearMonthAdapter;
-import gov.nist.secauto.metaschema.core.metapath.item.atomic.AbstractAnyAtomicItem;
+import gov.nist.secauto.metaschema.core.metapath.impl.AbstractOpaqueMapKey;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IYearMonthDurationItem;
 import gov.nist.secauto.metaschema.core.metapath.item.function.IMapKey;
 
@@ -21,7 +21,7 @@ import edu.umd.cs.findbugs.annotations.NonNull;
  * in years and months.
  */
 public class YearMonthDurationItemImpl
-    extends AbstractAnyAtomicItem<Period>
+    extends AbstractDurationItem<Period>
     implements IYearMonthDurationItem {
 
   /**
@@ -57,31 +57,15 @@ public class YearMonthDurationItemImpl
   }
 
   @Override
-  protected String getValueSignature() {
-    return "'" + asString() + "'";
-  }
-
-  @Override
   public IMapKey asMapKey() {
     return new MapKey();
   }
 
-  private final class MapKey implements IMapKey {
+  private final class MapKey
+      extends AbstractOpaqueMapKey {
     @Override
     public IYearMonthDurationItem getKey() {
       return YearMonthDurationItemImpl.this;
-    }
-
-    @Override
-    public int hashCode() {
-      return getKey().hashCode();
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-      return this == obj ||
-          obj instanceof MapKey
-              && getKey().equals(((MapKey) obj).getKey());
     }
   }
 }

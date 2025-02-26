@@ -66,6 +66,15 @@ public class InvalidArgumentFunctionException
   public static final int INVALID_ARGUMENT_TYPE = 6;
 
   /**
+   * <a href=
+   * "https://www.w3.org/TR/xpath-functions-31/#ERRFORG0008">err:FORG0008</a>:
+   * Raised by <a href=
+   * "https://www.w3.org/TR/xpath-functions-31/#func-dateTime">fn:dateTime</a> if
+   * the two arguments both have timezones and the timezones are different.
+   */
+  public static final int DATE_TIME_INCONSISTENT_TIMEZONE = 8;
+
+  /**
    * the serial version UUID.
    */
   private static final long serialVersionUID = 1L;

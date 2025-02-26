@@ -16,9 +16,11 @@ import gov.nist.secauto.metaschema.core.metapath.item.atomic.IDateItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IDateTimeItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IDayTimeDurationItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IDecimalItem;
+import gov.nist.secauto.metaschema.core.metapath.item.atomic.IDurationItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IIntegerItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IStringItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.ITimeItem;
+import gov.nist.secauto.metaschema.core.metapath.item.atomic.IUuidItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IYearMonthDurationItem;
 import gov.nist.secauto.metaschema.core.metapath.item.function.IArrayItem;
 import gov.nist.secauto.metaschema.core.metapath.item.function.IMapItem;
@@ -29,7 +31,6 @@ import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.MathContext;
-import java.net.URI;
 import java.util.Map;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -206,6 +207,18 @@ public final class TestUtils {
   }
 
   /**
+   * Create a uuid item using the provided value.
+   *
+   * @param value
+   *          the uuid value
+   * @return the uuid item
+   */
+  @NonNull
+  public static IUuidItem uuid(@NonNull String value) {
+    return IUuidItem.valueOf(value);
+  }
+
+  /**
    * Create a uri item using the provided value.
    *
    * @param value
@@ -214,9 +227,7 @@ public final class TestUtils {
    */
   @NonNull
   public static IAnyUriItem uri(@NonNull String value) {
-    URI uri = URI.create(value);
-    assert uri != null;
-    return IAnyUriItem.valueOf(uri);
+    return IAnyUriItem.valueOf(value);
   }
 
   /**
@@ -253,6 +264,19 @@ public final class TestUtils {
   @NonNull
   public static ITimeItem time(@NonNull String value) {
     return ITimeItem.valueOf(value);
+  }
+
+  /**
+   * Create a duration item using the provided value indicating the years, months,
+   * and days of the duration.
+   *
+   * @param value
+   *          the duration value
+   * @return the duration item
+   */
+  @NonNull
+  public static IDurationItem duration(@NonNull String value) {
+    return IDurationItem.valueOf(value);
   }
 
   /**

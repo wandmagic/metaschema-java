@@ -5,17 +5,17 @@
 
 package gov.nist.secauto.metaschema.core.metapath.function.impl;
 
+import gov.nist.secauto.metaschema.core.metapath.DynamicContext;
 import gov.nist.secauto.metaschema.core.metapath.function.ArithmeticFunctionException;
 import gov.nist.secauto.metaschema.core.metapath.function.CastFunctionException;
 import gov.nist.secauto.metaschema.core.metapath.function.DateTimeFunctionException;
+import gov.nist.secauto.metaschema.core.metapath.function.library.FnDateTime;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IAnyAtomicItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IAnyUriItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IBase64BinaryItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IBooleanItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IDateItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IDateTimeItem;
-import gov.nist.secauto.metaschema.core.metapath.item.atomic.IDateTimeWithTimeZoneItem;
-import gov.nist.secauto.metaschema.core.metapath.item.atomic.IDateWithTimeZoneItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IDayTimeDurationItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IDecimalItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IDurationItem;
@@ -23,18 +23,17 @@ import gov.nist.secauto.metaschema.core.metapath.item.atomic.IIntegerItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.INumericItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IStringItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.ITimeItem;
-import gov.nist.secauto.metaschema.core.metapath.item.atomic.ITimeWithTimeZoneItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IUntypedAtomicItem;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.IYearMonthDurationItem;
 import gov.nist.secauto.metaschema.core.metapath.type.InvalidTypeMetapathException;
 import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 
 import java.time.Duration;
+import java.time.LocalDate;
 import java.time.OffsetTime;
 import java.time.Period;
 import java.time.ZonedDateTime;
 import java.time.temporal.Temporal;
-import java.time.temporal.TemporalAmount;
 import java.util.Set;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -50,6 +49,9 @@ import edu.umd.cs.findbugs.annotations.Nullable;
     "PMD.CyclomaticComplexity"
 })
 public final class OperationFunctions {
+  @NonNull
+  public static final IDateItem DATE_1972_12_31 = IDateItem.valueOf(ObjectUtils.notNull(LocalDate.of(1972, 12, 31)));
+
   /**
    * Identifies the types and substypes that support aggregation.
    */
@@ -76,7 +78,7 @@ public final class OperationFunctions {
   @NonNull
   public static IDateItem opAddYearMonthDurationToDate(@NonNull IDateItem instant,
       @NonNull IYearMonthDurationItem duration) {
-    return addDurationToDate(instant.asZonedDateTime(), duration.asPeriod());
+    return opAddYearMonthDurationToDateTime(instant.asDateTime(), duration).asDate();
   }
 
   /**
@@ -90,21 +92,10 @@ public final class OperationFunctions {
    * @return the result of adding the duration to the date
    */
   @NonNull
-  public static IDateItem opAddDayTimeDurationToDate(@NonNull IDateItem instant,
+  public static IDateItem opAddDayTimeDurationToDate(
+      @NonNull IDateItem instant,
       @NonNull IDayTimeDurationItem duration) {
-    return addDurationToDate(instant.asZonedDateTime(), duration.asDuration());
-  }
-
-  @NonNull
-  private static IDateItem addDurationToDate(@NonNull ZonedDateTime dateTime, @NonNull TemporalAmount duration) {
-    ZonedDateTime result;
-    try {
-      result = dateTime.plus(duration);
-    } catch (ArithmeticException ex) {
-      throw new ArithmeticFunctionException(ArithmeticFunctionException.OVERFLOW_UNDERFLOW_ERROR, ex);
-    }
-    assert result != null;
-    return IDateWithTimeZoneItem.valueOf(result);
+    return opAddDayTimeDurationToDateTime(instant.asDateTime(), duration).asDate();
   }
 
   /**
@@ -182,7 +173,8 @@ public final class OperationFunctions {
       throw new ArithmeticFunctionException(ArithmeticFunctionException.OVERFLOW_UNDERFLOW_ERROR, ex);
     }
     assert result != null;
-    return IDateTimeWithTimeZoneItem.valueOf(result);
+    // preserve the same timezone "presence"
+    return IDateTimeItem.valueOf(result, instant.hasTimezone());
   }
 
   /**
@@ -206,7 +198,8 @@ public final class OperationFunctions {
       throw new ArithmeticFunctionException(ArithmeticFunctionException.OVERFLOW_UNDERFLOW_ERROR, ex);
     }
     assert result != null;
-    return IDateTimeWithTimeZoneItem.valueOf(result);
+    // preserve the same timezone "presence"
+    return IDateTimeItem.valueOf(result, instant.hasTimezone());
   }
 
   /**
@@ -223,14 +216,18 @@ public final class OperationFunctions {
   public static ITimeItem opAddDayTimeDurationToTime(
       @NonNull ITimeItem instant,
       @NonNull IDayTimeDurationItem duration) {
+    long seconds = duration.asDuration().toSeconds() % 86_400;
+    int nano = duration.asDuration().getNano();
+
     OffsetTime result;
     try {
-      result = instant.asOffsetTime().plus(duration.asDuration());
+      result = instant.asOffsetTime().plus(Duration.ofSeconds(seconds, nano));
     } catch (ArithmeticException ex) {
       throw new ArithmeticFunctionException(ArithmeticFunctionException.OVERFLOW_UNDERFLOW_ERROR, ex);
     }
     assert result != null;
-    return ITimeWithTimeZoneItem.valueOf(result);
+    // preserve the same timezone "presence"
+    return ITimeItem.valueOf(result, instant.hasTimezone());
   }
 
   /**
@@ -241,11 +238,19 @@ public final class OperationFunctions {
    *          the first point in time
    * @param date2
    *          the second point in time
+   * @param dynamicContext
+   *          the dynamic context used to provide the implicit timezone
    * @return the elapsed time between the starting instant and ending instant
    */
   @NonNull
-  public static IDayTimeDurationItem opSubtractDates(@NonNull IDateItem date1, @NonNull IDateItem date2) {
-    return between(date2.asZonedDateTime(), date1.asZonedDateTime());
+  public static IDayTimeDurationItem opSubtractDates(
+      @NonNull IDateItem date1,
+      @NonNull IDateItem date2,
+      @NonNull DynamicContext dynamicContext) {
+    return opSubtractDateTimes(
+        date1.asDateTime(),
+        date2.asDateTime(),
+        dynamicContext);
   }
 
   /**
@@ -262,7 +267,7 @@ public final class OperationFunctions {
   public static IDateItem opSubtractYearMonthDurationFromDate(
       @NonNull IDateItem date,
       @NonNull IYearMonthDurationItem duration) {
-    return subtractDurationFromDate(date.asZonedDateTime(), duration.asPeriod());
+    return opAddYearMonthDurationToDate(date, duration.negate());
   }
 
   /**
@@ -279,14 +284,7 @@ public final class OperationFunctions {
   public static IDateItem opSubtractDayTimeDurationFromDate(
       @NonNull IDateItem date,
       @NonNull IDayTimeDurationItem duration) {
-    return subtractDurationFromDate(date.asZonedDateTime(), duration.asDuration());
-  }
-
-  @NonNull
-  private static IDateItem subtractDurationFromDate(
-      @NonNull ZonedDateTime dateTime,
-      @NonNull TemporalAmount duration) {
-    return IDateWithTimeZoneItem.valueOf(ObjectUtils.notNull(dateTime.minus(duration)));
+    return opAddDayTimeDurationToDate(date, duration.negate());
   }
 
   /**
@@ -303,7 +301,7 @@ public final class OperationFunctions {
   public static ITimeItem opSubtractDayTimeDurationFromTime(
       @NonNull ITimeItem time,
       @NonNull IDayTimeDurationItem duration) {
-    return ITimeWithTimeZoneItem.valueOf(ObjectUtils.notNull(time.asOffsetTime().minus(duration.asDuration())));
+    return opAddDayTimeDurationToTime(time, duration.negate());
   }
 
   /**
@@ -314,13 +312,19 @@ public final class OperationFunctions {
    *          the first duration
    * @param arg2
    *          the second duration
+   * @param dynamicContext
+   *          the dynamic context used to provide the implicit timezone
    * @return the result of subtracting the second duration from the first
    */
   @NonNull
   public static IDayTimeDurationItem opSubtractTimes(
       @NonNull ITimeItem arg1,
-      @NonNull ITimeItem arg2) {
-    return between(arg2.asOffsetTime(), arg1.asOffsetTime());
+      @NonNull ITimeItem arg2,
+      @NonNull DynamicContext dynamicContext) {
+    return opSubtractDateTimes(
+        FnDateTime.fnDateTime(DATE_1972_12_31, arg1),
+        FnDateTime.fnDateTime(DATE_1972_12_31, arg2),
+        dynamicContext);
   }
 
   /**
@@ -379,15 +383,22 @@ public final class OperationFunctions {
    * Based on XPath 3.1 <a href=
    * "https://www.w3.org/TR/xpath-functions-31/#func-subtract-dateTimes">op:subtract-dateTimes</a>.
    *
-   * @param time1
+   * @param instant1
    *          the first point in time
-   * @param time2
+   * @param instant2
    *          the second point in time
+   * @param dynamicContext
+   *          the dynamic context used to provide the implicit timezone
    * @return the duration the occurred between the two points in time
    */
   @NonNull
-  public static IDayTimeDurationItem opSubtractDateTimes(@NonNull IDateTimeItem time1, @NonNull IDateTimeItem time2) {
-    return between(time2.asZonedDateTime(), time1.asZonedDateTime());
+  public static IDayTimeDurationItem opSubtractDateTimes(
+      @NonNull IDateTimeItem instant1,
+      @NonNull IDateTimeItem instant2,
+      @NonNull DynamicContext dynamicContext) {
+    return between(
+        instant2.normalize(dynamicContext).asZonedDateTime(),
+        instant1.normalize(dynamicContext).asZonedDateTime());
   }
 
   /**
@@ -421,8 +432,7 @@ public final class OperationFunctions {
   public static IDateTimeItem opSubtractYearMonthDurationFromDateTime(
       @NonNull IDateTimeItem moment,
       @NonNull IYearMonthDurationItem duration) {
-    return IDateTimeWithTimeZoneItem.valueOf(
-        ObjectUtils.notNull(moment.asZonedDateTime().minus(duration.asPeriod())));
+    return opAddYearMonthDurationToDateTime(moment, duration.negate());
   }
 
   /**
@@ -439,8 +449,8 @@ public final class OperationFunctions {
   public static IDateTimeItem opSubtractDayTimeDurationFromDateTime(
       @NonNull IDateTimeItem moment,
       @NonNull IDayTimeDurationItem duration) {
-    return IDateTimeWithTimeZoneItem.valueOf(
-        ObjectUtils.notNull(moment.asZonedDateTime().minus(duration.asDuration())));
+    // preserve the same timezone "presence"
+    return opAddDayTimeDurationToDateTime(moment, duration.negate());
   }
 
   /**
@@ -590,12 +600,17 @@ public final class OperationFunctions {
    *          the first value
    * @param arg2
    *          the second value
+   * @param dynamicContext
+   *          used to get the implicit timezone from the evaluation context
    * @return {@code true} if the first argument is the same instant in time as the
    *         second, or {@code false} otherwise
    */
   @NonNull
-  public static IBooleanItem opDateEqual(@NonNull IDateItem arg1, @NonNull IDateItem arg2) {
-    return IBooleanItem.valueOf(arg1.asZonedDateTime().equals(arg2.asZonedDateTime()));
+  public static IBooleanItem opDateEqual(
+      @NonNull IDateItem arg1,
+      @NonNull IDateItem arg2,
+      @NonNull DynamicContext dynamicContext) {
+    return opDateTimeEqual(arg1.asDateTime(), arg2.asDateTime(), dynamicContext);
   }
 
   /**
@@ -606,12 +621,42 @@ public final class OperationFunctions {
    *          the first value
    * @param arg2
    *          the second value
+   * @param dynamicContext
+   *          used to get the implicit timezone from the evaluation context
    * @return {@code true} if the first argument is the same instant in time as the
    *         second, or {@code false} otherwise
    */
   @NonNull
-  public static IBooleanItem opDateTimeEqual(@NonNull IDateTimeItem arg1, @NonNull IDateTimeItem arg2) {
-    return IBooleanItem.valueOf(arg1.asZonedDateTime().equals(arg2.asZonedDateTime()));
+  public static IBooleanItem opDateTimeEqual(
+      @NonNull IDateTimeItem arg1,
+      @NonNull IDateTimeItem arg2,
+      @NonNull DynamicContext dynamicContext) {
+    IDateTimeItem arg1Normalized = arg1.normalize(dynamicContext);
+    IDateTimeItem arg2Normalized = arg2.normalize(dynamicContext);
+    return IBooleanItem.valueOf(arg1Normalized.asZonedDateTime().isEqual(arg2Normalized.asZonedDateTime()));
+  }
+
+  /**
+   * Based on XPath 3.1 <a href=
+   * "https://www.w3.org/TR/xpath-functions-31/#func-time-equal">op:time-equal</a>.
+   *
+   * @param arg1
+   *          the first value
+   * @param arg2
+   *          the second value
+   * @param dynamicContext
+   *          used to get the implicit timezone from the evaluation context
+   * @return {@code true} if the first argument is the same instant in time as the
+   *         second, or {@code false} otherwise
+   */
+  @NonNull
+  public static IBooleanItem opTimeEqual(
+      @NonNull ITimeItem arg1,
+      @NonNull ITimeItem arg2,
+      @NonNull DynamicContext dynamicContext) {
+    IDateTimeItem time1 = IDateTimeItem.valueOf(DATE_1972_12_31, arg1);
+    IDateTimeItem time2 = IDateTimeItem.valueOf(DATE_1972_12_31, arg2);
+    return opDateTimeEqual(time1, time2, dynamicContext);
   }
 
   /**
@@ -654,12 +699,17 @@ public final class OperationFunctions {
    *          the first value
    * @param arg2
    *          the second value
+   * @param dynamicContext
+   *          used to get the implicit timezone from the evaluation context
    * @return {@code true} if the first argument is a later instant in time than
    *         the second, or {@code false} otherwise
    */
   @NonNull
-  public static IBooleanItem opDateGreaterThan(@NonNull IDateItem arg1, @NonNull IDateItem arg2) {
-    return IBooleanItem.valueOf(arg1.asZonedDateTime().compareTo(arg2.asZonedDateTime()) > 0);
+  public static IBooleanItem opDateGreaterThan(
+      @NonNull IDateItem arg1,
+      @NonNull IDateItem arg2,
+      @NonNull DynamicContext dynamicContext) {
+    return opDateLessThan(arg2, arg1, dynamicContext);
   }
 
   /**
@@ -670,12 +720,38 @@ public final class OperationFunctions {
    *          the first value
    * @param arg2
    *          the second value
+   * @param dynamicContext
+   *          used to get the implicit timezone from the evaluation context
    * @return {@code true} if the first argument is a later instant in time than
    *         the second, or {@code false} otherwise
    */
   @NonNull
-  public static IBooleanItem opDateTimeGreaterThan(@NonNull IDateTimeItem arg1, @NonNull IDateTimeItem arg2) {
-    return IBooleanItem.valueOf(arg1.asZonedDateTime().compareTo(arg2.asZonedDateTime()) > 0);
+  public static IBooleanItem opDateTimeGreaterThan(
+      @NonNull IDateTimeItem arg1,
+      @NonNull IDateTimeItem arg2,
+      @NonNull DynamicContext dynamicContext) {
+    return opDateTimeLessThan(arg2, arg1, dynamicContext);
+  }
+
+  /**
+   * Based on XPath 3.1 <a href=
+   * "https://www.w3.org/TR/xpath-functions-31/#func-time-greater-than">op:time-greater-than</a>.
+   *
+   * @param arg1
+   *          the first value
+   * @param arg2
+   *          the second value
+   * @param dynamicContext
+   *          used to get the implicit timezone from the evaluation context
+   * @return {@code true} if the first argument is a later instant in time than
+   *         the second, or {@code false} otherwise
+   */
+  @NonNull
+  public static IBooleanItem opTimeGreaterThan(
+      @NonNull ITimeItem arg1,
+      @NonNull ITimeItem arg2,
+      @NonNull DynamicContext dynamicContext) {
+    return opTimeLessThan(arg2, arg1, dynamicContext);
   }
 
   /**
@@ -693,8 +769,7 @@ public final class OperationFunctions {
   public static IBooleanItem opYearMonthDurationGreaterThan(
       @NonNull IYearMonthDurationItem arg1,
       @NonNull IYearMonthDurationItem arg2) {
-    // this is only an approximation
-    return IBooleanItem.valueOf(arg1.compareTo(arg2) > 0);
+    return opYearMonthDurationLessThan(arg2, arg1);
   }
 
   /**
@@ -712,7 +787,7 @@ public final class OperationFunctions {
   public static IBooleanItem opDayTimeDurationGreaterThan(
       @NonNull IDayTimeDurationItem arg1,
       @NonNull IDayTimeDurationItem arg2) {
-    return IBooleanItem.valueOf(arg1.compareTo(arg2) > 0);
+    return opDayTimeDurationLessThan(arg2, arg1);
   }
 
   /**
@@ -730,7 +805,7 @@ public final class OperationFunctions {
   public static IBooleanItem opBase64BinaryGreaterThan(
       @NonNull IBase64BinaryItem arg1,
       @NonNull IBase64BinaryItem arg2) {
-    return IBooleanItem.valueOf(arg1.compareTo(arg2) > 0);
+    return opBase64BinaryLessThan(arg2, arg1);
   }
 
   /**
@@ -741,14 +816,17 @@ public final class OperationFunctions {
    *          the first value
    * @param arg2
    *          the second value
+   * @param dynamicContext
+   *          used to get the implicit timezone from the evaluation context
    * @return {@code true} if the first argument is an earlier instant in time than
    *         the second, or {@code false} otherwise
    */
   @NonNull
   public static IBooleanItem opDateLessThan(
       @NonNull IDateItem arg1,
-      @NonNull IDateItem arg2) {
-    return IBooleanItem.valueOf(arg1.asZonedDateTime().compareTo(arg2.asZonedDateTime()) < 0);
+      @NonNull IDateItem arg2,
+      @NonNull DynamicContext dynamicContext) {
+    return opDateTimeLessThan(arg1.asDateTime(), arg2.asDateTime(), dynamicContext);
   }
 
   /**
@@ -759,14 +837,43 @@ public final class OperationFunctions {
    *          the first value
    * @param arg2
    *          the second value
+   * @param dynamicContext
+   *          used to get the implicit timezone from the evaluation context
+   * @return {@code true} if the first argument is an earlier instant in time than
+   *         the second, or {@code false} otherwise
+   */
+  @NonNull
+  public static IBooleanItem opTimeLessThan(
+      @NonNull ITimeItem arg1,
+      @NonNull ITimeItem arg2,
+      @NonNull DynamicContext dynamicContext) {
+    return opDateTimeLessThan(
+        IDateTimeItem.valueOf(DATE_1972_12_31, arg1),
+        IDateTimeItem.valueOf(DATE_1972_12_31, arg2),
+        dynamicContext);
+  }
+
+  /**
+   * Based on XPath 3.1 <a href=
+   * "https://www.w3.org/TR/xpath-functions-31/#func-time-less-than">op:time-less-than</a>.
+   *
+   * @param arg1
+   *          the first value
+   * @param arg2
+   *          the second value
+   * @param dynamicContext
+   *          used to get the implicit timezone from the evaluation context
    * @return {@code true} if the first argument is an earlier instant in time than
    *         the second, or {@code false} otherwise
    */
   @NonNull
   public static IBooleanItem opDateTimeLessThan(
       @NonNull IDateTimeItem arg1,
-      @NonNull IDateTimeItem arg2) {
-    return IBooleanItem.valueOf(arg1.asZonedDateTime().compareTo(arg2.asZonedDateTime()) < 0);
+      @NonNull IDateTimeItem arg2,
+      @NonNull DynamicContext dynamicContext) {
+    IDateTimeItem arg1Normalized = arg1.normalize(dynamicContext);
+    IDateTimeItem arg2Normalized = arg2.normalize(dynamicContext);
+    return IBooleanItem.valueOf(arg1Normalized.asZonedDateTime().isBefore(arg2Normalized.asZonedDateTime()));
   }
 
   /**
@@ -784,8 +891,7 @@ public final class OperationFunctions {
   public static IBooleanItem opYearMonthDurationLessThan(
       @NonNull IYearMonthDurationItem arg1,
       @NonNull IYearMonthDurationItem arg2) {
-    // this is only an approximation
-    return IBooleanItem.valueOf(arg1.compareTo(arg2) < 0);
+    return IBooleanItem.valueOf(arg1.asMonths() < arg2.asMonths());
   }
 
   /**
@@ -803,7 +909,7 @@ public final class OperationFunctions {
   public static IBooleanItem opDayTimeDurationLessThan(
       @NonNull IDayTimeDurationItem arg1,
       @NonNull IDayTimeDurationItem arg2) {
-    return IBooleanItem.valueOf(arg1.compareTo(arg2) < 0);
+    return IBooleanItem.valueOf(arg1.asSeconds() < arg2.asSeconds());
   }
 
   /**
@@ -1009,7 +1115,7 @@ public final class OperationFunctions {
     } else if (item instanceof IDecimalItem) {
       retval = ((IDecimalItem) item).negate();
     } else {
-      throw new InvalidTypeMetapathException(item);
+      throw new InvalidTypeMetapathException(item, String.format("Unsupported numeric type '%s'.", item.getClass()));
     }
     return retval;
   }
@@ -1033,7 +1139,7 @@ public final class OperationFunctions {
     } else if (arg1 instanceof IIntegerItem && arg2 instanceof IIntegerItem) {
       retval = IBooleanItem.valueOf(arg1.asInteger().equals(arg2.asInteger()));
     } else {
-      retval = IBooleanItem.valueOf(arg1.asDecimal().equals(arg2.asDecimal()));
+      retval = IBooleanItem.valueOf(arg1.asDecimal().compareTo(arg2.asDecimal()) == 0);
     }
     return retval;
   }
@@ -1051,17 +1157,7 @@ public final class OperationFunctions {
    */
   @NonNull
   public static IBooleanItem opNumericGreaterThan(@Nullable INumericItem arg1, @Nullable INumericItem arg2) {
-    IBooleanItem retval;
-    if (arg1 == null || arg2 == null) {
-      retval = IBooleanItem.FALSE;
-    } else if (arg1 instanceof IIntegerItem && arg2 instanceof IIntegerItem) {
-      int result = arg1.asInteger().compareTo(arg2.asInteger());
-      retval = IBooleanItem.valueOf(result > 0);
-    } else {
-      int result = arg1.asDecimal().compareTo(arg2.asDecimal());
-      retval = IBooleanItem.valueOf(result > 0);
-    }
-    return retval;
+    return opNumericLessThan(arg2, arg1);
   }
 
   /**
@@ -1122,10 +1218,7 @@ public final class OperationFunctions {
    */
   @NonNull
   public static IBooleanItem opBooleanGreaterThan(@Nullable IBooleanItem arg1, @Nullable IBooleanItem arg2) {
-    boolean left = arg1 != null && arg1.toBoolean();
-    boolean right = arg2 != null && arg2.toBoolean();
-
-    return IBooleanItem.valueOf(left && !right);
+    return opBooleanLessThan(arg2, arg1);
   }
 
   /**
@@ -1155,10 +1248,15 @@ public final class OperationFunctions {
    *          the first key to compare
    * @param k2
    *          the second key to compare
+   * @param dynamicContext
+   *          used to get the implicit timezone from the evaluation context
    * @return {@code true} if the compared keys are the same, or {@code false}
    *         otherwise
    */
-  public static boolean opSameKey(@NonNull IAnyAtomicItem k1, @NonNull IAnyAtomicItem k2) {
+  public static boolean opSameKey(
+      @NonNull IAnyAtomicItem k1,
+      @NonNull IAnyAtomicItem k2,
+      @NonNull DynamicContext dynamicContext) {
     boolean retval;
     if ((k1 instanceof IStringItem || k1 instanceof IAnyUriItem || k1 instanceof IUntypedAtomicItem)
         && (k2 instanceof IStringItem || k2 instanceof IAnyUriItem || k2 instanceof IUntypedAtomicItem)) {
@@ -1166,7 +1264,7 @@ public final class OperationFunctions {
     } else if (k1 instanceof IDecimalItem && k2 instanceof IDecimalItem) {
       retval = ((IDecimalItem) k1).asDecimal().equals(((IDecimalItem) k2).asDecimal());
     } else {
-      retval = k1.deepEquals(k2);
+      retval = k1.deepEquals(k2, dynamicContext);
     }
     return retval;
   }

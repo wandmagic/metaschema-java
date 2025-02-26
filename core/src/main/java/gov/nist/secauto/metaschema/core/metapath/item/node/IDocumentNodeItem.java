@@ -1,6 +1,7 @@
 
 package gov.nist.secauto.metaschema.core.metapath.item.node;
 
+import gov.nist.secauto.metaschema.core.metapath.DynamicContext;
 import gov.nist.secauto.metaschema.core.metapath.format.IPathFormatter;
 import gov.nist.secauto.metaschema.core.metapath.item.ICollectionValue;
 import gov.nist.secauto.metaschema.core.metapath.type.IItemType;
@@ -69,8 +70,8 @@ public interface IDocumentNodeItem extends IDocumentBasedNodeItem {
   }
 
   @Override
-  default boolean deepEquals(ICollectionValue other) {
+  default boolean deepEquals(ICollectionValue other, DynamicContext dynamicContext) {
     return other instanceof IDocumentNodeItem
-        && NodeComparators.compareNodeItem(this, (IDocumentNodeItem) other) == 0;
+        && NodeComparators.compareNodeItem(this, (IDocumentNodeItem) other, dynamicContext);
   }
 }

@@ -5,9 +5,11 @@
 
 package gov.nist.secauto.metaschema.core.metapath.item.atomic.impl;
 
-import gov.nist.secauto.metaschema.core.metapath.item.atomic.AbstractAnyAtomicItem;
+import gov.nist.secauto.metaschema.core.metapath.impl.AbstractMapKey;
 import gov.nist.secauto.metaschema.core.metapath.item.atomic.ITimeItem;
 import gov.nist.secauto.metaschema.core.metapath.item.function.IMapKey;
+
+import java.time.ZoneOffset;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
@@ -19,7 +21,7 @@ import edu.umd.cs.findbugs.annotations.NonNull;
  *          the Java type of the wrapped value
  */
 public abstract class AbstractTimeItem<TYPE>
-    extends AbstractAnyAtomicItem<TYPE>
+    extends AbstractTemporalItem<TYPE>
     implements ITimeItem {
   /**
    * Construct a new item with the provided {@code value}.
@@ -32,20 +34,22 @@ public abstract class AbstractTimeItem<TYPE>
   }
 
   @Override
-  protected String getValueSignature() {
-    return "'" + asString() + "'";
-  }
-
-  @Override
   public int hashCode() {
-    return asOffsetTime().hashCode();
+    return asOffsetTime().withOffsetSameInstant(ZoneOffset.UTC).hashCode();
   }
 
   @SuppressWarnings("PMD.OnlyOneReturn")
   @Override
   public boolean equals(Object obj) {
-    return this == obj
-        || obj instanceof ITimeItem && compareTo((ITimeItem) obj) == 0;
+    if (this == obj) {
+      return true;
+    }
+
+    if (obj instanceof ITimeItem) {
+      ITimeItem that = (ITimeItem) obj;
+      return hasTimezone() == that.hasTimezone() && deepEquals(that);
+    }
+    return false;
   }
 
   @Override
@@ -53,32 +57,24 @@ public abstract class AbstractTimeItem<TYPE>
     return new MapKey();
   }
 
-  private final class MapKey
-      implements IMapKey {
+  protected final class MapKey
+      extends AbstractMapKey {
 
     @Override
-    public AbstractTimeItem<TYPE> getKey() {
+    public ITimeItem getKey() {
       return AbstractTimeItem.this;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      return this == obj
+          || obj instanceof AbstractTimeItem<?>.MapKey
+              && getKey().equals(((AbstractTimeItem<?>.MapKey) obj).getKey());
     }
 
     @Override
     public int hashCode() {
       return getKey().hashCode();
-    }
-
-    @SuppressWarnings("PMD.OnlyOneReturn")
-    @Override
-    public boolean equals(Object obj) {
-      if (this == obj) {
-        return true;
-      }
-
-      if (!(obj instanceof AbstractTimeItem.MapKey)) {
-        return false;
-      }
-
-      AbstractTimeItem<?>.MapKey other = (AbstractTimeItem<?>.MapKey) obj;
-      return getKey().compareTo(other.getKey()) == 0;
     }
   }
 }

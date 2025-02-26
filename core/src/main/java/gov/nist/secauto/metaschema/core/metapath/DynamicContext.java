@@ -11,9 +11,11 @@ import gov.nist.secauto.metaschema.core.configuration.DefaultConfiguration;
 import gov.nist.secauto.metaschema.core.configuration.IConfiguration;
 import gov.nist.secauto.metaschema.core.configuration.IMutableConfiguration;
 import gov.nist.secauto.metaschema.core.metapath.function.CalledContext;
+import gov.nist.secauto.metaschema.core.metapath.function.DateTimeFunctionException;
 import gov.nist.secauto.metaschema.core.metapath.function.IFunction;
 import gov.nist.secauto.metaschema.core.metapath.function.IFunction.FunctionProperty;
 import gov.nist.secauto.metaschema.core.metapath.item.ISequence;
+import gov.nist.secauto.metaschema.core.metapath.item.atomic.IDayTimeDurationItem;
 import gov.nist.secauto.metaschema.core.metapath.item.node.IDocumentNodeItem;
 import gov.nist.secauto.metaschema.core.model.IUriResolver;
 import gov.nist.secauto.metaschema.core.qname.IEnhancedQName;
@@ -23,7 +25,10 @@ import gov.nist.secauto.metaschema.core.util.ObjectUtils;
 import java.io.IOException;
 import java.net.URI;
 import java.time.Clock;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -41,10 +46,11 @@ import edu.umd.cs.findbugs.annotations.Nullable;
 
 // TODO: add support for in-scope namespaces
 /**
- * The implementation of a Metapath <a href="https://www.w3.org/TR/xpath-31/#eval_context">dynamic
- * context</a>.
+ * The implementation of a Metapath
+ * <a href="https://www.w3.org/TR/xpath-31/#eval_context">dynamic context</a>.
  */
 public class DynamicContext { // NOPMD - intentional data class
+
   @NonNull
   private final Map<Integer, ISequence<?>> letVariableMap;
   @NonNull
@@ -77,8 +83,6 @@ public class DynamicContext { // NOPMD - intentional data class
     @NonNull
     private final StaticContext staticContext;
     @NonNull
-    private final ZoneId implicitTimeZone;
-    @NonNull
     private final ZonedDateTime currentDateTime;
     @NonNull
     private final Map<URI, IDocumentNodeItem> availableDocuments;
@@ -90,6 +94,8 @@ public class DynamicContext { // NOPMD - intentional data class
     private final IMutableConfiguration<MetapathEvaluationFeature<?>> configuration;
     @NonNull
     private final Deque<IExpression> executionStack = new ArrayDeque<>();
+    @NonNull
+    private ZoneId implicitTimeZone;
 
     public SharedState(@NonNull StaticContext staticContext) {
       this.staticContext = staticContext;
@@ -97,6 +103,7 @@ public class DynamicContext { // NOPMD - intentional data class
       Clock clock = Clock.systemDefaultZone();
 
       this.implicitTimeZone = ObjectUtils.notNull(clock.getZone());
+
       this.currentDateTime = ObjectUtils.notNull(ZonedDateTime.now(clock));
       this.availableDocuments = new HashMap<>();
       this.functionResultCache = ObjectUtils.notNull(Caffeine.newBuilder()
@@ -111,9 +118,10 @@ public class DynamicContext { // NOPMD - intentional data class
   /**
    * Generate a new dynamic context that is a copy of this dynamic context.
    * <p>
-   * This method can be used to create a new sub-context where changes can be made without affecting
-   * this context. This is useful for setting information that is only used in a limited evaluation
-   * sub-scope, such as for handling variable assignment.
+   * This method can be used to create a new sub-context where changes can be made
+   * without affecting this context. This is useful for setting information that
+   * is only used in a limited evaluation sub-scope, such as for handling variable
+   * assignment.
    *
    * @return a new dynamic context
    */
@@ -143,6 +151,53 @@ public class DynamicContext { // NOPMD - intentional data class
   }
 
   /**
+   * Get the default time zone used for evaluation.
+   *
+   * @return the time zone identifier object
+   */
+  @NonNull
+  public IDayTimeDurationItem getImplicitTimeZoneAsDayTimeDuration() {
+    LocalDateTime referenceDateTime = MetapathConstants.REFERENCE_DATE_TIME.asLocalDateTime();
+    ZonedDateTime reference = referenceDateTime.atZone(getImplicitTimeZone());
+    ZonedDateTime referenceZ = referenceDateTime.atZone(ZoneOffset.UTC);
+
+    return IDayTimeDurationItem.valueOf(ObjectUtils.notNull(
+        Duration.between(
+            reference,
+            referenceZ)));
+  }
+
+  /**
+   * Set the implicit timezone to the provided value.
+   * <p>
+   * Note: This value should only be adjusted when the context is first created.
+   * Once the context is used, this value is expected to be stable.
+   *
+   * @param timezone
+   *          the timezone to use
+   */
+  public void setImplicitTimeZone(@NonNull ZoneId timezone) {
+    sharedState.implicitTimeZone = timezone;
+  }
+
+  /**
+   * Set the implicit timezone to the provided value.
+   * <p>
+   * Note: This value should only be adjusted when the context is first created.
+   * Once the context is used, this value is expected to be stable.
+   *
+   * @param offset
+   *          the offset which must be >= -PT14H and <= PT13H
+   * @throws DateTimeFunctionException
+   *           with the code
+   *           {@link DateTimeFunctionException#INVALID_TIME_ZONE_VALUE_ERROR} if
+   *           the offset is < -PT14H or > PT14H
+   */
+  public void setImplicitTimeZone(@NonNull IDayTimeDurationItem offset) {
+    setImplicitTimeZone(offset.asZoneOffset());
+  }
+
+  /**
    * Get the current date and time.
    *
    * @return the current date and time
@@ -153,7 +208,8 @@ public class DynamicContext { // NOPMD - intentional data class
   }
 
   /**
-   * Get the mapping of loaded documents from the document URI to the document node.
+   * Get the mapping of loaded documents from the document URI to the document
+   * node.
    *
    * @return the map of document URIs to document nodes
    */
@@ -168,7 +224,8 @@ public class DynamicContext { // NOPMD - intentional data class
    *
    * @return the loader
    * @throws DynamicMetapathException
-   *           with an error code {@link DynamicMetapathException#DYNAMIC_CONTEXT_ABSENT} if a
+   *           with an error code
+   *           {@link DynamicMetapathException#DYNAMIC_CONTEXT_ABSENT} if a
    *           document loader is not configured for this dynamic context
    */
   @NonNull
@@ -192,11 +249,12 @@ public class DynamicContext { // NOPMD - intentional data class
   }
 
   /**
-   * Get the cached function call result for evaluating a function that has the property
-   * {@link FunctionProperty#DETERMINISTIC}.
+   * Get the cached function call result for evaluating a function that has the
+   * property {@link FunctionProperty#DETERMINISTIC}.
    *
    * @param callingContext
-   *          the function calling context information that distinguishes the call from any other call
+   *          the function calling context information that distinguishes the call
+   *          from any other call
    * @return the cached result sequence for the function call
    */
   @Nullable
@@ -205,10 +263,12 @@ public class DynamicContext { // NOPMD - intentional data class
   }
 
   /**
-   * Cache a function call result for a that has the property {@link FunctionProperty#DETERMINISTIC}.
+   * Cache a function call result for a that has the property
+   * {@link FunctionProperty#DETERMINISTIC}.
    *
    * @param callingContext
-   *          the calling context information that distinguishes the call from any other call
+   *          the calling context information that distinguishes the call from any
+   *          other call
    * @param result
    *          the function call result
    */
@@ -218,10 +278,12 @@ public class DynamicContext { // NOPMD - intentional data class
   }
 
   /**
-   * Used to disable the evaluation of predicate expressions during Metapath evaluation.
+   * Used to disable the evaluation of predicate expressions during Metapath
+   * evaluation.
    * <p>
-   * This can be useful for determining the potential targets identified by a Metapath expression as a
-   * partial evaluation, without evaluating that these targets match the predicate.
+   * This can be useful for determining the potential targets identified by a
+   * Metapath expression as a partial evaluation, without evaluating that these
+   * targets match the predicate.
    *
    * @return this dynamic context
    */
@@ -232,7 +294,8 @@ public class DynamicContext { // NOPMD - intentional data class
   }
 
   /**
-   * Used to enable the evaluation of predicate expressions during Metapath evaluation.
+   * Used to enable the evaluation of predicate expressions during Metapath
+   * evaluation.
    * <p>
    * This is the default behavior if unchanged.
    *
@@ -255,13 +318,15 @@ public class DynamicContext { // NOPMD - intentional data class
   }
 
   /**
-   * Get the sequence value assigned to a let variable with the provided qualified name.
+   * Get the sequence value assigned to a let variable with the provided qualified
+   * name.
    *
    * @param name
    *          the variable qualified name
    * @return the non-null variable value
    * @throws MetapathException
-   *           of the variable has not been assigned or if the variable value is {@code null}
+   *           of the variable has not been assigned or if the variable value is
+   *           {@code null}
    */
   @NonNull
   public ISequence<?> getVariableValue(@NonNull IEnhancedQName name) {
@@ -286,8 +351,8 @@ public class DynamicContext { // NOPMD - intentional data class
    *          the number of arguments in the requested function
    * @return the function
    * @throws StaticMetapathException
-   *           with the code {@link StaticMetapathException#NO_FUNCTION_MATCH} if a matching function
-   *           was not found
+   *           with the code {@link StaticMetapathException#NO_FUNCTION_MATCH} if
+   *           a matching function was not found
    */
   @NonNull
   public IFunction getFunction(@NonNull IEnhancedQName name, int arity) {
@@ -393,7 +458,8 @@ public class DynamicContext { // NOPMD - intentional data class
       /**
        * {@inheritDoc}
        * <p>
-       * This method first resolves the provided URI against the static context's base URI.
+       * This method first resolves the provided URI against the static context's base
+       * URI.
        */
       @Override
       public URI resolve(URI uri) {

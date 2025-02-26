@@ -24,8 +24,10 @@ import edu.umd.cs.findbugs.annotations.NonNull;
  */
 public final class FnCurrentDate {
   @NonNull
+  private static final String NAME = "current-date";
+  @NonNull
   static final IFunction SIGNATURE = IFunction.builder()
-      .name("current-date")
+      .name(NAME)
       .namespace(MetapathConstants.NS_METAPATH_FUNCTIONS)
       .deterministic()
       .contextDependent()
@@ -58,6 +60,7 @@ public final class FnCurrentDate {
    */
   @NonNull
   public static IDateItem fnCurrentDate(@NonNull DynamicContext dynamicContext) {
+    // FIXME: support implicit timezone
     return IDateWithTimeZoneItem.valueOf(dynamicContext.getCurrentDateTime());
   }
 }

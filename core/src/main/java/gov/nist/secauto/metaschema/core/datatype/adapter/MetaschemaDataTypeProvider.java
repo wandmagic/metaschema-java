@@ -235,6 +235,5 @@ public final class MetaschemaDataTypeProvider // NOPMD - Used for service initia
     register(TypeConstants.DURATION_TYPE);
     register(TypeConstants.IP_ADDRESS_TYPE);
     register(TypeConstants.NUMERIC_TYPE);
-    register(TypeConstants.TEMPORAL_TYPE);
   }
 }

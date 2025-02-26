@@ -5,6 +5,7 @@
 
 package gov.nist.secauto.metaschema.core.metapath.impl;
 
+import gov.nist.secauto.metaschema.core.metapath.DynamicContext;
 import gov.nist.secauto.metaschema.core.metapath.item.ICollectionValue;
 import gov.nist.secauto.metaschema.core.metapath.item.IItem;
 import gov.nist.secauto.metaschema.core.metapath.item.ISequence;
@@ -218,7 +219,7 @@ public abstract class AbstractSequence<ITEM extends IItem>
 
   @SuppressWarnings("PMD.OnlyOneReturn")
   @Override
-  public boolean deepEquals(ICollectionValue other) {
+  public boolean deepEquals(ICollectionValue other, DynamicContext dynamicContext) {
     if (!(other instanceof ISequence)) {
       return false;
     }
@@ -234,7 +235,7 @@ public abstract class AbstractSequence<ITEM extends IItem>
     while (thisIterator.hasNext() && otherIterator.hasNext()) {
       IItem i1 = thisIterator.next();
       IItem i2 = otherIterator.next();
-      if (!i1.deepEquals(i2)) {
+      if (!i1.deepEquals(i2, dynamicContext)) {
         retval = false;
         break;
       }
