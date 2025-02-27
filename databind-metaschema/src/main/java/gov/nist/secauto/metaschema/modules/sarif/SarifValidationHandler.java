@@ -5,40 +5,6 @@
 
 package gov.nist.secauto.metaschema.modules.sarif;
 
-import java.io.IOException;
-import java.io.StringWriter;
-import java.math.BigInteger;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import org.schemastore.json.sarif.x210.Artifact;
-import org.schemastore.json.sarif.x210.ArtifactLocation;
-import org.schemastore.json.sarif.x210.Location;
-import org.schemastore.json.sarif.x210.LogicalLocation;
-import org.schemastore.json.sarif.x210.Message;
-import org.schemastore.json.sarif.x210.MultiformatMessageString;
-import org.schemastore.json.sarif.x210.PhysicalLocation;
-import org.schemastore.json.sarif.x210.Region;
-import org.schemastore.json.sarif.x210.ReportingDescriptor;
-import org.schemastore.json.sarif.x210.Result;
-import org.schemastore.json.sarif.x210.Run;
-import org.schemastore.json.sarif.x210.Sarif;
-import org.schemastore.json.sarif.x210.SarifModule;
-import org.schemastore.json.sarif.x210.Tool;
-import org.schemastore.json.sarif.x210.ToolComponent;
-
-import edu.umd.cs.findbugs.annotations.NonNull;
-import edu.umd.cs.findbugs.annotations.Nullable;
 import gov.nist.secauto.metaschema.core.datatype.markup.MarkupLine;
 import gov.nist.secauto.metaschema.core.datatype.markup.MarkupMultiline;
 import gov.nist.secauto.metaschema.core.model.IAttributable;
@@ -56,6 +22,41 @@ import gov.nist.secauto.metaschema.core.util.UriUtils;
 import gov.nist.secauto.metaschema.databind.IBindingContext;
 import gov.nist.secauto.metaschema.databind.io.Format;
 import gov.nist.secauto.metaschema.databind.io.SerializationFeature;
+
+import org.schemastore.json.sarif.x210.Artifact;
+import org.schemastore.json.sarif.x210.ArtifactLocation;
+import org.schemastore.json.sarif.x210.Location;
+import org.schemastore.json.sarif.x210.LogicalLocation;
+import org.schemastore.json.sarif.x210.Message;
+import org.schemastore.json.sarif.x210.MultiformatMessageString;
+import org.schemastore.json.sarif.x210.PhysicalLocation;
+import org.schemastore.json.sarif.x210.Region;
+import org.schemastore.json.sarif.x210.ReportingDescriptor;
+import org.schemastore.json.sarif.x210.Result;
+import org.schemastore.json.sarif.x210.Run;
+import org.schemastore.json.sarif.x210.Sarif;
+import org.schemastore.json.sarif.x210.SarifModule;
+import org.schemastore.json.sarif.x210.Tool;
+import org.schemastore.json.sarif.x210.ToolComponent;
+
+import java.io.IOException;
+import java.io.StringWriter;
+import java.math.BigInteger;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.Nullable;
 
 /**
  * Supports building a Static Analysis Results Interchange Format (SARIF)
@@ -292,11 +293,12 @@ public final class SarifValidationHandler {
   @NonNull
   public String writeToString(@NonNull IBindingContext bindingContext) throws IOException {
     bindingContext.registerModule(SarifModule.class);
-    StringWriter writer = new StringWriter();
-    bindingContext.newSerializer(Format.JSON, Sarif.class)
-        .disableFeature(SerializationFeature.SERIALIZE_ROOT)
-        .serialize(generateSarif(getSource()), writer);
-    return writer.toString();
+    try (StringWriter writer = new StringWriter()) {
+      bindingContext.newSerializer(Format.JSON, Sarif.class)
+          .disableFeature(SerializationFeature.SERIALIZE_ROOT)
+          .serialize(generateSarif(getSource()), writer);
+      return ObjectUtils.notNull(writer.toString());
+    }
   }
 
   /**

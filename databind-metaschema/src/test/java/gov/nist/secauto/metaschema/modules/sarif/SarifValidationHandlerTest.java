@@ -5,6 +5,25 @@
 
 package gov.nist.secauto.metaschema.modules.sarif;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import gov.nist.secauto.metaschema.core.datatype.markup.MarkupLine;
+import gov.nist.secauto.metaschema.core.metapath.item.node.INodeItem;
+import gov.nist.secauto.metaschema.core.model.IResourceLocation;
+import gov.nist.secauto.metaschema.core.model.constraint.ConstraintValidationFinding;
+import gov.nist.secauto.metaschema.core.model.constraint.IConstraint;
+import gov.nist.secauto.metaschema.core.model.validation.IValidationFinding;
+import gov.nist.secauto.metaschema.core.util.IVersionInfo;
+import gov.nist.secauto.metaschema.core.util.ObjectUtils;
+import gov.nist.secauto.metaschema.databind.IBindingContext;
+
+import org.jmock.Expectations;
+import org.jmock.junit5.JUnit5Mockery;
+import org.json.JSONObject;
+import org.json.JSONTokener;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+
 import java.io.IOException;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
@@ -15,28 +34,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringJoiner;
 
-import org.jmock.Expectations;
-import org.jmock.junit5.JUnit5Mockery;
-import org.json.JSONObject;
-import org.json.JSONTokener;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
-
 import dev.harrel.jsonschema.Dialects;
 import dev.harrel.jsonschema.JsonNode;
 import dev.harrel.jsonschema.Validator;
 import dev.harrel.jsonschema.ValidatorFactory;
 import dev.harrel.jsonschema.providers.OrgJsonNode;
-import gov.nist.secauto.metaschema.core.datatype.markup.MarkupLine;
-import gov.nist.secauto.metaschema.core.metapath.item.node.INodeItem;
-import gov.nist.secauto.metaschema.core.model.IResourceLocation;
-import gov.nist.secauto.metaschema.core.model.constraint.ConstraintValidationFinding;
-import gov.nist.secauto.metaschema.core.model.constraint.IConstraint;
-import gov.nist.secauto.metaschema.core.model.validation.IValidationFinding;
-import gov.nist.secauto.metaschema.core.util.IVersionInfo;
-import gov.nist.secauto.metaschema.core.util.ObjectUtils;
-import gov.nist.secauto.metaschema.databind.IBindingContext;
 
 class SarifValidationHandlerTest {
   @RegisterExtension
